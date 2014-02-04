@@ -39,4 +39,4 @@ Ideas and feedback welcome!﻿
 
 P.S. We are searching for fellow developers to help in the project:
 
-Skills required one or more of: C++/MFC/AFX, C#/WPF, XAML/Photoshop
+Skills required one or more of: C++/MFC/AFX/DirectX, C#/WPF, XAML/Photoshop
