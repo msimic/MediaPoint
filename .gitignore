@@ -219,7 +219,4 @@ pip-log.txt
 ############
 
 /output
-Libs/AllArchitectures/InstallTool.exe
-Libs/AllArchitectures/WPFSpark.dll
-Libs/codecs/x86/VSFilter.dll
 MediaPoint_Setup_x86/MediaPoint Setup x86 - Copy.isproj
