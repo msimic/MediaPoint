@@ -217,5 +217,3 @@ pip-log.txt
 ############
 ## UNIGNORE
 ############
-
-!preprocessor\debug
