@@ -1,0 +1,420 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B7DE0555-40BE-4BCA-A8E6-D8A4126E30FF}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MediaPoint.Common</RootNamespace>
+    <AssemblyName>MediaPoint.Common</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <OutputPath>..\output\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <OutputPath>..\output\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <OutputPath>..\output\bin\x86\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisLogFile>..\bin\MediaPoint.Common.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
+    <NoWarn>1607</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <OutputPath>..\output\bin\x86\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\MediaPoint.Common.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>1607</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <OutputPath>..\output\bin\x64\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>..\bin\MediaPoint.Common.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+    <NoWarn>1607</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <OutputPath>..\output\bin\x64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\MediaPoint.Common.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>1607</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DirectShowLib-2005">
+      <HintPath>..\Libs\AllArchitectures\DirectShowLib-2005.dll</HintPath>
+    </Reference>
+    <Reference Include="GoogleSearchAPI">
+      <HintPath>..\Libs\AllArchitectures\GoogleSearchAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\AllArchitectures\Microsoft.WindowsAPICodePack.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\AllArchitectures\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="SubtitleDownloader">
+      <HintPath>..\Libs\AllArchitectures\SubtitleDownloader.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Helpers\Imdb.cs" />
+    <Compile Include="Interfaces\ITag.cs" />
+    <Compile Include="MediaFoundation\MediaInfoLib.cs" />
+    <Compile Include="MediaPlayers\CharSets.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ScreenSaver\ScreenSaver.cs" />
+    <Compile Include="Subtitles\SubtitleUtil.cs" />
+    <Compile Include="TaskbarNotification\BalloonIcon.cs" />
+    <Compile Include="DirectX\Direct3D.cs" />
+    <Compile Include="Helpers\Levehnstein.cs" />
+    <Compile Include="Interfaces\Interfaces.cs" />
+    <Compile Include="TaskbarNotification\Interop\BalloonFlags.cs" />
+    <Compile Include="TaskbarNotification\Interop\IconDataMembers.cs" />
+    <Compile Include="TaskbarNotification\Interop\IconState.cs" />
+    <Compile Include="TaskbarNotification\Interop\MouseEvent.cs" />
+    <Compile Include="TaskbarNotification\Interop\NotifyCommand.cs" />
+    <Compile Include="TaskbarNotification\Interop\NotifyIconData.cs" />
+    <Compile Include="TaskbarNotification\Interop\NotifyIconVersion.cs" />
+    <Compile Include="TaskbarNotification\Interop\Point.cs" />
+    <Compile Include="TaskbarNotification\Interop\TrayInfo.cs" />
+    <Compile Include="TaskbarNotification\Interop\WinApi.cs" />
+    <Compile Include="TaskbarNotification\Interop\WindowClass.cs" />
+    <Compile Include="TaskbarNotification\Interop\WindowMessageSink.cs" />
+    <Compile Include="MediaFoundation\BaseFilter.cs" />
+    <Compile Include="MediaFoundation\BasePin.cs" />
+    <Compile Include="MediaFoundation\EnumMediaTypes.cs" />
+    <Compile Include="MediaFoundation\EnumPins.cs" />
+    <Compile Include="MediaFoundation\EVRPresenter.cs" />
+    <Compile Include="MediaFoundation\HRESULT.cs" />
+    <Compile Include="MediaFoundation\Interop.cs" />
+    <Compile Include="MediaFoundation\StreamSourceFilter.cs" />
+    <Compile Include="MediaPlayers\BaseClasses.cs" />
+    <Compile Include="MediaPlayers\MediaDetector.cs" />
+    <Compile Include="MediaPlayers\MediaSeekingPlayer.cs" />
+    <Compile Include="MediaPlayers\MediaUriPlayer.cs" />
+    <Compile Include="MediaPlayers\PropertyPageHelper.cs" />
+    <Compile Include="MediaPlayers\Vmr9Allocator.cs" />
+    <Compile Include="TaskbarNotification\PopupActivationMode.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TaskbarNotification\RoutedEventHelper.cs" />
+    <Compile Include="Subtitles\BluRaySup\BluRaySupPalette.cs" />
+    <Compile Include="Subtitles\BluRaySup\BluRaySupParser.cs" />
+    <Compile Include="Subtitles\BluRaySup\BluRaySupPicture.cs" />
+    <Compile Include="Subtitles\BluRaySup\Core.cs" />
+    <Compile Include="Subtitles\BluRaySup\ImageObject.cs" />
+    <Compile Include="Subtitles\BluRaySup\ImageObjectFragment.cs" />
+    <Compile Include="Subtitles\BluRaySup\PaletteInfo.cs" />
+    <Compile Include="Subtitles\BluRaySup\ToolBox.cs" />
+    <Compile Include="Subtitles\Configuration.cs" />
+    <Compile Include="Subtitles\DetectEncoding\EncodingTools.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\CMLangConvertCharset.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\CMLangConvertCharsetClass.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\CMLangString.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\CMLangStringClass.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\CMultiLanguage.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\CMultiLanguageClass.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IEnumCodePage.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IEnumRfc1766.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IEnumScript.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangCodePages.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangConvertCharset.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangFontLink.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangFontLink2.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangLineBreakConsole.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangString.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangStringAStr.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangStringBufA.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangStringBufW.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMLangStringWStr.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMultiLanguage.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMultiLanguage2.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IMultiLanguage3.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\ISequentialStream.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\IStream.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagDetectEncodingInfo.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagMIMECONTF.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagMIMECPINFO.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagMIMECSETINFO.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagMLCPF.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagMLDETECTCP.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagMLSTR_FLAGS.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagRFC1766INFO.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagSCRIPFONTINFO.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagSCRIPTINFO.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagSTATSTG.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\tagUNICODERANGE.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\_FILETIME.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\_LARGE_INTEGER.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\_RemotableHandle.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\_ULARGE_INTEGER.cs" />
+    <Compile Include="Subtitles\DetectEncoding\Multilang\__MIDL_IWinTypes_0009.cs" />
+    <Compile Include="Subtitles\Enums\FindType.cs" />
+    <Compile Include="Subtitles\Enums\SpellCheckAction.cs" />
+    <Compile Include="Subtitles\Enums\SubtitleSortCriteria.cs" />
+    <Compile Include="Subtitles\FastBitmap.cs" />
+    <Compile Include="Subtitles\FindReplaceDialogHelper.cs" />
+    <Compile Include="Subtitles\Fourier.cs" />
+    <Compile Include="Subtitles\HistoryItem.cs" />
+    <Compile Include="Subtitles\IfoParser.cs" />
+    <Compile Include="Subtitles\ImageSplitter.cs" />
+    <Compile Include="Subtitles\ImageSplitterItem.cs" />
+    <Compile Include="Subtitles\Language.cs" />
+    <Compile Include="Subtitles\LanguageStructure.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Box.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Mdhd.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Mdia.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Minf.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Moov.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Mvhd.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Stbl.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Tkhd.cs" />
+    <Compile Include="Subtitles\Mp4\Boxes\Trak.cs" />
+    <Compile Include="Subtitles\Mp4\Mp4Parser.cs" />
+    <Compile Include="Subtitles\NikseBitmap.cs" />
+    <Compile Include="Subtitles\Paragraph.cs" />
+    <Compile Include="Subtitles\PositionAndSize.cs" />
+    <Compile Include="Subtitles\PositionsAndSizes.cs" />
+    <Compile Include="Subtitles\Settings.cs" />
+    <Compile Include="Subtitles\StripableText.cs" />
+    <Compile Include="Subtitles\Subtitle.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AbcIViewer.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AdobeEncore.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AdobeEncoreLineTabs.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AdobeEncoreTabs.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AdobeEncoreWithLineNumbers.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AdvancedSubStationAlpha.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AQTitle.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\AvidCaption.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\BdnXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Captionate.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\CaraokeXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Cavena890.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Csv.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\DCSubtitle.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\DigiBeta.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\DvdStudioPro.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\DvdStudioProSpace.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\DvdSubtitle.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Ebu.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Eeg708.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\F4Rtf.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\F4Text.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\F4Xml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\FabSubtitler.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\FinalCutProTextXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\FinalCutProXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\FlashXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\GpacTtxt.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Idx.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\MicroDvd.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\MPlayer2.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\OpenDvt.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Pac.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\PinnacleImpression.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\PListCaption.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\QuickTimeText.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\RealTime.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Sami.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Scenarist.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\ScenaristClosedCaptions.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Son.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SonyDVDArchitect.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SonyDVDArchitectExplicitDuration.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SonyDVDArchitectLineAndDuration.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SonyDVDArchitectTabs.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SonyDVDArchitectWithLineNumbers.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Spruce.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SpruceWithSpace.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Spt.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\StructuredTitles.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SubRip.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SubStationAlpha.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SubtitleEditorProject.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SubtitleFormat.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SubViewer10.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\SubViewer20.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TimedText.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TimedText10.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TimeXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TmpegEncText.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TmpegEncXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TMPlayer.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TranscriberXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\TurboTitler.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UleadSubtitleFormat.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle1.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle10.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle11.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle2.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle3.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle4.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle5.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle6.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle7.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle8.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UnknownSubtitle9.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UTSubtitleXml.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Utx.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\UtxFrames.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\WebVTT.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\Wsb.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\YouTubeSbv.cs" />
+    <Compile Include="Subtitles\SubtitleFormats\ZeroG.cs" />
+    <Compile Include="Subtitles\Subtitles.cs" />
+    <Compile Include="Subtitles\TextDraw.cs" />
+    <Compile Include="Subtitles\TimeCode.cs" />
+    <Compile Include="Subtitles\TransportStream\AdaptationField.cs" />
+    <Compile Include="Subtitles\TransportStream\Helper.cs" />
+    <Compile Include="Subtitles\TransportStream\Packet.cs" />
+    <Compile Include="Subtitles\TransportStream\PacketizedElementaryStream.cs" />
+    <Compile Include="Subtitles\TransportStream\ProgramAssociationTable.cs" />
+    <Compile Include="Subtitles\TransportStream\TransportStreamParser.cs" />
+    <Compile Include="Subtitles\Utilities.cs" />
+    <Compile Include="Subtitles\VideoFormats\AviRiffData.cs" />
+    <Compile Include="Subtitles\VideoFormats\Matroska.cs" />
+    <Compile Include="Subtitles\VideoFormats\RiffDecodeHeader.cs" />
+    <Compile Include="Subtitles\VideoFormats\RiffParser.cs" />
+    <Compile Include="Subtitles\VideoFormats\VideoInfo.cs" />
+    <Compile Include="Subtitles\VobSub\Helper.cs" />
+    <Compile Include="Subtitles\VobSub\Idx.cs" />
+    <Compile Include="Subtitles\VobSub\IdxParagraph.cs" />
+    <Compile Include="Subtitles\VobSub\Mpeg2Header.cs" />
+    <Compile Include="Subtitles\VobSub\PacketizedElementaryStream.cs" />
+    <Compile Include="Subtitles\VobSub\SpHeader.cs" />
+    <Compile Include="Subtitles\VobSub\SubPicture.cs" />
+    <Compile Include="Subtitles\VobSub\VobSubMergedPack.cs" />
+    <Compile Include="Subtitles\VobSub\VobSubPack.cs" />
+    <Compile Include="Subtitles\VobSub\VobSubParser.cs" />
+    <Compile Include="Subtitles\VobSub\VobSubWriter.cs" />
+    <Compile Include="Subtitles\Wave.cs" />
+    <Compile Include="Subtitles\WaveToVisualizer.cs" />
+    <Compile Include="Subtitles\ZipExtractor.cs" />
+    <Compile Include="Subtitles\zlib\Adler32.cs" />
+    <Compile Include="Subtitles\zlib\Deflate.cs" />
+    <Compile Include="Subtitles\zlib\InfBlocks.cs" />
+    <Compile Include="Subtitles\zlib\InfCodes.cs" />
+    <Compile Include="Subtitles\zlib\Inflate.cs" />
+    <Compile Include="Subtitles\zlib\InfTree.cs" />
+    <Compile Include="Subtitles\zlib\StaticTree.cs" />
+    <Compile Include="Subtitles\zlib\SupportClass.cs" />
+    <Compile Include="Subtitles\zlib\Tree.cs" />
+    <Compile Include="Subtitles\zlib\ZInputStream.cs" />
+    <Compile Include="Subtitles\zlib\Zlib.cs" />
+    <Compile Include="Subtitles\zlib\ZOutputStream.cs" />
+    <Compile Include="Subtitles\zlib\ZStream.cs" />
+    <Compile Include="Subtitles\zlib\ZStreamException.cs" />
+    <Compile Include="TaskbarNotification\TaskbarIcon.cs" />
+    <Compile Include="TaskbarNotification\TaskbarIcon.Declarations.cs" />
+    <Compile Include="Threading\WorkDispatcher.cs" />
+    <Compile Include="Threading\WorkDispatcherObject.cs" />
+    <Compile Include="TaskbarNotification\Util.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TaskbarNotification\DefaultTrayIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="ToonShader.fx" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

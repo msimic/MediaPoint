@@ -1,0 +1,573 @@
+﻿#region Usings
+using System;
+using System.Drawing;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using DirectShowLib;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security;
+using System.Text;
+using MediaPoint.Common.Interfaces;
+using MediaPoint.Common.MediaFoundation;
+using MediaPoint.Common.MediaFoundation.Interop;
+
+#endregion
+
+namespace MediaPoint.Common.DirectShow.MediaPlayers
+{
+	/// <summary>
+	/// The MediaUriPlayer plays media files from a given Uri.
+	/// </summary>
+	public class MediaUriPlayer : MediaSeekingPlayer
+	{
+		/// <summary>
+		/// The name of the default audio render.  This is the
+		/// same on all versions of windows
+		/// </summary>
+		private const string DEFAULT_AUDIO_RENDERER_NAME = "Default DirectSound Device";
+
+		/// <summary>
+		/// Set the default audio renderer property backing
+		/// </summary>
+		private string m_audioRenderer = DEFAULT_AUDIO_RENDERER_NAME;
+
+#if DEBUG
+		/// <summary>
+		/// Used to view the graph in graphedit
+		/// </summary>
+		private DsROTEntry m_dsRotEntry;
+#endif
+
+		/// <summary>
+		/// The DirectShow graph interface.  In this example
+		/// We keep reference to this so we can dispose 
+		/// of it later.
+		/// </summary>
+		//private IGraphBuilder m_graph;
+
+		/// <summary>
+		/// The media Uri
+		/// </summary>
+		private Uri m_sourceUri;
+
+		/// <summary>
+		/// Gets or sets the Uri source of the media
+		/// </summary>
+		public Uri Source
+		{
+			get
+			{
+				VerifyAccess();
+				return m_sourceUri;
+			}
+			set
+			{
+				VerifyAccess();
+				m_sourceUri = value;
+				OpenSource();
+			}
+		}
+
+		public void SetAdvancedSubtitleConfig(string sett)
+		{
+			Dispatcher.BeginInvoke((Action)(() =>
+			{
+				var set = _splitterSettings as ILAVSplitterSettings;
+				int ret = set.SetRuntimeConfig(true);
+				ret = set.SetAdvancedSubtitleConfig(sett);
+			}));
+		}
+
+		/// <summary>
+		/// The renderer type to use when
+		/// rendering video
+		/// </summary>
+		public VideoRendererType VideoRenderer
+		{
+			get;
+			set;
+		}
+
+		/// <summary>
+		/// The name of the audio renderer device
+		/// </summary>
+		public string AudioRenderer
+		{
+			get
+			{
+				VerifyAccess();
+				return m_audioRenderer;
+			}
+			set
+			{
+				VerifyAccess();
+
+				if (string.IsNullOrEmpty(value))
+				{
+					value = DEFAULT_AUDIO_RENDERER_NAME;
+				}
+
+				m_audioRenderer = value;
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets if the media should play in loop
+		/// or if it should just stop when the media is complete
+		/// </summary>
+		public bool Loop { get; set; }
+
+		/// <summary>
+		/// Is ran everytime a new media event occurs on the graph
+		/// </summary>
+		/// <param name="code">The Event code that occured</param>
+		/// <param name="lparam1">The first event parameter sent by the graph</param>
+		/// <param name="lparam2">The second event parameter sent by the graph</param>
+		protected override void OnMediaEvent(EventCode code, IntPtr lparam1, IntPtr lparam2)
+		{
+			Console.WriteLine(code.ToString());
+			if (Loop)
+			{
+				switch (code)
+				{
+					case EventCode.Complete:
+						MediaPosition = 0;
+						break;
+				}
+			}
+			else
+				/* Only run the base when we don't loop
+				 * otherwise the default behavior is to
+				 * fire a media ended event */
+				base.OnMediaEvent(code, lparam1, lparam2);
+		}
+
+		public static IPin ByDirection(IBaseFilter vSource, PinDirection vDir, int iIndex)
+		{
+			IPin result = null;
+			IPin[] array = new IPin[1];
+			if (vSource == null)
+			{
+				return null;
+			}
+			IEnumPins enumPins;
+			int hr = vSource.EnumPins(out enumPins);
+			DsError.ThrowExceptionForHR(hr);
+			try
+			{
+				while (enumPins.Next(1, array, IntPtr.Zero) == 0)
+				{
+					PinDirection pinDirection;
+					hr = array[0].QueryDirection(out pinDirection);
+					DsError.ThrowExceptionForHR(hr);
+					if (pinDirection == vDir)
+					{
+						if (iIndex == 0)
+						{
+							result = array[0];
+							break;
+						}
+						iIndex--;
+					}
+					//Marshal.ReleaseComObject(array[0]);
+				}
+			}
+			finally
+			{
+				//Marshal.ReleaseComObject(enumPins);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// Opens the media by initializing the DirectShow graph
+        //
+        //                                          +----------------+          +----------------+       +-----------------------+
+        //     +---------------------+              | LavVideo       |          | VobSub         |       | EVR+CustomPresenter   |
+        //     | LavSplitterSource   |              |----------------|          |----------------|       |-----------------------|
+        //     +---------------------+              |                |          |                |       |                       |
+        //     |                     |              |                |          |                |       |    VIDEO              |
+        //     |             video  +|->+---------+<-+ IN       OUT +->+------+<-+ VID_IN   OUT +-> +-+ <-+   RENDERER           |
+        //     |                     |              +----------------+          |                |       |                       |
+        //     |             audio  +|->+------+                                |                |       +-----------------------+
+        //     |                     |         |    +----------------+      +-+<-+ TXT_IN        |
+        //     |          subtitle  +|->+--+   |    | LavAudio       |      |   |                |
+        //     +---------------------+     |   |    |----------------|      |   +----------------+       +-----------------------+
+        //                                 |   |    |                |      |                            | DShow output device   |
+        //                                 |   |    |                |     xxx                           |-----------------------|
+        //                                 |   +--+<-+ IN       OUT +->+--x | x-----------------------+  |                       |
+        //                                 |        +----------------+      |                            |    AUDIO              |
+        //                                 |                                |                           <-+   RENDERER           |
+        //                                 |                                |                            |                       |
+        //                                 +--------------------------------+                            +-----------------------+
+        // 								
+		/// </summary>
+		protected virtual void OpenSource()
+		{
+			/* Make sure we clean up any remaining mess */
+			FreeResources();
+
+			if (m_sourceUri == null)
+				return;
+
+			string fileSource = m_sourceUri.OriginalString;
+
+			if (string.IsNullOrEmpty(fileSource))
+				return;
+
+			try
+			{
+                if (m_graph != null) Marshal.ReleaseComObject(m_graph);
+
+				/* Creates the GraphBuilder COM object */
+				m_graph = new FilterGraphNoThread() as IGraphBuilder;
+
+				if (m_graph == null)
+					throw new Exception("Could not create a graph");
+
+				/* Add our prefered audio renderer */
+				var audioRenderer = InsertAudioRenderer(AudioRenderer);
+
+				if ((System.Environment.OSVersion.Platform == PlatformID.Win32NT &&
+					(System.Environment.OSVersion.Version.Major == 5)))
+					VideoRenderer = VideoRendererType.VideoMixingRenderer9;
+
+				IBaseFilter renderer = CreateVideoRenderer(VideoRenderer, m_graph, 2);
+                if (_renderer != null) Marshal.ReleaseComObject(_renderer);
+			    _renderer = renderer;
+				//if (renderer != null)
+				//    m_graph.AddFilter((IBaseFilter)renderer, "Renderer");
+
+				var filterGraph = m_graph as IFilterGraph2;
+
+				if (filterGraph == null)
+					throw new Exception("Could not QueryInterface for the IFilterGraph2");
+
+				ILAVAudioSettings lavAudioSettings;
+				ILAVAudioStatus lavStatus;
+				IBaseFilter audioDecoder = FilterProvider.GetAudioFilter(out lavAudioSettings, out lavStatus);
+				if (audioDecoder != null)
+				{
+                    if (_audio != null) Marshal.ReleaseComObject(_audio);
+				    _audio = audioDecoder;
+					lavAudioSettings.SetRuntimeConfig(true);
+					m_graph.AddFilter((IBaseFilter)audioDecoder, "LavAudio");
+				}
+
+				ILAVSplitterSettings splitterSettings;
+				IFileSourceFilter splitter = FilterProvider.GetSplitterSource(out splitterSettings);
+				//IBaseFilter splitter = FilterProvider.GetSplitter(out splitterSettings);
+
+				if (splitter != null)
+				{
+				    splitter.Load(fileSource, null);
+                    if (_splitter != null) Marshal.ReleaseComObject(_splitter);
+				    _splitter = splitter;
+					splitterSettings.SetRuntimeConfig(true);
+					m_graph.AddFilter((IBaseFilter)splitter, "LavSplitter");
+				}
+
+				//StreamSourceFilter file = new StreamSourceFilter();
+				//var ass = Assembly.GetAssembly(typeof (StreamSourceFilter));
+				//Directory.SetCurrentDirectory(Path.GetDirectoryName(ass.Location));
+				//var file = Activator.CreateComInstanceFrom(Path.GetFileName(ass.Location), "MediaPoint.Common.MediaFoundation.StreamSourceFilter");
+				//int ret1; 
+				//m_graph.AddFilter((IBaseFilter)file, "dummy");
+				//IPin p1 = ByDirection((IBaseFilter)file, PinDirection.Output, 0);
+				//IPin p2 = ByDirection(splitter, PinDirection.Input, 0);
+				//m_graph.Connect(p1, p2);
+				
+
+				//IBaseFilter sourceFilter = splitter;
+				/* Have DirectShow find the correct source filter for the Uri */
+				int hr = 0; //filterGraph.AddSourceFilter(fileSource, fileSource, out sourceFilter);
+				//DsError.ThrowExceptionForHR(hr);
+
+				/* We will want to enum all the pins on the source filter */
+				IEnumPins pinEnum;
+
+				hr = ((IBaseFilter)splitter).EnumPins(out pinEnum);
+				DsError.ThrowExceptionForHR(hr);
+
+				IntPtr fetched = IntPtr.Zero;
+				IPin[] pins = { null };
+
+				/* Counter for how many pins successfully rendered */
+				
+
+				if (VideoRenderer == VideoRendererType.VideoMixingRenderer9)
+				{
+					var mixer = renderer as IVMRMixerControl9;
+
+					if (mixer != null)
+					{
+						VMR9MixerPrefs dwPrefs;
+						mixer.GetMixingPrefs(out dwPrefs);
+						dwPrefs &= ~VMR9MixerPrefs.RenderTargetMask;
+						dwPrefs |= VMR9MixerPrefs.RenderTargetRGB;
+						//mixer.SetMixingPrefs(dwPrefs);
+					}
+				}
+
+				// Test using FFDShow Video Decoder Filter
+				ILAVVideoSettings lavVideoSettings;
+				IBaseFilter lavVideo = FilterProvider.GetVideoFilter(out lavVideoSettings);
+                if (_video != null) Marshal.ReleaseComObject(_video);
+			    _video = lavVideo;
+
+			    IBaseFilter vobSub = FilterProvider.GetVobSubFilter();
+
+                if (vobSub != null)
+                {
+                    m_graph.AddFilter(vobSub, "VobSub");
+                    IDirectVobSub vss = vobSub as IDirectVobSub;
+                    if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
+                    _vobsub = vss;
+                    InitSubSettings();
+                }
+
+				if (lavVideo != null)
+				{
+					lavVideoSettings.SetRuntimeConfig(true);
+					m_graph.AddFilter(lavVideo, "LavVideo");
+				}
+
+				int ret;
+			    bool subconnected = false;
+				ret = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)splitter, PinDirection.Output, 0), DsFindPin.ByDirection(lavVideo, PinDirection.Input, 0));
+                ret = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)lavVideo, PinDirection.Output, 0), DsFindPin.ByDirection(vobSub, PinDirection.Input, 0));
+                if (ret == 0)
+                {
+                    int lc;
+                    ((IDirectVobSub) vobSub).get_LanguageCount(out lc);
+                    subconnected = (lc != 0);
+                    IPin pn = DsFindPin.ByDirection((IBaseFilter)splitter, PinDirection.Output, 2);
+                    if (pn != null)
+                    {
+                        ret = m_graph.Connect(pn, DsFindPin.ByDirection(vobSub, PinDirection.Input, 1));
+                        ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
+                        subconnected = (lc != 0);
+                    }
+                    ret = m_graph.Connect(DsFindPin.ByDirection(vobSub, PinDirection.Output, 0),
+                                          DsFindPin.ByDirection(renderer, PinDirection.Input, 0));
+                }
+                else
+                {
+                    ret = m_graph.Connect(DsFindPin.ByDirection(lavVideo, PinDirection.Output, 0),
+                                      DsFindPin.ByDirection(renderer, PinDirection.Input, 0));
+                }
+
+                /* Loop over each pin of the source filter */
+				while (pinEnum.Next(pins.Length, pins, fetched) == 0)
+				{
+				    IPin cTo;
+				    pins[0].ConnectedTo(out cTo);
+                    if (cTo == null)
+                    {
+                        // this should not happen if the filtegraph is manually connected in a good manner
+                        ret = filterGraph.RenderEx(pins[0], AMRenderExFlags.RenderToExistingRenderers, IntPtr.Zero);
+                    }
+                    else
+                    {
+                        Marshal.ReleaseComObject(cTo);
+                    }
+					Marshal.ReleaseComObject(pins[0]);
+				}
+
+                if (lavVideoSettings != null)
+                {
+                    if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_CUDA) != 0)
+                    {
+                        ret = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_CUDA);
+                    }
+                    else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_QuickSync) != 0)
+                    {
+                        ret = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_QuickSync);
+                    }
+                    else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2Native) != 0)
+                    {
+                        ret = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2Native);
+                    }
+                    else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2) != 0)
+                    {
+                        ret = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2);
+                    }
+                    else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2CopyBack) != 0)
+                    {
+                        ret = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2CopyBack);
+                    }
+                }
+                
+                //hr = m_graph.RenderFile(fileSource, null);
+
+				Marshal.ReleaseComObject(pinEnum);
+
+				IAMStreamSelect selector = splitter as IAMStreamSelect;
+				int numstreams;
+				selector.Count(out numstreams);
+				AMMediaType mt;
+				AMStreamSelectInfoFlags fl;
+				SubtitleStreams.Clear();
+				VideoStreams.Clear();
+				AudioStreams.Clear();
+				for (int i = 0; i < numstreams; i++)
+				{
+					int lcid;
+					int group;
+					string name;
+					object o, o2;
+					selector.Info(i, out mt, out fl, out lcid, out group, out name, out o, out o2);
+					switch (group)
+					{
+						case 0:
+							VideoStreams.Add(name);
+							break;
+						case 1:
+							AudioStreams.Add(name);
+							break;
+						case 2:
+							SubtitleStreams.Add(name);
+							break;
+					}
+
+                    if (o != null) Marshal.ReleaseComObject(o);
+                    if (o2 != null) Marshal.ReleaseComObject(o2);
+				}
+
+				OnPropertyChanged("SubtitleStreams");
+				OnPropertyChanged("VideoStreams");
+				OnPropertyChanged("AudioStreams");
+
+				//Marshal.ReleaseComObject(splitter);
+
+				
+				/* Configure the graph in the base class */
+				SetupFilterGraph(m_graph);
+
+			#if DEBUG
+				/* Adds the GB to the ROT so we can view
+                 * it in graphedit */
+				m_dsRotEntry = new DsROTEntry(m_graph);
+			#endif
+
+				//if (_splitterSettings != null)
+				//{
+				//    Marshal.ReleaseComObject(_splitterSettings);
+				//    _splitterSettings = null;
+				//}
+                if (_splitterSettings != null) Marshal.ReleaseComObject(_splitterSettings);
+				_splitterSettings = (ILAVSplitterSettings)splitter;
+				//ret = _splitterSettings.SetRuntimeConfig(true);
+				//if (ret != 0)
+				//    throw new Exception("Could not set SetRuntimeConfig to true");
+
+				//string sss = "*:*";
+
+				//LAVSubtitleMode mode = LAVSubtitleMode.LAVSubtitleMode_NoSubs;
+				//mode = _splitterSettings.GetSubtitleMode();
+				//if (mode != LAVSubtitleMode.LAVSubtitleMode_Default)
+				//    throw new Exception("Could not set GetAdvancedSubtitleConfige");
+
+				//ret = _splitterSettings.SetSubtitleMode(LAVSubtitleMode.LAVSubtitleMode_Advanced);
+				//if (ret != 1)
+				//    throw new Exception("Could not set SetAdvancedSubtitleConfige");
+
+				//ret = _splitterSettings.SetAdvancedSubtitleConfig(sss);
+				//if (ret != 1)
+				//    throw new Exception("Could not set SetAdvancedSubtitleConfige");
+
+				//sss = "";
+				//ret = _splitterSettings.GetAdvancedSubtitleConfig(out sss);
+				//if (ret != 0)
+				//    throw new Exception("Could not set GetAdvancedSubtitleConfige");
+
+				//IPin sub = DsFindPin.ByDirection((IBaseFilter)splitter, PinDirection.Output, 2);
+				//PinInfo pi;
+				//sub.QueryPinInfo(out pi);
+                SIZE a,b;
+                if ((_displayControl).GetNativeVideoSize(out a, out b) == 0)
+                {
+                    if (a.cx > 0 && a.cy > 0)
+                    {
+                        HasVideo = true;
+                        SetNativePixelSizes(a);
+                    }
+                }
+
+                if (!subconnected)
+                {
+                    InvokeNoSubtitleLoaded(new EventArgs());
+                }
+                else
+                {
+                    InitSubSettings();
+                }
+				/* Sets the NaturalVideoWidth/Height */
+				//SetNativePixelSizes(renderer);
+
+				//InvokeMediaFailed(new MediaFailedEventArgs(sss, null));
+			}
+			catch (Exception ex)
+			{
+				/* This exection will happen usually if the media does
+				 * not exist or could not open due to not having the
+				 * proper filters installed */
+				FreeResources();
+
+				/* Fire our failed event */
+				InvokeMediaFailed(new MediaFailedEventArgs(ex.Message, ex));
+			}
+
+			InvokeMediaOpened();
+		}
+
+        /// <summary>
+		/// Inserts the audio renderer by the name of
+		/// the audio renderer that is passed
+		/// </summary>
+		protected virtual IBaseFilter InsertAudioRenderer(string audioDeviceName)
+		{
+			if (m_graph == null)
+				return null;
+
+			return AddFilterByName(m_graph, FilterCategory.AudioRendererCategory, audioDeviceName);
+		}
+
+		/// <summary>
+		/// Frees all unmanaged memory and resets the object back
+		/// to its initial state
+		/// </summary>
+		protected override void FreeResources()
+		{
+#if DEBUG
+			/* Remove us from the ROT */
+			if (m_dsRotEntry != null)
+			{
+				m_dsRotEntry.Dispose();
+				m_dsRotEntry = null;
+			}
+#endif
+
+			/* We run the StopInternal() to avoid any 
+             * Dispatcher VeryifyAccess() issues because
+             * this may be called from the GC */
+			StopInternal();
+
+			/* Let's clean up the base 
+			 * class's stuff first */
+			base.FreeResources();
+
+			if (m_graph != null)
+			{
+				Marshal.ReleaseComObject(m_graph);
+				m_graph = null;
+
+				/* Only run the media closed if we have an
+				 * initialized filter graph */
+				InvokeMediaClosed(new EventArgs());
+			}
+		}
+	}
+}

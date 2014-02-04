@@ -1,0 +1,62 @@
+﻿using System;
+
+namespace MediaPoint.Common.MediaFoundation
+{
+	public class HR
+	{
+		public static bool SUCCESS(HRESULT hr)
+		{
+			return unchecked((int)hr) > -1;
+		}
+		public static bool FAILED(HRESULT hr)
+		{
+			return unchecked((int)hr) < 0;
+		}
+	}
+	/// <summary>
+	/// Si says:
+	/// I'm using HRESULT's since it's probably catastrophic
+	/// to throw Exceptions during a DirectShow graph.
+	/// </summary>
+	public enum HRESULT : uint
+	{
+		/// <summary>
+		/// Same as NOERROR 
+		/// </summary>
+		S_OK = 0,
+		VFW_E_NOT_FOUND = 0x80040216,
+		VFW_E_CANNOT_CONNECT = 0x80040217,
+		S_FALSE = 1,
+		E_INVALIDARG = 0x80070057,
+		E_NOINTERFACE = 0x80004002,
+		E_NOTIMPL = 0x80004001,
+		E_UNEXPECTED = 0x8000FFFF,
+		E_FAIL = 0x80004005,
+		D3DERR_INVALIDCALL = 0x8876086c,
+		VFW_E_NOT_CONNECTED = 0x80040209,
+		VFW_E_TYPE_NOT_ACCEPTED = 0x8004022A,
+		VFW_E_NO_ACCEPTABLE_TYPES = 0x80040207,
+		VFW_E_INVALID_DIRECTION = 0x80040208,
+		VFW_E_ALREADY_CONNECTED = 0x80040204,
+		VFW_E_NOT_STOPPED = 0x80040224,
+		E_OUTOFMEMORY = 0x8007000E,
+		VFW_E_NO_ALLOCATOR = 0x8004020A,
+		VFW_S_NO_MORE_ITEMS = 0x00040103,
+		VFW_E_INVALIDMEDIATYPE = 0x80040200,
+		VFW_E_RUNTIME_ERROR = 0x8004020B,
+		VFW_E_WRONG_STATE = 0x80040227,
+		MF_E_NO_MORE_TYPES = 0xC00D36B9,
+		MF_E_UNEXPECTED = 0xC00D36BB,
+		MF_E_INVALIDTYPE = 0xC00D36BD,
+		MF_E_INVALIDINDEX = 0xC00D36BF,
+		MF_E_INVALID_TIMESTAMP = 0xC00D36C0,
+		MF_E_NO_SAMPLE_TIMESTAMP = 0xC00D36C8,
+		MF_E_NO_SAMPLE_DURATION = 0xC00D36C9,
+		MF_E_NOT_FOUND = 0xC00D36D5,
+		MF_E_NO_CLOCK = 0xC00D36D7,
+		MF_E_SHUTDOWN = 0xC00D3E85,
+		MF_E_END_OF_STREAM = 0xC00D3E84,
+		MF_E_INVALIDREQUEST = 0xC00D36B2,
+		MF_E_INVALIDMEDIATYPE = 0xC00D36B4,
+	}
+}

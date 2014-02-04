@@ -1,0 +1,287 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ToonShader" xml:space="preserve">
+    <value>//--------------------------- BASIC PROPERTIES ------------------------------
+// The world transformation
+float4x4 World;
+ 
+// The view transformation
+float4x4 View;
+ 
+// The projection transformation
+float4x4 Projection;
+ 
+// The transpose of the inverse of the world transformation,
+// used for transforming the vertex's normal
+float4x4 WorldInverseTranspose;
+ 
+//--------------------------- DIFFUSE LIGHT PROPERTIES ------------------------------
+// The direction of the diffuse light
+float3 DiffuseLightDirection = float3(1, 0, 0);
+ 
+// The color of the diffuse light
+float4 DiffuseColor = float4(1, 1, 1, 1);
+ 
+// The intensity of the diffuse light
+float DiffuseIntensity = 1.0;
+ 
+//--------------------------- TOON SHADER PROPERTIES ------------------------------
+// The color to draw the lines in.  Black is a good default.
+float4 LineColor = float4(0, 0, 0, 1);
+ 
+// The thickness of the lines.  This may need to change, depending on the scale of
+// the objects you are drawing.
+float LineThickness = .03;
+ 
+//--------------------------- TEXTURE PROPERTIES ------------------------------
+// The texture being used for the object
+texture Texture;
+ 
+// The texture sampler, which will get the texture color
+sampler2D textureSampler = sampler_state 
+{
+    Texture = (Texture);
+    MinFilter = Linear;
+    MagFilter = Linear;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+ 
+//--------------------------- DATA STRUCTURES ------------------------------
+// The structure used to store information between the application and the
+// vertex shader
+struct AppToVertex
+{
+    float4 Position : POSITION0;            // The position of the vertex
+    float3 Normal : NORMAL0;                // The vertex's normal
+    float2 TextureCoordinate : TEXCOORD0;    // The texture coordinate of the vertex
+};
+ 
+// The structure used to store information between the vertex shader and the
+// pixel shader
+struct VertexToPixel
+{
+    float4 Position : POSITION0;
+    float2 TextureCoordinate : TEXCOORD0;
+    float3 Normal : TEXCOORD1;
+};
+ 
+//--------------------------- SHADERS ------------------------------
+// The vertex shader that does cel shading.
+// It really only does the basic transformation of the vertex location,
+// and normal, and copies the texture coordinate over.
+VertexToPixel CelVertexShader(AppToVertex input)
+{
+    VertexToPixel output;
+ 
+    // Transform the position
+    float4 worldPosition = mul(input.Position, World);
+    float4 viewPosition = mul(worldPosition, View);
+    output.Position = mul(viewPosition, Projection);
+ 
+    // Transform the normal
+    output.Normal = normalize(mul(input.Normal, WorldInverseTranspose));
+ 
+    // Copy over the texture coordinate
+    output.TextureCoordinate = input.TextureCoordinate;
+ 
+    return output;
+}
+ 
+// The pixel shader that does cel shading.  Basically, it calculates
+// the color like is should, and then it discretizes the color into
+// one of four colors.
+float4 CelPixelShader(VertexToPixel input) : COLOR0
+{
+    // Calculate diffuse light amount
+    float intensity = dot(normalize(DiffuseLightDirection), input.Normal);
+    if(intensity &lt; 0)
+        intensity = 0;
+ 
+    // Calculate what would normally be the final color, including texturing and diffuse lighting
+    float4 color = tex2D(textureSampler, input.TextureCoordinate) * DiffuseColor * DiffuseIntensity;
+    color.a = 1;
+ 
+    // Discretize the intensity, based on a few cutoff points
+    if (intensity &gt; 0.95)
+        color = float4(1.0,1,1,1.0) * color;
+    else if (intensity &gt; 0.5)
+        color = float4(0.7,0.7,0.7,1.0) * color;
+    else if (intensity &gt; 0.05)
+        color = float4(0.35,0.35,0.35,1.0) * color;
+    else
+        color = float4(0.1,0.1,0.1,1.0) * color;
+ 
+    return color;
+}
+ 
+// The vertex shader that does the outlines
+VertexToPixel OutlineVertexShader(AppToVertex input)
+{
+    VertexToPixel output = (VertexToPixel)0;
+ 
+    // Calculate where the vertex ought to be.  This line is equivalent
+    // to the transformations in the CelVertexShader.
+    float4 original = mul(mul(mul(input.Position, World), View), Projection);
+ 
+    // Calculates the normal of the vertex like it ought to be.
+    float4 normal = mul(mul(mul(input.Normal, World), View), Projection);
+ 
+    // Take the correct "original" location and translate the vertex a little
+    // bit in the direction of the normal to draw a slightly expanded object.
+    // Later, we will draw over most of this with the right color, except the expanded
+    // part, which will leave the outline that we want.
+    output.Position    = original + (mul(LineThickness, normal));
+ 
+    return output;
+}
+ 
+// The pixel shader for the outline.  It is pretty simple:  draw everything with the
+// correct line color.
+float4 OutlinePixelShader(VertexToPixel input) : COLOR0
+{
+    return LineColor;
+}
+ 
+// The entire technique for doing toon shading
+technique Toon
+{
+    // The first pass will go through and draw the back-facing triangles with the outline shader,
+    // which will draw a slightly larger version of the model with the outline color.  Later, the
+    // model will get drawn normally, and draw over the top most of this, leaving only an outline.
+    pass Pass1
+    {
+        VertexShader = compile vs_2_0 OutlineVertexShader();
+        PixelShader = compile ps_2_0 OutlinePixelShader();
+        CullMode = CW;
+    }
+ 
+    // The second pass will draw the model like normal, but with the cel pixel shader, which will
+    // color the model with certain colors, giving us the cel/toon effect that we are looking for.
+    pass Pass2
+    {
+        VertexShader = compile vs_2_0 CelVertexShader();
+        PixelShader = compile ps_2_0 CelPixelShader();
+        CullMode = CCW;
+    }
+}
+</value>
+  </data>
+</root>

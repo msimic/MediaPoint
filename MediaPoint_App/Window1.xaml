@@ -1,0 +1,112 @@
+﻿<Window x:Class="MediaPoint.App.Window1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MediaPoint"
+        Icon="/Images/app.ico" Name="window"
+        Style="{DynamicResource WindowStyle}"
+        xmlns:controls="clr-namespace:MediaPoint.Controls;assembly=MediaPoint.Controls"
+        xmlns:tb="clr-namespace:MediaPoint.Common.TaskbarNotification;assembly=MediaPoint.Common"
+        MouseLeave="mediaPlayer_MouseLeave" Initialized="window_Initialized" Loaded="window_Loaded"
+        WindowStartupLocation="CenterScreen" Visibility="Collapsed"
+        PreviewMouseMove="Window_PreviewMouseMove" SizeChanged="Window_SizeChanged"
+        StateChanged="OnStateChanged" IsVisibleChanged="OnIsVisibleChanged">
+    <Window.Triggers>
+        <EventTrigger
+      RoutedEvent="tb:TaskbarIcon.TrayToolTipOpen"
+      SourceName="trayIcon">
+        </EventTrigger>
+    </Window.Triggers>    
+    <Grid x:Name="Layout">
+        <tb:TaskbarIcon
+          x:Name="trayIcon"
+          VerticalAlignment="Top"
+          IconSource="{Binding Path=Icon, ElementName=window, Mode=Default}"
+          ContextMenu="{DynamicResource TrayContextMenu}"
+          ToolTipText="Test"
+          ForcedVisibility="true"
+          MenuActivation="RightClick"
+          PopupActivation="LeftClick"
+          DoubleClickCommand="{Binding RestoreCommand}"
+          DoubleClickCommandParameter="{Binding RelativeSource={RelativeSource Self}}"
+          >
+            <tb:TaskbarIcon.TrayPopup>
+                <controls:Popup Style="{DynamicResource TrayPopup}" />
+            </tb:TaskbarIcon.TrayPopup>
+            <tb:TaskbarIcon.TrayToolTip>
+                <controls:ToolTip InfoText="{Binding Player.Status}" Style="{DynamicResource TrayTooltip}"  />
+            </tb:TaskbarIcon.TrayToolTip>
+        </tb:TaskbarIcon>
+        <controls:MainWindowContent Style="{DynamicResource MainWindowContent}">
+            <Grid>
+                <controls:HidingOverlay x:Name="windowControls" Style="{DynamicResource HidingOverlay}">                    
+                </controls:HidingOverlay>
+                
+                <Grid Name="visualContainer" RenderTransformOrigin="0.5,0.5" Style="{DynamicResource VideoContainer}">
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="scale" ScaleX="1.0" ScaleY="1.0" />
+                            <RotateTransform x:Name="rotation" Angle="0" />
+                            <SkewTransform CenterX="0.5" CenterY="0.5" AngleX="0" AngleY="0" x:Name="skew"></SkewTransform>
+                        </TransformGroup>
+                    </Grid.RenderTransform>
+                    <Grid Background="#00000000" x:Name="mediaPlayerContainer" >
+                        <controls:MediaUriElement x:Name="mediaPlayer" DataContext="{Binding Player}"
+                                                    DeeperColor="{Binding IsDeeperColor}"
+                                                    Stretch="Uniform"
+                                                    AudioRenderer="{Binding Main.AudioRenderer}"
+                                                    Source="{Binding Source}"
+                                                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                                    VideoRenderer="EnhancedVideoRenderer"
+                                                    LoadedBehavior="Manual"                                                                  
+                                                    SubtitlesStreams="{Binding EmbeddedSubtitleStreams, Mode=OneWayToSource}"
+                                                    AudioStreams="{Binding AudioStreams, Mode=OneWayToSource}"
+                                                    VideoStreams="{Binding VideoStreams, Mode=OneWayToSource}"
+                                                    AudioRenderers="{Binding Main.AudioRenderers, Mode=OneWayToSource}"
+                                                    SpeedRatio="{Binding Rate}"
+                                                    IsPlaying="{Binding IsPaused, Converter={StaticResource NotConverter}, Mode=TwoWay}"
+                                                    MediaOpened="mediaPlayer_MediaOpened"
+                                                    MediaClosed="mediaPlayer_MediaClosed"
+                                                    MediaEnded="mediaPlayer_MediaEnded"
+                                                    MediaFailed="mediaPlayer_MediaFailed"
+                                                    Volume="{Binding Volume, Converter={StaticResource LogarithmicConverter}, ConverterParameter=45000}"
+                                                    MouseWheel="mediaPlayer_MouseWheel"
+                                                    MouseLeftButtonUp="mediaPlayer_MouseLeftButtonUp"
+                                                    MouseLeftButtonDown="mediaPlayer_MouseLeftButtonDown"
+                                                    MediaPosition="{Binding MediaPosition, Mode=TwoWay}"
+                                                    MediaDuration="{Binding MediaDuration, Mode=OneWayToSource}"
+                                                    SubtitleFont="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleFont.Font}"
+                                                    SubtitleCharset="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubEncoding}"
+                                                    SubtitleSize="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleSize}"
+                                                    SubtitleColor="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleColor}"
+                                                    Subtitle="{Binding SelectedSubtitle}"
+                                                    Loop="{Binding Loop}">
+                        </controls:MediaUriElement>
+                    </Grid>
+                </Grid>
+                
+                <controls:IMDbOverlay Style="{DynamicResource IMDbOverlay}">
+                </controls:IMDbOverlay>
+                
+                <controls:Options Style="{DynamicResource Options}">
+                    <Grid Margin="0,-50,0,50">
+                        <ComboBox x:Name="themeCombo" Height="20" Width="200" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding .}" FontSize="15" Height="20"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                </controls:Options>
+                <controls:MediaControls x:Name="mediaControls"
+                                    Style="{DynamicResource MediaControls}"
+                                    Visibility="{Binding Player, Converter={StaticResource NotNullToVisibility}}">
+                    <StackPanel Orientation="Horizontal" Margin="0,50,0,-50">
+                        <Button Width="60" Height="20" Command="{Binding Player.OpenCommand}">Open</Button>
+                        <Button Width="60" Height="20" Command="{Binding Player.PlayCommand}">Play</Button>
+                    </StackPanel>
+                </controls:MediaControls>
+            </Grid>
+        </controls:MainWindowContent>
+    </Grid>
+</Window>

@@ -1,0 +1,548 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Xml;
+
+//  - Mom, when you were my age&#13;what did you want to do?
+namespace MediaPoint.Subtitles.Logic.SubtitleFormats
+{
+    class FinalCutProXml : SubtitleFormat
+    {
+        public override string Extension
+        {
+            get { return ".xml"; }
+        }
+
+        public override string Name
+        {
+            get { return "Final Cut Pro Xml"; }
+        }
+
+        public override bool HasLineNumber
+        {
+            get { return false; }
+        }
+
+        public override bool IsTimeBased
+        {
+            get { return true; }
+        }
+
+        public override bool IsMine(List<string> lines, string fileName)
+        {
+            var subtitle = new Subtitle();
+            LoadSubtitle(subtitle, lines, fileName);
+            return subtitle.Paragraphs.Count > 0;
+        }
+
+        public string GetFrameRateAsString()
+        {
+            if (Configuration.Settings.General.CurrentFrameRate < 24)
+                return "24"; // ntsc 23.976
+            else if (Configuration.Settings.General.CurrentFrameRate < 25)
+                return "24";
+            else if (Configuration.Settings.General.CurrentFrameRate < 29)
+                return "25";
+            else if (Configuration.Settings.General.CurrentFrameRate < 29)
+                return "25";
+            else if (Configuration.Settings.General.CurrentFrameRate < 30)
+                return "30"; // ntsc 29.97
+            else if (Configuration.Settings.General.CurrentFrameRate < 40)
+                return "30";
+            else if (Configuration.Settings.General.CurrentFrameRate < 40)
+                return "30";
+            else if (Configuration.Settings.General.CurrentFrameRate < 60)
+                return "60"; // ntsc 59.94
+            return "60";
+        }
+
+        public string GetNtsc()
+        {
+            if (Configuration.Settings.General.CurrentFrameRate < 24)
+                return "TRUE"; // ntsc 23.976
+            else if (Configuration.Settings.General.CurrentFrameRate < 25)
+                return "FALSE";
+            else if (Configuration.Settings.General.CurrentFrameRate < 29)
+                return "FALSE";
+            else if (Configuration.Settings.General.CurrentFrameRate < 29)
+                return "FALSE";
+            else if (Configuration.Settings.General.CurrentFrameRate < 30)
+                return "TRUE"; // ntsc 29.97
+            else if (Configuration.Settings.General.CurrentFrameRate < 40)
+                return "FALSE";
+            else if (Configuration.Settings.General.CurrentFrameRate < 40)
+                return "FALSE";
+            else if (Configuration.Settings.General.CurrentFrameRate < 60)
+                return "TRUE"; // ntsc 59.94
+            return "FALSE";
+        }
+
+        public override string ToText(Subtitle subtitle, string title)
+        {
+
+            string xmlStructure =
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" + Environment.NewLine +
+                "<xmeml version=\"5\">" + Environment.NewLine +
+                "<sequence id=\"LOF_master til dialogliste\">" + Environment.NewLine +
+  @"    <uuid>5B3B0C07-9A9D-42AA-872C-C953923F97D8</uuid>
+    <updatebehavior>add</updatebehavior>
+    <name>LOF_master til dialogliste</name>
+    <duration>73574</duration>
+    <rate>
+      <ntsc>" + GetNtsc() + @"</ntsc>
+      <timebase>" + GetFrameRateAsString() + @"</timebase>
+    </rate>
+    <timecode>
+      <rate>
+        <ntsc>" + GetNtsc() + @"</ntsc>
+        <timebase>" + GetFrameRateAsString() + @"</timebase>
+      </rate>
+      <string>00:00:00:00</string>
+      <frame>0</frame>
+      <source>source</source>
+      <displayformat>NDF</displayformat>
+    </timecode>
+    <in>0</in>
+    <out>73575</out>
+    <media>
+      <video>
+        <format>
+          <samplecharacteristics>
+            <width>1920</width>
+            <height>1080</height>
+            <anamorphic>FALSE</anamorphic>
+            <pixelaspectratio>Square</pixelaspectratio>
+            <fielddominance>none</fielddominance>
+            <rate>
+              <ntsc>" + GetNtsc() + @"</ntsc>
+              <timebase>" + GetFrameRateAsString() + @"</timebase>
+            </rate>
+            <colordepth>24</colordepth>
+            <codec>
+              <name>Apple ProRes 422</name>
+              <appspecificdata>
+                <appname>Final Cut Pro</appname>
+                <appmanufacturer>Apple Inc.</appmanufacturer>
+                <appversion>7.0</appversion>
+                <data>
+                  <qtcodec>
+                    <codecname>Apple ProRes 422</codecname>
+                    <codectypename>Apple ProRes 422 (HQ)</codectypename>
+                    <codectypecode>apch</codectypecode>
+                    <codecvendorcode>appl</codecvendorcode>
+                    <spatialquality>1024</spatialquality>
+                    <temporalquality>0</temporalquality>
+                    <keyframerate>0</keyframerate>
+                    <datarate>0</datarate>
+                  </qtcodec>
+                </data>
+              </appspecificdata>
+            </codec>
+          </samplecharacteristics>
+          <appspecificdata>
+            <appname>Final Cut Pro</appname>
+            <appmanufacturer>Apple Inc.</appmanufacturer>
+            <appversion>7.0</appversion>
+            <data>
+              <fcpimageprocessing>
+                <useyuv>TRUE</useyuv>
+                <usesuperwhite>FALSE</usesuperwhite>
+                <rendermode>Float10BPP</rendermode>
+              </fcpimageprocessing>
+            </data>
+          </appspecificdata>
+        </format>
+        <track>
+        </track>
+      </video>
+    </media>
+  </sequence>
+</xmeml>";
+
+
+            string xmlTrackStructure3 =
+                @"          <generatoritem id='Outline Text[NUMBER]'>
+            <name>Outline Text</name>
+            <duration>3000</duration>
+            <rate>
+              <ntsc>" + GetNtsc() + @"</ntsc>
+              <timebase>" + GetFrameRateAsString() + @"</timebase>
+            </rate>
+            <in>1380</in>
+            <out>1474</out>
+            <start>8228</start>
+            <end>8322</end>
+            <enabled>TRUE</enabled>
+            <anamorphic>FALSE</anamorphic>
+            <alphatype>black</alphatype>
+            <masterclipid>Outline Text1</masterclipid>
+            <logginginfo>
+              <scene/>
+              <shottake/>
+              <lognote/>
+              <good>FALSE</good>
+            </logginginfo>
+            <labels>
+              <label2/>
+            </labels>
+            <comments>
+              <mastercomment1/>
+              <mastercomment2/>
+              <mastercomment3/>
+              <mastercomment4/>
+            </comments>
+            <effect>
+              <name>Outline Text</name>
+              <effectid>Outline Text</effectid>
+              <effectcategory>Text</effectcategory>
+              <effecttype>generator</effecttype>
+              <mediatype>video</mediatype>
+              <parameter>
+                <parameterid>part1</parameterid>
+                <name>Text Settings</name>
+                <value/>
+              </parameter>
+              <parameter>
+                <parameterid>str</parameterid>
+                <name>Text</name>
+                <value>[TEXT]</value>
+              </parameter>
+              <parameter>
+                <parameterid>font</parameterid>
+                <name>Font</name>
+                <value>Lucida Grande</value>
+              </parameter>
+              <parameter>
+                <parameterid>style</parameterid>
+                <name>Style</name>
+                <valuemin>1</valuemin>
+                <valuemax>4</valuemax>
+                <valuelist>
+                  <valueentry>
+                    <name>Plain</name>
+                    <value>1</value>
+                  </valueentry>
+                  <valueentry>
+                    <name>Bold</name>
+                    <value>2</value>
+                  </valueentry>
+                  <valueentry>
+                    <name>Italic</name>
+                    <value>3</value>
+                  </valueentry>
+                  <valueentry>
+                    <name>Bold/Italic</name>
+                    <value>4</value>
+                  </valueentry>
+                </valuelist>
+                <value>1</value>
+              </parameter>
+              <parameter>
+                <parameterid>align</parameterid>
+                <name>Alignment</name>
+                <valuemin>1</valuemin>
+                <valuemax>3</valuemax>
+                <valuelist>
+                  <valueentry>
+                    <name>Left</name>
+                    <value>1</value>
+                  </valueentry>
+                  <valueentry>
+                    <name>Center</name>
+                    <value>2</value>
+                  </valueentry>
+                  <valueentry>
+                    <name>Right</name>
+                    <value>3</value>
+                  </valueentry>
+                </valuelist>
+                <value>2</value>
+              </parameter>
+              <parameter>
+                <parameterid>size</parameterid>
+                <name>Size</name>
+                <valuemin>0</valuemin>
+                <valuemax>200</valuemax>
+                <value>18</value>
+              </parameter>
+              <parameter>
+                <parameterid>track</parameterid>
+                <name>Tracking</name>
+                <valuemin>0</valuemin>
+                <valuemax>100</valuemax>
+                <value>1</value>
+              </parameter>
+              <parameter>
+                <parameterid>lead</parameterid>
+                <name>Leading</name>
+                <valuemin>-100</valuemin>
+                <valuemax>100</valuemax>
+                <value>0</value>
+              </parameter>
+              <parameter>
+                <parameterid>aspect</parameterid>
+                <name>Aspect</name>
+                <valuemin>0</valuemin>
+                <valuemax>4</valuemax>
+                <value>1</value>
+              </parameter>
+              <parameter>
+                <parameterid>linewidth</parameterid>
+                <name>Line Width</name>
+                <valuemin>0</valuemin>
+                <valuemax>200</valuemax>
+                <value>20</value>
+              </parameter>
+              <parameter>
+                <parameterid>linesoft</parameterid>
+                <name>Line Softness</name>
+                <valuemin>0</valuemin>
+                <valuemax>100</valuemax>
+                <value>5</value>
+              </parameter>
+              <parameter>
+                <parameterid>textopacity</parameterid>
+                <name>Text Opacity</name>
+                <valuemin>0</valuemin>
+                <valuemax>100</valuemax>
+                <value>100</value>
+              </parameter>
+              <parameter>
+                <parameterid>center</parameterid>
+                <name>Center</name>
+                <value>
+                  <horiz>0.00833333</horiz>
+                  <vert>0.390741</vert>
+                </value>
+              </parameter>
+              <parameter>
+                <parameterid>textcolor</parameterid>
+                <name>Text Color</name>
+                <value>
+                  <alpha>255</alpha>
+                  <red>255</red>
+                  <green>255</green>
+                  <blue>255</blue>
+                </value>
+              </parameter>
+              <parameter>
+                <parameterid>supertext</parameterid>
+                <name>Text Graphic</name>
+              </parameter>
+              <parameter>
+                <parameterid>linecolor</parameterid>
+                <name>Line Color</name>
+                <value>
+                  <alpha>255</alpha>
+                  <red>0</red>
+                  <green>0</green>
+                  <blue>0</blue>
+                </value>
+              </parameter>
+              <parameter>
+                <parameterid>superline</parameterid>
+                <name>Line Graphic</name>
+              </parameter>
+              <parameter>
+                <parameterid>part2</parameterid>
+                <name>Background Settings</name>
+                <value/>
+              </parameter>
+              <parameter>
+                <parameterid>xscale</parameterid>
+                <name>Horizontal Size</name>
+                <valuemin>0</valuemin>
+                <valuemax>200</valuemax>
+                <value>0</value>
+              </parameter>
+              <parameter>
+                <parameterid>yscale</parameterid>
+                <name>Vertical Size</name>
+                <valuemin>0</valuemin>
+                <valuemax>200</valuemax>
+                <value>0</value>
+              </parameter>
+              <parameter>
+                <parameterid>xoffset</parameterid>
+                <name>Horizontal Offset</name>
+                <valuemin>-100</valuemin>
+                <valuemax>100</valuemax>
+                <value>0</value>
+              </parameter>
+              <parameter>
+                <parameterid>yoffset</parameterid>
+                <name>Vertical Offset</name>
+                <valuemin>-100</valuemin>
+                <valuemax>100</valuemax>
+                <value>0</value>
+              </parameter>
+              <parameter>
+                <parameterid>backsoft</parameterid>
+                <name>Back Soft</name>
+                <valuemin>0</valuemin>
+                <valuemax>100</valuemax>
+                <value>0</value>
+              </parameter>
+              <parameter>
+                <parameterid>backopacity</parameterid>
+                <name>Back Opacity</name>
+                <valuemin>0</valuemin>
+                <valuemax>100</valuemax>
+                <value>50</value>
+              </parameter>
+              <parameter>
+                <parameterid>backcolor</parameterid>
+                <name>Back Color</name>
+                <value>
+                  <alpha>255</alpha>
+                  <red>255</red>
+                  <green>255</green>
+                  <blue>255</blue>
+                </value>
+              </parameter>
+              <parameter>
+                <parameterid>superback</parameterid>
+                <name>Back Graphic</name>
+              </parameter>
+              <parameter>
+                <parameterid>crop</parameterid>
+                <name>Crop</name>
+                <value>FALSE</value>
+              </parameter>
+              <parameter>
+                <parameterid>autokern</parameterid>
+                <name>Auto Kerning</name>
+                <value>TRUE</value>
+              </parameter>
+            </effect>
+            <sourcetrack>
+              <mediatype>video</mediatype>
+            </sourcetrack>
+            <itemhistory>
+              <uuid>8F00E937-5C83-4A2F-9827-AE0612006D05</uuid>
+            </itemhistory>
+          </generatoritem>";
+
+            var xml = new XmlDocument();
+            xml.LoadXml(xmlStructure);
+            xml.DocumentElement.SelectSingleNode("sequence/name").InnerText = title;
+            if (subtitle.Header != null && subtitle.Header.StartsWith("<uuid>") && subtitle.Header.EndsWith("</uuid>"))
+                xml.DocumentElement.SelectSingleNode("sequence/uuid").InnerText = subtitle.Header.Replace("<uuid>", string.Empty).Replace("</uuid>", string.Empty).Trim();
+            else
+                xml.DocumentElement.SelectSingleNode("sequence/uuid").InnerText = Guid.NewGuid().ToString().ToUpper();
+
+            XmlNode trackNode = xml.DocumentElement.SelectSingleNode("sequence/media/video/track");
+
+            int number = 1;
+            foreach (Paragraph p in subtitle.Paragraphs)
+            {
+                XmlNode generatorItem = xml.CreateElement("generatoritem");
+                generatorItem.InnerXml = xmlTrackStructure3.Replace("[NUMBER]", number.ToString());
+
+                double frameRate = Configuration.Settings.General.CurrentFrameRate;
+                XmlNode start = generatorItem.SelectSingleNode("generatoritem/start");
+                start.InnerText = ((int)Math.Round(p.StartTime.TotalSeconds*frameRate)).ToString();
+
+                XmlNode end = generatorItem.SelectSingleNode("generatoritem/end");
+                end.InnerText = ((int)Math.Round(p.EndTime.TotalSeconds * frameRate)).ToString();
+
+                XmlNode text = generatorItem.SelectSingleNode("generatoritem/effect/parameter[parameterid='str']/value");
+                text.InnerText = Utilities.RemoveHtmlTags(p.Text).Replace(Environment.NewLine, "&#13;");
+
+                trackNode.AppendChild(generatorItem.SelectSingleNode("generatoritem"));
+                number++;
+            }
+
+            var ms = new MemoryStream();
+            var writer = new XmlTextWriter(ms, Encoding.UTF8);
+            writer.Formatting = Formatting.Indented;
+            xml.Save(writer);
+            string xmlAsText = Encoding.UTF8.GetString(ms.ToArray()).Trim();
+            xmlAsText = xmlAsText.Replace("xmeml[]", "xmeml");
+            return xmlAsText;
+        }
+
+        public override void LoadSubtitle(Subtitle subtitle, List<string> lines, string fileName)
+        {
+            _errorCount = 0;
+            var FrameRate = Configuration.Settings.General.CurrentFrameRate;
+
+            var sb = new StringBuilder();
+            lines.ForEach(line => sb.AppendLine(line));
+            var xml = new XmlDocument();
+            try
+            {
+                xml.LoadXml(sb.ToString());
+
+                if (xml.DocumentElement.SelectSingleNode("sequence/uuid") != null)
+                    subtitle.Header = "<uuid>" + xml.DocumentElement.SelectSingleNode("sequence/uuid").InnerText + "</uuid>";
+
+                if (xml.DocumentElement.SelectSingleNode("sequence/rate") != null && xml.DocumentElement.SelectSingleNode("sequence/rate/timebase") != null)
+                {
+                    try
+                    {
+                        FrameRate = double.Parse(xml.DocumentElement.SelectSingleNode("sequence/rate/timebase").InnerText);
+                    }
+                    catch
+                    {
+                        FrameRate = Configuration.Settings.General.CurrentFrameRate;
+                    }
+                }
+
+                foreach (XmlNode node in xml.SelectNodes("xmeml/sequence/media/video/track"))
+                {
+                    try
+                    {
+                        foreach (XmlNode generatorItemNode in node.SelectNodes("generatoritem"))
+                        {
+                            XmlNode rate = generatorItemNode.SelectSingleNode("rate");
+                            if (rate != null)
+                            {
+                                XmlNode timebase = rate.SelectSingleNode("timebase");
+                                if (timebase != null)
+                                    FrameRate = double.Parse(timebase.InnerText);
+                            }
+
+                            double startFrame = 0;
+                            double endFrame = 0;
+                            XmlNode startNode = generatorItemNode.SelectSingleNode("start");
+                            if (startNode != null)
+                                startFrame = double.Parse(startNode.InnerText);
+
+                            XmlNode endNode = generatorItemNode.SelectSingleNode("end");
+                            if (endNode != null)
+                                endFrame = double.Parse(endNode.InnerText);
+
+                            string text = string.Empty;
+                            foreach (XmlNode parameterNode in generatorItemNode.SelectNodes("effect/parameter[parameterid='str']"))
+                            {
+                                XmlNode valueNode = parameterNode.SelectSingleNode("value");
+                                if (valueNode != null)
+                                    text += valueNode.InnerText;
+                            }
+                            if (text.Length > 0)
+                            {
+                                subtitle.Paragraphs.Add(new Paragraph(text, Convert.ToDouble((startFrame / FrameRate) *1000), Convert.ToDouble((endFrame / FrameRate) * 1000)));
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        _errorCount++;
+                    }
+                }
+                subtitle.Renumber(1);
+            }
+            catch
+            {
+                _errorCount = 1;
+                return;
+            }
+            Configuration.Settings.General.CurrentFrameRate = FrameRate;
+        }
+
+    }
+}
+
+
