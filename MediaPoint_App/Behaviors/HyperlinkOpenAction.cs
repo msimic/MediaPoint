@@ -19,6 +19,13 @@ namespace MediaPoint.App.Behaviors
         {
             RequestNavigateEventArgs e = (RequestNavigateEventArgs)parameter;
             Uri u = (AssociatedObject as Hyperlink).NavigateUri;
+            
+            var w = Window.GetWindow(AssociatedObject as Hyperlink) as Window1;
+            if (FullScreenBehavior.GetIsFullScreen(w))
+            {
+                FullScreenBehavior.SetIsFullScreen(w, false);
+            }
+
             Process.Start(new ProcessStartInfo(u.AbsoluteUri));
             e.Handled = true;
         }

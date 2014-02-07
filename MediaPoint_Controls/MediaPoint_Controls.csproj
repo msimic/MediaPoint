@@ -21,7 +21,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\bin\x86\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -32,7 +32,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\bin\x86\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -44,7 +44,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
@@ -60,7 +60,7 @@
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
@@ -79,7 +79,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\bin\x64\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
@@ -96,7 +96,7 @@
     <NoWarn>1607</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-	<BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\bin\x64\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
@@ -166,6 +166,7 @@
     <Compile Include="Controls\MediaSeekingElement.cs" />
     <Compile Include="Controls\MediaUriElement.cs" />
     <Compile Include="Controls\MultimediaUtil.cs" />
+    <Compile Include="Controls\OnlineSubs.cs" />
     <Compile Include="Controls\Options.cs" />
     <Compile Include="Controls\OutlinedText.cs" />
     <Compile Include="Controls\Planerator.cs" />

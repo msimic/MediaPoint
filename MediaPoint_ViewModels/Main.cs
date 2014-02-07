@@ -18,6 +18,7 @@ using MediaPoint.VM.Model;
 using MediaPoint.VM.ViewInterfaces;
 using MediaPoint.MVVM.Services;
 using System.Threading;
+using MediaPoint.Common.Helpers;
 
 namespace MediaPoint.VM
 {
@@ -47,7 +48,7 @@ namespace MediaPoint.VM
 		    AutoLoadSubtitles = true;
             SubtitleLanguages = new List<ITag>() {new Tag() {Id = "eng", Name="English"}};
             AllSubtitleServices = new List<ITag>() { new Tag() { Id = "Podnapisi", Name = "Podnapisi" }, new Tag() { Id = "OpenSubtitles", Name = "OpenSubtitles" } };
-            SubtitleServices = new List<ITag>() { new Tag() { Id = "Podnapisi", Name = "Podnapisi" } };
+            SubtitleServices = new List<ITag>() { new Tag() { Id = "Podnapisi", Name = "Podnapisi" }, new Tag() { Id = "Podnapisi", Name = "Podnapisi" } };
             AllLanguages = new List<ITag> { new Tag("bos", "Bosnian"),
                                             new Tag("slv", "Slovenian"),
                                             new Tag("hrv", "Croatian"),
@@ -92,6 +93,17 @@ namespace MediaPoint.VM
                                             new Tag("tha", "Thai"),
                                             new Tag("ukr", "Ukrainian"),
                                             new Tag("vie", "Vietnamese")};
+
+            var ISO839_1 = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+            var l = LanguageISOTranslator.ISO839_1[ISO839_1];
+            if (l != null)
+            {
+                var l2 = AllLanguages.FirstOrDefault(o => o.Id == l.ISO639_2B);
+                if (l2 != null)
+                {
+                    SubtitleLanguages.Insert(0, l2);
+                }
+            }
 
             _previousExecutionState = NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED);
 			_view = ServiceLocator.GetService<IMainView>();

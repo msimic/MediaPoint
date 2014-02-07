@@ -15,16 +15,16 @@ using System.Windows.Shapes;
 
 namespace MediaPoint.Controls
 {
-	public class IMDbOverlay : ContentControl
-	{
-		static IMDbOverlay()
-		{
-			DefaultStyleKeyProperty.OverrideMetadata(typeof(IMDbOverlay), new FrameworkPropertyMetadata(typeof(IMDbOverlay)));
-		}
+    public class OnlineSubs : ContentControl
+    {
+        static OnlineSubs()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(OnlineSubs), new FrameworkPropertyMetadata(typeof(OnlineSubs)));
+        }
 
-        public IMDbOverlay()
-		{
-		}
-	}
+        public OnlineSubs()
+        {
+        }
+    }
 
 }

@@ -417,11 +417,13 @@ namespace MediaPoint.App
         private void MediaControlsOnMouseLeave(object sender, MouseEventArgs e)
         {
             _mouseOverMediaControls = false;
+            HideUI();
         }
 
         private void MediaControlsOnMouseEnter(object sender, MouseEventArgs mouseEventArgs)
         {
             _mouseOverMediaControls = true;
+            ShowUI();
         }
 
         void timer_Tick(object sender, System.EventArgs e)
@@ -431,7 +433,7 @@ namespace MediaPoint.App
             if (diff >= TimeoutToHide && !IsHidden && !_mouseOverMediaControls)
             {
                 if (this.DataContext as Main == null) return;
-                if (!(this.DataContext as Main).IsOptionsVisible)
+                if (!(this.DataContext as Main).IsOptionsVisible && !(this.DataContext as Main).Player.ShowOnlineSubtitles)
                 {
                     Cursor = Cursors.None;
                     HideUI();
@@ -453,6 +455,7 @@ namespace MediaPoint.App
             {
                 element.Visibility = System.Windows.Visibility.Visible;
             }
+
             DoubleAnimation da = new DoubleAnimation();
             da.From = element.Opacity;
             da.To = value;
@@ -567,7 +570,7 @@ namespace MediaPoint.App
                         MessageBox.Show(@"It seems that your graphic card does not have the required capabilities to play movies using DirectShow.
 Ensure that the latest graphic drivers and DirectX are installed and try again.
 
-If you are not running a 'virtual machine' (which is unsupported) ensure that you have at least Windows XP with Service Pack 3 and a graphics card fully capable of DirectX 9.0c.", "Media failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+If you are not running a 'virtual machine' (which is unsupported) ensure that you have at least Windows Vista and a graphics card fully capable of DirectX 9.0c.", "Media failed", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                 }
                 MessageBox.Show(@"Com exception", "Media failed - error code: " + ((COMException)e.Exception).ErrorCode, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -647,7 +650,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                 {
                     if (mediaPlayer.IsPlaying)
                         mediaPlayer.Pause();
-                    else if (mediaPlayer.MediaUriPlayer.HasVideo)
+                    else
                     {
                         mediaPlayer.Play();
                     }
@@ -659,7 +662,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
 
         private void mediaPlayer_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (mediaPlayer.IsPlaying) HideUI();
+            HideUI();
         }
 
         private void mediaPlayer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

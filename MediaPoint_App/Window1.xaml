@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MediaPoint"
         Icon="/Images/app.ico" Name="window"
-        Style="{DynamicResource WindowStyle}"
+        Style="{DynamicResource WindowStyle}" Background="Black"
         xmlns:controls="clr-namespace:MediaPoint.Controls;assembly=MediaPoint.Controls"
         xmlns:tb="clr-namespace:MediaPoint.Common.TaskbarNotification;assembly=MediaPoint.Common"
         MouseLeave="mediaPlayer_MouseLeave" Initialized="window_Initialized" Loaded="window_Loaded"
@@ -86,7 +86,10 @@
                 
                 <controls:IMDbOverlay Style="{DynamicResource IMDbOverlay}">
                 </controls:IMDbOverlay>
-                
+
+                <controls:OnlineSubs Style="{DynamicResource OnlineSubs}">
+                </controls:OnlineSubs>
+
                 <controls:Options Style="{DynamicResource Options}">
                     <Grid Margin="0,-50,0,50">
                         <ComboBox x:Name="themeCombo" Height="20" Width="200" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">

@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using MediaPoint.App.Extensions;
+using MediaPoint.VM;
 
 namespace MediaPoint.App.Behaviors
 {
@@ -162,12 +163,20 @@ namespace MediaPoint.App.Behaviors
 				    window.MaxHeight = Int32.MaxValue;
                     window.MaxWidth = Int32.MaxValue;
 					window.WindowState = WindowState.Maximized;
+                    if (window.DataContext is Main)
+                    {
+                        (window.DataContext as Main).IsMaximized = true;
+                    }
 				}   // if
 				else
 				{
 					window.Topmost = false;
 					window.WindowStyle = (WindowStyle)window.Tag; //WindowStyle.SingleBorderWindow;
 					window.WindowState = WindowState.Normal;
+                    if (window.DataContext is Main)
+                    {
+                        (window.DataContext as Main).IsMaximized = false;
+                    }
 				}   // else
 
 			}   // if
@@ -316,6 +325,7 @@ namespace MediaPoint.App.Behaviors
 			if (e.Handled == false)
 			{
 				var ics = (e.OriginalSource as UIElement).TryFindParent<DependencyObject>(typeof (ICommandSource));
+                if (ics == null) ics = (e.OriginalSource as UIElement).TryFindParent<DependencyObject>(typeof(System.Windows.Controls.Primitives.Selector));
 				if (FullScreenOnDoubleClick && ics == null)
 				{
 					bool current = GetIsFullScreen(_wnd);

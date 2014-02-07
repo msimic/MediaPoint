@@ -48,6 +48,11 @@ namespace MediaPoint.Controls.Extensions
 
 		#region Methods
 
+        public static Size Difference(this Size size, Size other)
+        {
+            return new Size(size.Width - other.Width, size.Height - other.Height);
+        }
+
         public static Size MonitorSize(ref Window window, Matrix dpimatrix)
         {
             W32Point pt = new W32Point();

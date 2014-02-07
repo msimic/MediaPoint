@@ -442,8 +442,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
         public void LoadCurrentSub()
         {            
-            Dispatcher.BeginInvoke((Action) (() =>
-            {
+            //Dispatcher.BeginInvoke((Action) (() =>
+            //{
                 if (_vobsub != null && SubtitleSettings.Subtitle != null &&
                     SubtitleSettings.Subtitle.Type ==
                     SubtitleItem.SubtitleType.File)
@@ -460,7 +460,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 {
                     //_splitterSettings.SetAdvancedSubtitleConfig()
                 }
-            }));
+            //}));
         }
 
         public void InitSubSettings()

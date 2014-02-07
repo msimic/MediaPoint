@@ -24,6 +24,7 @@
     <Setter Property="Foreground" Value="White" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
@@ -126,7 +127,7 @@
         </Setter>
       <Style.Triggers>
         <Trigger Property="WindowState" Value="Maximized">
-          <Setter Property="Padding" Value="7" />
+                <Setter Property="Padding" Value="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource FullscreenPaddingConverter}}" />
         </Trigger>
         <Trigger Property="ResizeMode" Value="CanResizeWithGrip">
           <Setter Property="Template">
@@ -343,7 +344,7 @@
                                                 </Button>
                                               </StackPanel>
                                               <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Height="26" DockPanel.Dock="Right">
-                                                <Button Name="subsBtn" Margin="0,0,3,0" Visibility="{Binding Player.SubtitleStreams.Count, Converter={StaticResource IntegerBiggerThanToVisibilityConverter}, ConverterParameter=0}"
+                                                <Button Name="subsBtn" Margin="0,0,3,0"
                                                   Style="{DynamicResource ShowImdbButton}"
                                                   Width="28"
                                                   Height="14" ToolTip="Select active subtitle">
@@ -358,37 +359,51 @@
                                               </StackPanel>
                                             </Grid>
                                           </Border>
-                                          <Popup DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}" Name="substreamsPopup" StaysOpen="False" PlacementTarget="{Binding ElementName=subsBtn}" AllowsTransparency="True">
+                                          <Popup MaxWidth="350" MaxHeight="250" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}" Name="substreamsPopup" StaysOpen="False" PlacementTarget="{Binding ElementName=subsBtn}" AllowsTransparency="True">
                                             <Border CornerRadius="7,7,7,7" Background="#dd000000">
                                               <Border Style="{DynamicResource ControlsInnerBorder}" Padding="10">
-                                                <ListBox BorderThickness="0" BorderBrush="#00000000" Background="Transparent" ItemsSource="{Binding Player.SubtitleStreams}" SelectedItem="{Binding Player.SelectedSubtitle}">
-                                                  <ListBox.Resources>
-                                                    <Style TargetType="{x:Type ListBoxItem}">
-                                                      <Setter Property="Template">
-                                                        <Setter.Value>
-                                                          <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                                                            <ContentPresenter />
-                                                          </ControlTemplate>
-                                                        </Setter.Value>
-                                                      </Setter>
-                                                    </Style>
-                                                  </ListBox.Resources>
-                                                  <ListBox.ItemTemplate>
-                                                    <DataTemplate DataType="{x:Type Subtitles:SubtitleItem}">
-                                                      <RadioButton GroupName="substreams" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding DisplayName}">
-                                                        <RadioButton.IsChecked>
-                                                          <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}" Mode="TwoWay" />
-                                                        </RadioButton.IsChecked>
-                                                        <Interactivity:Interaction.Triggers>
-                                                          <Interactivity:EventTrigger EventName="Click" >
-                                                            <Behaviors:SetterAction Popup="{Binding RelativeSource={RelativeSource AncestorType=Popup}}" Property="Popup.IsOpen" Value="False"/>
-                                                          </Interactivity:EventTrigger>
-                                                        </Interactivity:Interaction.Triggers>
-                                                      </RadioButton>
-                                                    </DataTemplate>
-                                                  </ListBox.ItemTemplate>
-                                                </ListBox>
-                                              </Border>
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="*"/>
+                                                        </Grid.RowDefinitions>
+                                                            <Button Margin="2" HorizontalAlignment="Center" Style="{DynamicResource ShowImdbButton}" Command="{Binding Player.ShowOnlineSubtitlesCommand}">
+                                                            <Interactivity:Interaction.Triggers>
+                                                                <Interactivity:EventTrigger EventName="Click" >
+                                                                    <Behaviors:SetterAction Popup="{Binding RelativeSource={RelativeSource AncestorType=Popup}}" Property="Popup.IsOpen" Value="False"/>
+                                                                </Interactivity:EventTrigger>
+                                                            </Interactivity:Interaction.Triggers>
+                                                                <TextBlock Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="10" Foreground="White" >GET SUBTITLES FROM ONLINE SERVICES</TextBlock>
+                                                            </Button>
+                                                            <ListBox Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderThickness="0" BorderBrush="#00000000" Background="Transparent" ItemsSource="{Binding Player.SubtitleStreams}" SelectedItem="{Binding Player.SelectedSubtitle}">
+                                                            <ListBox.Resources>
+                                                                <Style TargetType="{x:Type ListBoxItem}">
+                                                                    <Setter Property="Template">
+                                                                        <Setter.Value>
+                                                                            <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                                                                <ContentPresenter />
+                                                                            </ControlTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Style>
+                                                            </ListBox.Resources>
+                                                            <ListBox.ItemTemplate>
+                                                                <DataTemplate DataType="{x:Type Subtitles:SubtitleItem}">
+                                                                    <RadioButton GroupName="substreams" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding DisplayName}">
+                                                                        <RadioButton.IsChecked>
+                                                                            <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}" Mode="TwoWay" />
+                                                                        </RadioButton.IsChecked>
+                                                                        <Interactivity:Interaction.Triggers>
+                                                                            <Interactivity:EventTrigger EventName="Click" >
+                                                                                <Behaviors:SetterAction Popup="{Binding RelativeSource={RelativeSource AncestorType=Popup}}" Property="Popup.IsOpen" Value="False"/>
+                                                                            </Interactivity:EventTrigger>
+                                                                        </Interactivity:Interaction.Triggers>
+                                                                    </RadioButton>
+                                                                </DataTemplate>
+                                                            </ListBox.ItemTemplate>
+                                                        </ListBox>
+                                                    </Grid>
+                                                </Border>
                                             </Border>
                                           </Popup>
                                         </Grid>
@@ -510,11 +525,181 @@
         </Setter>
     </Style>
 
+    <Style TargetType="Controls:OnlineSubs" x:Key="OnlineSubs">
+        <Style.Resources>
+            <ResourceDictionary>
+                <DoubleAnimation x:Key="FadeIn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:1"/>
+                <DoubleAnimation x:Key="FadeOut" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:1"/>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeInVisibility" BeginTime="0:0:0"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Visible</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeOutVisibility" BeginTime="0:0:1"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Collapsed</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+            </ResourceDictionary>
+        </Style.Resources>
+        <Setter Property="Panel.ZIndex" Value="2001"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Width" Value="500"/>
+        <Setter Property="Height" Value="350"/>
+        <Setter Property="Margin" Value="50"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Controls:OnlineSubs">
+                    <Border Background="#bb000000" CornerRadius="7">
+                        <Border Style="{DynamicResource MenuOuterBorder}" Margin="4">
+                            <Border Style="{DynamicResource MenuInnerBorder}">
+                                <Grid>
+                                    <Grid.Resources>
+                                        <!-- hack to get the datacontext in mouse bindings since they are not part of the visual tree -->
+                                        <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
+                                    </Grid.Resources>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                        <RowDefinition MaxHeight="300" Height="*"></RowDefinition>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                    </Grid.RowDefinitions>
+                                    <Button Grid.Column="0"
+                                      Margin="3"
+                                      HorizontalAlignment="Right"
+                                      VerticalAlignment="Top"
+                                      Padding="2"
+                                      Command="{Binding Player.ShowOnlineSubtitlesCommand}" CommandParameter="hide"  Width="15" Height="15"
+                                      Style="{StaticResource ImageButton}"
+                                      Behaviors:Buttons.Image="/Themes/default/Images/close.png"
+                                      Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
+                                      Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png"/>
+                                    <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
+                                    <Image Grid.Row="2" RenderTransformOrigin="0.5,0.5"  Source="/Themes/default/Images/loading.gif" Margin="30" Visibility="{Binding Player.IsSubtitleSearchInProgress, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=false}">
+                                        <Image.RenderTransform>
+                                            <TransformGroup>
+                                                <RotateTransform x:Name="rt" Angle="0"></RotateTransform>
+                                            </TransformGroup>
+                                        </Image.RenderTransform>
+                                        <Image.Triggers>
+                                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                                <EventTrigger.Actions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="rt" Storyboard.TargetProperty="Angle" To="360" Duration="0:0:1" RepeatBehavior="Forever" ></DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </EventTrigger.Actions>
+                                            </EventTrigger>
+                                        </Image.Triggers>
+                                    </Image>
+                                    <ListBox Grid.Row="2" BorderThickness="0" ItemsSource="{Binding Player.OnlineSubtitleChoices}" Margin="10" Background="Transparent"
+                                             Attached:ItemsControlDoubleClickMouseInputBinding.Enabled="true"  Visibility="{Binding Player.IsSubtitleSearchInProgress, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=true}" 
+                                             SelectedValue="{Binding Player.SelectedOnlineSubtitle}">
+                                        <ListBox.InputBindings>
+                                            <MouseBinding MouseAction="LeftDoubleClick" Attached:InputBindingCommandSetter.Command="{Binding DataContext.Player.LoadSelectedOnlineSubtitleCommand, Source={StaticResource ProxyElement}}"/>
+                                        </ListBox.InputBindings>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid TextBlock.Foreground="White" IsSharedSizeScope="True" Margin="1" Background="#00000000">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="groupName" />
+                                                        <ColumnDefinition Width="*" SharedSizeGroup="groupName2" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.ToolTip>
+                                                        <ToolTip ToolTipService.ShowDuration="12000" Background="Transparent" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                                            <Border TextBlock.Foreground="White" CornerRadius="7" Background="#dd000000">
+                                                                <StackPanel Margin="5">
+                                                                    <TextBlock Text="{Binding Service, StringFormat='Service: {0}'}"/>
+                                                                    <TextBlock Text="{Binding MatchedBy, StringFormat='Matched by keywords: [{0}]'}"/>
+                                                                    <TextBlock Text="{Binding Score, StringFormat='Match score: {0}'}"/>
+                                                                    <TextBlock Text="{Binding Language, StringFormat='Language: {0}'}"/>
+                                                                    <StackPanel Margin="5">
+                                                                        <TextBlock Text="Fits to following releases:"/>
+                                                                        <ItemsControl ItemsSource="{Binding Releases}">
+                                                                        </ItemsControl>
+                                                                    </StackPanel>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </ToolTip>
+                                                    </Grid.ToolTip>
+                                                    <Image Height="11" Width="16" Margin="2" Source="{Binding Language, Converter={StaticResource LanguageToFlagConverter}}" VerticalAlignment="Center" />
+                                                    <TextBlock Margin="2" Grid.Column="1" HorizontalAlignment="Left" Foreground="White" Text="{Binding MatchRelease}" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                    <Grid Grid.Row="3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition MaxWidth="400" Width="*"></ColumnDefinition>
+                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <TextBlock Margin="2" Foreground="White" Text="Keywords: " VerticalAlignment="Center"/>
+                                            <TextBox MaxWidth="250"  Margin="2" BorderBrush="Transparent" Background="Black" Foreground="White" Text="{Binding Player.SubtitleDefaultSearchText}" VerticalAlignment="Center"/>
+                                            <Button Margin="2" TextBlock.Foreground="White" Style="{DynamicResource ShowImdbButton}" Command="{Binding Player.NeedSubtitlesCommand}" CommandParameter="online" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <TextBlock Margin="4" HorizontalAlignment="Center" Foreground="White" Text="Search" VerticalAlignment="Center"/>
+                                            </Button>
+                                        </StackPanel>
+                                        <Button Margin="2" TextBlock.Foreground="White" Style="{DynamicResource ShowImdbButton}" Grid.Column="1" Command="{Binding Player.LoadSelectedOnlineSubtitleCommand}" HorizontalAlignment="Right">
+                                            <TextBlock Margin="4" HorizontalAlignment="Center" Foreground="White" Text="Download" VerticalAlignment="Center"/>
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Border>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Player.ShowOnlineSubtitles}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeIn"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeInVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOut"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.ExitActions>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    
     <Style TargetType="Controls:IMDbOverlay" x:Key="IMDbOverlay">
         <Style.Resources>
           <ResourceDictionary>
             <DoubleAnimation x:Key="FadeIn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:1"/>
-            <DoubleAnimation x:Key="FadeOut" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:2"/>
+            <DoubleAnimation x:Key="FadeOut" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:1"/>
             <ObjectAnimationUsingKeyFrames x:Key="FadeInVisibility" BeginTime="0:0:0"
                         Storyboard.TargetProperty="Visibility">
                 <DiscreteObjectKeyFrame KeyTime="0">
@@ -523,7 +708,7 @@
                     </DiscreteObjectKeyFrame.Value>
                 </DiscreteObjectKeyFrame>
             </ObjectAnimationUsingKeyFrames>
-                <ObjectAnimationUsingKeyFrames x:Key="FadeOutVisibility" BeginTime="0:0:2"
+                <ObjectAnimationUsingKeyFrames x:Key="FadeOutVisibility" BeginTime="0:0:1"
                         Storyboard.TargetProperty="Visibility">
                     <DiscreteObjectKeyFrame KeyTime="0">
                         <DiscreteObjectKeyFrame.Value>
@@ -540,7 +725,7 @@
         <Setter Property="Margin" Value="50"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Visibility" Value="Visible"/>
+        <Setter Property="Visibility" Value="Collapsed"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:IMDbOverlay">
@@ -552,11 +737,22 @@
                           <ColumnDefinition Width="*"></ColumnDefinition>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                          <RowDefinition Height="Auto"></RowDefinition>
-                          <RowDefinition Height="*"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
+                        <Button Grid.Column="0"
+                            Margin="3"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Padding="2"
+                            Command="{Binding Player.ShowImdbCommand}" CommandParameter="hide"  Width="15" Height="15"
+                            Style="{StaticResource ImageButton}"
+                            Behaviors:Buttons.Image="/Themes/default/Images/close.png"
+                            Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
+                            Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png"/>
 
-                        <Border Grid.Column="0" HorizontalAlignment="Center">
+                        <Border Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center">
                           <StackPanel Orientation="Horizontal" Margin="10">
                             <StackPanel>
                               <Grid Margin="5">
@@ -588,16 +784,14 @@
                                 <StackPanel>
                                   <StackPanel Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Center">
                                     <TextBlock>
-                                      <Hyperlink NavigateUri="{Binding Player.IMDb.ImdbURL}">
+                                      <Hyperlink NavigateUri="{Binding Player.IMDb.ImdbURL}" Cursor="Hand">
                                         <Interactivity:Interaction.Triggers>
                                           <Interactivity:EventTrigger EventName="RequestNavigate" >
                                             <Behaviors:HyperlinkOpenAction/>
                                           </Interactivity:EventTrigger>
                                         </Interactivity:Interaction.Triggers>
                                         <TextBlock Style="{DynamicResource DefaultFontStyle}" Foreground="#59C2FF" FontSize="18" Text="{Binding Player.IMDb.DisplayTitle}"></TextBlock>
-                                        <TextBlock Style="{DynamicResource DefaultFontStyle}" Foreground="#59C2FF" FontSize="14" xml:space="preserve"> (</TextBlock>
-                                        <TextBlock Style="{DynamicResource DefaultFontStyle}" Foreground="#59C2FF" FontSize="14" Text="{Binding Player.IMDb.Year}"></TextBlock>
-                                        <TextBlock Style="{DynamicResource DefaultFontStyle}" Foreground="#59C2FF" FontSize="14" >)</TextBlock>
+                                        <TextBlock Style="{DynamicResource DefaultFontStyle}" Foreground="#59C2FF" FontSize="14" Text="{Binding Player.IMDb.Year, StringFormat=' ({0})'}"></TextBlock>
                                       </Hyperlink>
                                     </TextBlock>
                                   </StackPanel>
@@ -616,7 +810,7 @@
                             </StackPanel>
                           </StackPanel>
                         </Border>
-                        <Grid Grid.Column="0" Grid.Row="1" MaxWidth="400" Margin="10,0,10,10">
+                        <Grid Grid.Column="0" Grid.Row="2" MaxWidth="400" Margin="10,0,10,10">
                           <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -3440,7 +3634,7 @@
                 CornerRadius="4,4,4,4"
                 Opacity="0"
                 IsHitTestVisible="False" />
-            <ContentPresenter></ContentPresenter>
+            <ContentPresenter IsHitTestVisible="False"></ContentPresenter>
             <Border Width="Auto"
                 Height="Auto"
                 Background="{DynamicResource MediaButtonBackground}"

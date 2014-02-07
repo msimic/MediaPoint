@@ -16,6 +16,8 @@
                     <converters:ExtendedBooleanToVisibility x:Key="ExtraBoolToVisibilityConverter"></converters:ExtendedBooleanToVisibility>
                     <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter"></converters:StringNotEmptyToVisibilityConverter>
                     <converters:IntegerBiggerThanToVisibilityConverter x:Key="IntegerBiggerThanToVisibilityConverter"></converters:IntegerBiggerThanToVisibilityConverter>
+                    <converters:FullscreenPaddingConverter x:Key="FullscreenPaddingConverter"/>
+                    <converters:LanguageToFlagConverter x:Key="LanguageToFlagConverter"/>
                   <converters:MultiplyWithConverter x:Key="MultiplyWithConverter"/>
                 </ResourceDictionary>
                 <ResourceDictionary Source="/Themes/default/style.xaml"/>

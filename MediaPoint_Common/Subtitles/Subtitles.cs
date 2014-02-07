@@ -12,6 +12,7 @@ using System.Windows.Input;
 using MediaPoint.Subtitles.Logic.BluRaySup;
 using System.Text.RegularExpressions;
 using MediaPoint.Helpers;
+using MediaPoint.Common.Subtitles;
 
 namespace MediaPoint.Subtitles
 {
@@ -956,34 +957,33 @@ namespace MediaPoint.Subtitles
 				}
 				else
 				{
-					foreach (var f in subFiles)
-					{
-						if (Levenshtein.Compare(Path.GetFileNameWithoutExtension(f.Path), Path.GetFileNameWithoutExtension(videoFile)) < Path.GetFileNameWithoutExtension(videoFile).Length / 4 ||
-							Path.GetFileNameWithoutExtension(f.Path).ToLowerInvariant().Contains(Path.GetFileNameWithoutExtension(videoFile).ToLowerInvariant()) ||
-							Path.GetFileNameWithoutExtension(videoFile).ToLowerInvariant().Contains(Path.GetFileNameWithoutExtension(f.Path).ToLowerInvariant()))
-						{
-							if (Path.GetExtension(f.Path) != Path.GetExtension(videoFile))
-							{
-								if (fillNow) OpenSubtitle(f.Path, overrideEnc, null, null);
-								return f.Path;
-							}
-						}
-					}
-					foreach (var f in files)
-					{
-						if (Path.GetExtension(f).ToLower() == ".srt" ||
-							Path.GetExtension(f).ToLower() == ".sub" ||
-							Path.GetExtension(f).ToLower() == ".ass" ||
-							Path.GetExtension(f).ToLower() == ".ssa")
-						{
-							if (fillNow) OpenSubtitle(f, overrideEnc, null, null);
-							return f;
-						}
-					}
+                    return OrderedFilenames(videoFile, subFiles, overrideEnc, fillNow);
 				}
-				return null;
 			}
 		}
+
+        private string OrderedFilenames(string videoFile, List<SubtitleItem> subFiles, Encoding overrideEnc, bool fillNow)
+        {
+            var os = subFiles.Select(s => {
+                string s1 = Path.GetFileNameWithoutExtension(s.Path).ToLowerInvariant();
+                string s2 = Path.GetFileNameWithoutExtension(videoFile).ToLowerInvariant();
+                int maxl = Math.Max(s1.Length, s2.Length);
+                double m = SubtitleUtil.WordMatches(s1, s2);
+                double l = (double)Levenshtein.Compare(s1, s2);
+                l = (maxl - l) / maxl;
+                var r = new
+                {
+                    score = m * l,
+                    sub = s
+                };
+                
+                return r;
+            });
+            
+            var first = os.OrderBy(s => s.score).Reverse().FirstOrDefault();
+
+            return first != null ? first.sub.Path : null;
+        }
 
 		public void ClearSubtitles()
 		{
