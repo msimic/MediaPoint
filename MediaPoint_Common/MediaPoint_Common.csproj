@@ -144,8 +144,11 @@
     <Compile Include="Extensions\String.cs" />
     <Compile Include="Helpers\Imdb.cs" />
     <Compile Include="Helpers\LanguageISOTranslator.cs" />
+    <Compile Include="Interfaces\DCDSPFilters.cs" />
+    <Compile Include="Interfaces\IEqualizer.cs" />
     <Compile Include="Interfaces\ITag.cs" />
     <Compile Include="MediaFoundation\MediaInfoLib.cs" />
+    <Compile Include="MediaPlayers\AudioCallback.cs" />
     <Compile Include="MediaPlayers\CharSets.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>

@@ -8,6 +8,7 @@ using MediaPoint.Common.Helpers;
 using MediaPoint.Helpers;
 using SubtitleDownloader.Core;
 using MediaPoint.Common.Extensions;
+using System.Net;
 
 namespace MediaPoint.Common.Subtitles
 {
@@ -247,6 +248,7 @@ namespace MediaPoint.Common.Subtitles
         {
             List<SubtitleMatch> scores = new List<SubtitleMatch>();
             List<Subtitle> subtitles = new List<Subtitle>();
+            
             foreach (var service in services)
             {
                 var d = SubtitleDownloaderFactory.GetSubtitleDownloader(service);
@@ -271,7 +273,7 @@ namespace MediaPoint.Common.Subtitles
                     foreach (var score in newScores)
                         score.Service = service;
 
-                    scores.AddRange(newScores);                   
+                    scores.AddRange(newScores);
 
                     if (newScores.First().Score > 1 && !noFiltering)
                         break;

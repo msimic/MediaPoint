@@ -548,6 +548,13 @@
                 </ObjectAnimationUsingKeyFrames>
             </ResourceDictionary>
         </Style.Resources>
+        <Setter Property="Behaviors:StylizedBehaviors.Behaviors">
+            <Setter.Value>
+                <Behaviors:StylizedBehaviorCollection>
+                    <LayoutBehaviors:MouseDragElementBehavior/>
+                </Behaviors:StylizedBehaviorCollection>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Panel.ZIndex" Value="2001"/>
         <Setter Property="ClipToBounds" Value="True"/>
         <Setter Property="Opacity" Value="0"/>
@@ -577,6 +584,7 @@
                                         <RowDefinition MaxHeight="300" Height="*"></RowDefinition>
                                         <RowDefinition Height="Auto"></RowDefinition>
                                     </Grid.RowDefinitions>
+                                    <TextBlock Foreground="Red" Text="{Binding Player.ErrorMessage}" ></TextBlock>
                                     <Button Grid.Column="0"
                                       Margin="3"
                                       HorizontalAlignment="Right"
@@ -694,6 +702,132 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
+
+    <Style TargetType="Controls:Equalizer" x:Key="Equalizer">
+        <Style.Resources>
+            <ResourceDictionary>
+                <DoubleAnimation x:Key="FadeIn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:1"/>
+                <DoubleAnimation x:Key="FadeOut" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:1"/>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeInVisibility" BeginTime="0:0:0"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Visible</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeOutVisibility" BeginTime="0:0:1"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Collapsed</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+            </ResourceDictionary>
+        </Style.Resources>
+        <Setter Property="Behaviors:StylizedBehaviors.Behaviors">
+            <Setter.Value>
+                <Behaviors:StylizedBehaviorCollection>
+                    <LayoutBehaviors:MouseDragElementBehavior/>
+                </Behaviors:StylizedBehaviorCollection>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Panel.ZIndex" Value="2002"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Width" Value="500"/>
+        <Setter Property="Height" Value="350"/>
+        <Setter Property="Margin" Value="50"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Controls:Equalizer">
+                    <Border Background="#bb000000" CornerRadius="7">
+                        <Border Style="{DynamicResource MenuOuterBorder}" Margin="4">
+                            <Border Style="{DynamicResource MenuInnerBorder}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.Resources>
+                                        <!-- hack to get the datacontext in mouse bindings since they are not part of the visual tree -->
+                                        <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
+                                    </Grid.Resources>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                        <RowDefinition Height="*"></RowDefinition>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                    </Grid.RowDefinitions>
+                                    <Button Grid.Column="0" Grid.ColumnSpan="11"
+                                      Margin="3"
+                                      HorizontalAlignment="Right"
+                                      VerticalAlignment="Top"
+                                      Padding="2"
+                                      Command="{Binding ShowEqualizerCommand}" CommandParameter="hide"  Width="15" Height="15"
+                                      Style="{StaticResource ImageButton}"
+                                      Behaviors:Buttons.Image="/Themes/default/Images/close.png"
+                                      Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
+                                      Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png"/>
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[0]}" Grid.Column="0" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[1]}" Grid.Column="1" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[2]}" Grid.Column="2" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[3]}" Grid.Column="3" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[4]}" Grid.Column="4" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[5]}" Grid.Column="5" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[6]}" Grid.Column="6" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[7]}" Grid.Column="7" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[8]}" Grid.Column="8" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[9]}" Grid.Column="9" />
+                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[10]}" Grid.Column="10" />
+                                </Grid>
+                            </Border>
+                        </Border>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ShowEqualizer}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeIn"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeInVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOut"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.ExitActions>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
     
     <Style TargetType="Controls:IMDbOverlay" x:Key="IMDbOverlay">
         <Style.Resources>
@@ -718,6 +852,13 @@
                 </ObjectAnimationUsingKeyFrames>            
             </ResourceDictionary>
         </Style.Resources>
+        <Setter Property="Behaviors:StylizedBehaviors.Behaviors">
+            <Setter.Value>
+                <Behaviors:StylizedBehaviorCollection>
+                    <LayoutBehaviors:MouseDragElementBehavior/>
+                </Behaviors:StylizedBehaviorCollection>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Panel.ZIndex" Value="1000"/>
         <Setter Property="ClipToBounds" Value="True"/>
         <Setter Property="Opacity" Value="0"/>
@@ -864,6 +1005,13 @@
         <Setter Property="Height" Value="250"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Visibility" Value="{Binding IsOptionsVisible, Converter={StaticResource Boolean2VisibilityConverter}}"/>
+        <Setter Property="Behaviors:StylizedBehaviors.Behaviors">
+            <Setter.Value>
+                <Behaviors:StylizedBehaviorCollection>
+                    <LayoutBehaviors:MouseDragElementBehavior/>
+                </Behaviors:StylizedBehaviorCollection>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:Options">

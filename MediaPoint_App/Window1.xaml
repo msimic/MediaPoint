@@ -90,6 +90,9 @@
                 <controls:OnlineSubs Style="{DynamicResource OnlineSubs}">
                 </controls:OnlineSubs>
 
+                <controls:Equalizer Style="{DynamicResource Equalizer}">
+                </controls:Equalizer>
+                
                 <controls:Options Style="{DynamicResource Options}">
                     <Grid Margin="0,-50,0,50">
                         <ComboBox x:Name="themeCombo" Height="20" Width="200" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">

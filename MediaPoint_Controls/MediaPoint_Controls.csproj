@@ -151,6 +151,7 @@
   <ItemGroup>
     <Compile Include="Behaviors\DraggableBehavior.cs" />
     <Compile Include="Behaviors\StylizedBehaviors.cs" />
+    <Compile Include="Controls\Equalizer.cs" />
     <Compile Include="Controls\EvernoteTagControl.cs" />
     <Compile Include="Controls\EvernoteTagItem.cs" />
     <Compile Include="Controls\IMDbOverlay.cs" />
@@ -234,6 +235,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

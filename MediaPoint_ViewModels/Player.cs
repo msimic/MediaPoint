@@ -19,6 +19,7 @@ using MediaPoint.VM.ViewInterfaces;
 using MediaPoint.MVVM.Services;
 using System.ComponentModel;
 using Microsoft.WindowsAPICodePack.Taskbar;
+using System.Net;
 
 namespace MediaPoint.VM
 {
@@ -282,6 +283,12 @@ namespace MediaPoint.VM
 			get { return GetValue(() => AudioStreams); }
 			set { SetValue(() => AudioStreams, value); }
 		}
+
+        public string ErrorMessage
+        {
+            get { return GetValue(() => ErrorMessage); }
+            set { SetValue(() => ErrorMessage, value); }
+        }
 
 		public ObservableCollection<string> VideoStreams
 		{
@@ -609,7 +616,14 @@ namespace MediaPoint.VM
             BackgroundWorker b = new BackgroundWorker();
             b.DoWork += (sender, args) =>
             {
-                args.Result = SubtitleUtil.DownloadSubtitle(SelectedOnlineSubtitle, Source.LocalPath);
+                try
+                {
+                    args.Result = SubtitleUtil.DownloadSubtitle(SelectedOnlineSubtitle, Source.LocalPath);
+                }
+                catch (WebException)
+                {
+                    ErrorMessage = "Nemaš net";
+                }
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
@@ -646,15 +660,23 @@ namespace MediaPoint.VM
                                     IsSubtitleSearchInProgress = true;
                                     IMDb imdb;
                                     List<SubtitleMatch> otherChoices;
-                                    string s = SubtitleUtil.DownloadSubtitle(uri.LocalPath, Main.SubtitleLanguages.Select(l => l.Id).ToArray(),
-                                                                             Main.SubtitleServices.Select(l => l.Id).ToArray(), out imdb, out otherChoices);
-                                    if (!string.IsNullOrEmpty(s) && imdb.status)
-                                    {
-                                        args.Result = new object[] {s, imdb, otherChoices};
+                                    try
+                                    {                                    
+                                        string s = SubtitleUtil.DownloadSubtitle(uri.LocalPath, Main.SubtitleLanguages.Select(l => l.Id).ToArray(),
+                                                                                 Main.SubtitleServices.Select(l => l.Id).ToArray(), out imdb, out otherChoices);
+                                        if (!string.IsNullOrEmpty(s) && imdb.status)
+                                        {
+                                            args.Result = new object[] {s, imdb, otherChoices};
+                                        }
+                                        else
+                                        {
+                                            args.Result = imdb;
+                                        }
                                     }
-                                    else
+                                    catch (WebException)
                                     {
-                                        args.Result = imdb;
+                                        ErrorMessage = "Nemaš net";
+                                        args.Result = null;
                                     }
                                 };
                 b.RunWorkerCompleted += (sender, args) =>
@@ -740,8 +762,16 @@ namespace MediaPoint.VM
                 IsSubtitleSearchInProgress = true;
                 IMDb imdb;
                 List<SubtitleMatch> otherChoices;
-                SubtitleUtil.FindSubtitleForFilename(SubtitleDefaultSearchText, Main.SubtitleLanguages.Select(l => l.Id).ToArray(), Main.SubtitleServices.Select(l => l.Id).ToArray(), out imdb, out otherChoices, true, false);
-                args.Result = otherChoices;
+                try
+                {
+                    SubtitleUtil.FindSubtitleForFilename(SubtitleDefaultSearchText, Main.SubtitleLanguages.Select(l => l.Id).ToArray(), Main.SubtitleServices.Select(l => l.Id).ToArray(), out imdb, out otherChoices, true, false);
+                    args.Result = otherChoices;
+                }
+                catch (WebException)
+                {
+                    ErrorMessage = "Nemas net";
+                    args.Result = null;
+                }
             };
             b.RunWorkerCompleted += (sender, args) =>
             {

@@ -62,7 +62,7 @@
 		<lastprinted/>
 		<createdtm>06/21/1999 14:00</createdtm>
 		<lastsavedtm>07/14/2000 17:50</lastsavedtm>
-		<pagecount>200</pagecount>
+		<pagecount>400</pagecount>
 		<wordcount>0</wordcount>
 		<charcount/>
 		<appname>InstallShield Express</appname>
@@ -352,6 +352,8 @@
 		<row><td>EVRPresenter32.dll</td><td>{EEE86DE0-CC64-470F-A966-C9F106B7B735}</td><td>INSTALLDIR</td><td>2</td><td/><td>evrpresenter32.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>GoogleSearchAPI.dll</td><td>{0DFC80CF-94AA-4695-B30F-34734FBEE595}</td><td>INSTALLDIR</td><td>2</td><td/><td>googlesearchapi.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>ICSharpCode.SharpZipLib.dll</td><td>{F662BE44-849C-40D3-AC4C-76EFF2192B5B}</td><td>INSTALLDIR</td><td>2</td><td/><td>icsharpcode.sharpziplib.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>ISO19770_LocalTag</td><td>{C266DE14-A7D3-4C51-B203-9C292AB055FA}</td><td>INSTALLDIR</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>ISO19770_SystemTag</td><td>{88BA58D5-B947-4AE5-985A-858F988A5CDB}</td><td>CommonAppDataFolder</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>ISX_DEFAULTCOMPONENT</td><td>{33DD892E-63F9-4066-BB14-0136B22F9684}</td><td>CODECS</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>ISX_DEFAULTCOMPONENT1</td><td>{E1045F2B-227E-45E9-8A64-692187676603}</td><td>THEMES</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>ISX_DEFAULTCOMPONENT10</td><td>{B2CECB75-2F6D-433A-A676-68D4831ADA73}</td><td>INSTALLDIR</td><td>2</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
@@ -394,9 +396,11 @@
 		<row><td>avformat_lav_55.dll</td><td>{776A4DE6-13E5-47A2-9709-3CA3C94A7442}</td><td>CODECS</td><td>2</td><td/><td>avformat_lav_55.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>avresample_lav_1.dll</td><td>{073314E0-833B-423B-AD30-FE6D113BF399}</td><td>CODECS</td><td>2</td><td/><td>avresample_lav_1.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>avutil_lav_52.dll</td><td>{462977EB-09E9-48BA-A331-09DBEF240132}</td><td>CODECS</td><td>2</td><td/><td>avutil_lav_52.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>dcdspfilter.ax</td><td>{ACBF05A8-083E-4711-AFEE-21AA597DB4E2}</td><td>CODECS</td><td>2</td><td/><td>dcdspfilter.ax</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>fxc32.exe</td><td>{B145CD90-D0BE-4E1C-B282-1B1280E9F0E3}</td><td>INSTALLDIR</td><td>2</td><td/><td>fxc32.exe</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>libbluray.dll</td><td>{9B563CE3-4C08-4C15-85A8-7ABE29371D16}</td><td>CODECS</td><td>2</td><td/><td>libbluray.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>msvcr100.dll</td><td>{AB2069B1-DE5D-450B-B8BC-1B3391BAB143}</td><td>INSTALLDIR</td><td>2</td><td/><td>msvcr100.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>msvcr110.dll</td><td>{0F57A644-5EB4-4A4C-B099-6DAB29EA3ADC}</td><td>INSTALLDIR</td><td>2</td><td/><td>msvcr110.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>swscale_lav_2.dll</td><td>{7C7B37EC-5201-493C-8976-BB4AB8DBBAB9}</td><td>CODECS</td><td>2</td><td/><td>swscale_lav_2.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 	</table>
 
@@ -1128,6 +1132,7 @@
 		<row><td>ISSelfRegisterCosting</td><td>1</td><td>ISSELFREG.DLL</td><td>ISSelfRegisterCosting</td><td/><td/></row>
 		<row><td>ISSelfRegisterFiles</td><td>3073</td><td>ISSELFREG.DLL</td><td>ISSelfRegisterFiles</td><td/><td/></row>
 		<row><td>ISSelfRegisterFinalize</td><td>1</td><td>ISSELFREG.DLL</td><td>ISSelfRegisterFinalize</td><td/><td/></row>
+		<row><td>ISSetAllUsers</td><td>257</td><td>SetAllUsers.dll</td><td>SetAllUsers</td><td/><td/></row>
 		<row><td>ISUnSelfRegisterFiles</td><td>3073</td><td>ISSELFREG.DLL</td><td>ISUnSelfRegisterFiles</td><td/><td/></row>
 		<row><td>LaunchProgramFileFromSetupCompleteSuccess</td><td>1</td><td>NewBinary20</td><td>LaunchProgram</td><td/><td/></row>
 		<row><td>NGEN</td><td>3074</td><td>NewBinary21</td><td>/ngen "[WindowsFolder]Microsoft.NET\Framework\v2.0.50727\ngen.exe" "[INSTALLDIR]MediaPoint.exe"</td><td/><td/></row>
@@ -1993,9 +1998,11 @@
 		<row><td>AlwaysInstall</td><td>avformat_lav_55.dll</td></row>
 		<row><td>AlwaysInstall</td><td>avresample_lav_1.dll</td></row>
 		<row><td>AlwaysInstall</td><td>avutil_lav_52.dll</td></row>
+		<row><td>AlwaysInstall</td><td>dcdspfilter.ax</td></row>
 		<row><td>AlwaysInstall</td><td>fxc32.exe</td></row>
 		<row><td>AlwaysInstall</td><td>libbluray.dll</td></row>
 		<row><td>AlwaysInstall</td><td>msvcr100.dll</td></row>
+		<row><td>AlwaysInstall</td><td>msvcr110.dll</td></row>
 		<row><td>AlwaysInstall</td><td>swscale_lav_2.dll</td></row>
 	</table>
 
@@ -2022,6 +2029,7 @@
 		<row><td>close_hover.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>CLOSE_~1.PNG|close_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close_hover.png</td><td>1</td><td/></row>
 		<row><td>d3dcompiler_43.dll</td><td>D3DCompiler_43.dll</td><td>D3DCOM~1.DLL|D3DCompiler_43.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\D3DCompiler_43.dll</td><td>1</td><td/></row>
 		<row><td>d3dx9_43.dll</td><td>D3DX9_43.dll</td><td>D3DX9_43.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\D3DX9_43.dll</td><td>1</td><td/></row>
+		<row><td>dcdspfilter.ax</td><td>dcdspfilter.ax</td><td>DCDSPF~1.AX|dcdspfilter.ax</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\dcdspfilter.ax</td><td>1</td><td/></row>
 		<row><td>directshowlib_2005.dll</td><td>DirectShowLib_2005.dll</td><td>DIRECT~1.DLL|DirectShowLib-2005.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\DirectShowLib-2005.dll</td><td>1</td><td/></row>
 		<row><td>evrpresenter32.dll</td><td>EVRPresenter32.dll</td><td>EVRPRE~1.DLL|EVRPresenter32.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\EVRPresenter32.dll</td><td>1</td><td/></row>
 		<row><td>fxc32.exe</td><td>fxc32.exe</td><td>fxc32.exe</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\fxc32.exe</td><td>1</td><td/></row>
@@ -2053,6 +2061,9 @@
 		<row><td>min_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>MIN_HO~1.PNG|min_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\min_hover.png</td><td>1</td><td/></row>
 		<row><td>min_hover.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>MIN_HO~1.PNG|min_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\min_hover.png</td><td>1</td><td/></row>
 		<row><td>msvcr100.dll</td><td>msvcr100.dll</td><td>msvcr100.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\msvcr100.dll</td><td>1</td><td/></row>
+		<row><td>msvcr110.dll</td><td>msvcr110.dll</td><td>msvcr110.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\msvcr110.dll</td><td>1</td><td/></row>
+		<row><td>regid.2014_02.io.github_medi</td><td>ISO19770_SystemTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Downloads\MediaPoint\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
+		<row><td>regid.2014_02.io.github_medi1</td><td>ISO19770_LocalTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Downloads\MediaPoint\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
 		<row><td>restore.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>restore.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore.png</td><td>1</td><td/></row>
 		<row><td>restore.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>restore.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore.png</td><td>1</td><td/></row>
 		<row><td>restore_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>RESTOR~1.PNG|restore_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore_hover.png</td><td>1</td><td/></row>
@@ -2221,6 +2232,8 @@
 		<row><td>EVRPresenter32.dll</td><td/><td/><td>_74269FDE_E101_412E_986C_EC68B7182F6E_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>GoogleSearchAPI.dll</td><td/><td/><td>_33CFFF6F_087A_4AB5_A70D_52C7395F5B1F_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>ICSharpCode.SharpZipLib.dll</td><td/><td/><td>_461A2AA2_8647_4459_A104_DC77643A51EB_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>ISO19770_LocalTag</td><td/><td/><td>_6423221A_5908_4EA8_B34B_1728671A25FC_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>ISO19770_SystemTag</td><td/><td/><td>_505AD075_F7A7_43C6_8F2F_1D8DA6A92F61_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>ISX_DEFAULTCOMPONENT</td><td/><td/><td>_7590D289_84DF_4E0E_9BF1_C79F0AE30A63_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>ISX_DEFAULTCOMPONENT1</td><td/><td/><td>_8361DB0D_8B74_431D_9B13_73AA96442860_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>ISX_DEFAULTCOMPONENT10</td><td/><td/><td>_B5F58E6E_0E15_40EA_BD03_8AF6137059A5_FILTER</td><td/><td/><td/><td/></row>
@@ -2263,9 +2276,11 @@
 		<row><td>avformat_lav_55.dll</td><td/><td/><td>_74E21804_0099_4807_A6ED_C0972A71DA49_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>avresample_lav_1.dll</td><td/><td/><td>_6421A374_5560_415C_A2E7_8EEFE730A4FA_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>avutil_lav_52.dll</td><td/><td/><td>_2AEFA45F_E6A4_4729_8C50_9B1820751FD2_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>dcdspfilter.ax</td><td/><td/><td>_4862573F_A18F_4F6B_A6A9_2C5CD3B12111_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>fxc32.exe</td><td/><td/><td>_DCF69B19_6D07_4CFD_86C5_5FC0C273B622_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>libbluray.dll</td><td/><td/><td>_0250A4E8_6705_481B_8AC3_DCA63646F15F_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>msvcr100.dll</td><td/><td/><td>_8C4932C1_E858_47AB_A22E_D50E45956370_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>msvcr110.dll</td><td/><td/><td>_6B33C621_1438_4075_8E76_19B4E2A3247C_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>swscale_lav_2.dll</td><td/><td/><td>_881B14CF_332F_43D9_9EE9_0D8FB19F2C18_FILTER</td><td/><td/><td/><td/></row>
 	</table>
 
@@ -2641,7 +2656,7 @@
 		<row><td>DVD-18</td><td>Express</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\</td><td>Default</td><td>3</td><td>1033</td><td>0</td><td>2</td><td>Intel</td><td/><td>1033</td><td>0</td><td>15.83</td><td>1</td><td>2048</td><td/><td>0</td><td/><td>MediaLocation</td><td/><td>http://</td><td/><td/><td/><td/><td>75805</td><td/><td/><td/><td>3</td></row>
 		<row><td>DVD-5</td><td>Express</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\</td><td>Default</td><td>3</td><td>1033</td><td>0</td><td>2</td><td>Intel</td><td/><td>1033</td><td>0</td><td>4.38</td><td>1</td><td>2048</td><td/><td>0</td><td/><td>MediaLocation</td><td/><td>http://</td><td/><td/><td/><td/><td>75805</td><td/><td/><td/><td>3</td></row>
 		<row><td>DVD-9</td><td>Express</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\</td><td>Default</td><td>3</td><td>1033</td><td>0</td><td>2</td><td>Intel</td><td/><td>1033</td><td>0</td><td>7.95</td><td>1</td><td>2048</td><td/><td>0</td><td/><td>MediaLocation</td><td/><td>http://</td><td/><td/><td/><td/><td>75805</td><td/><td/><td/><td>3</td></row>
-		<row><td>SingleImage</td><td>Express</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\</td><td>PackageName</td><td>1</td><td>1033</td><td>0</td><td>1</td><td>Intel</td><td/><td>1033</td><td>0</td><td>0</td><td>0</td><td>0</td><td/><td>0</td><td/><td>MediaLocation</td><td/><td>http://</td><td/><td/><td/><td/><td>108573</td><td/><td/><td/><td>3</td></row>
+		<row><td>SingleImage</td><td>Express</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\</td><td>PackageName</td><td>1</td><td>1033</td><td>0</td><td>1</td><td>Intel</td><td/><td>1033</td><td>0</td><td>0</td><td>0</td><td>0</td><td/><td>0</td><td/><td>MediaLocation</td><td/><td>https://github.com/msimic</td><td/><td>&lt;ISProjectFolder&gt;\..\Docs\MarsMediaCodeCA.pfx</td><td/><td/><td>536979487</td><td/><td/><td/><td>3</td></row>
 		<row><td>WebDeployment</td><td>Express</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\</td><td>PackageName</td><td>4</td><td>1033</td><td>2</td><td>1</td><td>Intel</td><td/><td>1033</td><td>0</td><td>0</td><td>0</td><td>0</td><td/><td>0</td><td/><td>MediaLocation</td><td/><td>http://</td><td/><td/><td/><td/><td>124941</td><td/><td/><td/><td>3</td></row>
 	</table>
 
@@ -3989,15 +4004,15 @@
 		<row><td>IDS__TargetReq_DESC_RAM</td><td>1033</td><td>The amount of RAM is not adequate for running [ProductName].</td><td>0</td><td/><td>-920612094</td></row>
 		<row><td>IDS__TargetReq_DESC_RESOLUTION</td><td>1033</td><td>The screen resolution is not adequate for running [ProductName].</td><td>0</td><td/><td>-920612094</td></row>
 		<row><td>ID_STRING1</td><td>1033</td><td>http://www.MarsMedia.com</td><td>0</td><td/><td>-920610046</td></row>
-		<row><td>ID_STRING10</td><td>1033</td><td>http://marsmedia.weebly.com/mediapoint/updates</td><td>0</td><td/><td>-920623646</td></row>
+		<row><td>ID_STRING10</td><td>1033</td><td>http://msimic.github.io/MediaPoint/</td><td>0</td><td/><td>1226981098</td></row>
 		<row><td>ID_STRING2</td><td>1033</td><td>MarsMedia</td><td>0</td><td/><td>-920610046</td></row>
 		<row><td>ID_STRING3</td><td>1033</td><td>MEDIAP~1|MediaPoint Player</td><td>0</td><td/><td>421660225</td></row>
 		<row><td>ID_STRING4</td><td>1033</td><td>MEDIAP~1|MediaPoint Player</td><td>0</td><td/><td>421666369</td></row>
 		<row><td>ID_STRING5</td><td>1033</td><td>UNINST~1|Uninstall MediaPoint</td><td>0</td><td/><td>421701153</td></row>
-		<row><td>ID_STRING6</td><td>1033</td><td>Contact:  community</td><td>0</td><td/><td>-920593022</td></row>
+		<row><td>ID_STRING6</td><td>1033</td><td>The installer database contains logic and data required to install MediaPoint</td><td>0</td><td/><td>1227017067</td></row>
 		<row><td>ID_STRING7</td><td>1033</td><td>MediaPoint community</td><td>0</td><td/><td>-920625726</td></row>
-		<row><td>ID_STRING8</td><td>1033</td><td>http://marsmedia.weebly.com/mediapoint</td><td>0</td><td/><td>-920603198</td></row>
-		<row><td>ID_STRING9</td><td>1033</td><td>Your media likes this!</td><td>0</td><td/><td>-920648222</td></row>
+		<row><td>ID_STRING8</td><td>1033</td><td>http://msimic.github.io/MediaPoint/</td><td>0</td><td/><td>1226985226</td></row>
+		<row><td>ID_STRING9</td><td>1033</td><td>MediaPoint, the media player your media likes more than you!</td><td>0</td><td/><td>1226968842</td></row>
 		<row><td>IIDS_UITEXT_FeatureUninstalled</td><td>1033</td><td>This feature will remain uninstalled.</td><td>0</td><td/><td>-920612094</td></row>
 		<row><td>NEW_STRING1</td><td>1033</td><td>mp3</td><td>0</td><td/><td>421699812</td></row>
 	</table>
@@ -4005,6 +4020,8 @@
 	<table name="ISSwidtagProperty">
 		<col key="yes" def="s72">Name</col>
 		<col def="s0">Value</col>
+		<row><td>TagCreatorRegid</td><td>regid.2014-02.io.github,MediaPoint</td></row>
+		<row><td>UniqueId</td><td>20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD</td></row>
 	</table>
 
 	<table name="ISTargetImage">
@@ -4157,6 +4174,7 @@
 		<row><td>ISSelfRegisterCosting</td><td/><td>2201</td><td/><td/></row>
 		<row><td>ISSelfRegisterFiles</td><td/><td>5601</td><td/><td/></row>
 		<row><td>ISSelfRegisterFinalize</td><td/><td>6601</td><td/><td/></row>
+		<row><td>ISSetAllUsers</td><td>Not Installed</td><td>10</td><td/><td/></row>
 		<row><td>ISUnSelfRegisterFiles</td><td/><td>2202</td><td/><td/></row>
 		<row><td>InstallFiles</td><td/><td>4000</td><td>InstallFiles</td><td/></row>
 		<row><td>InstallFinalize</td><td/><td>6600</td><td>InstallFinalize</td><td/></row>
@@ -4189,7 +4207,7 @@
 		<row><td>RegisterUser</td><td/><td>6000</td><td>RegisterUser</td><td/></row>
 		<row><td>RemoveDuplicateFiles</td><td/><td>3400</td><td>RemoveDuplicateFiles</td><td/></row>
 		<row><td>RemoveEnvironmentStrings</td><td/><td>3300</td><td>RemoveEnvironmentStrings</td><td/></row>
-		<row><td>RemoveExistingProducts</td><td/><td>1410</td><td>RemoveExistingProducts</td><td/></row>
+		<row><td>RemoveExistingProducts</td><td/><td>1500</td><td>RemoveExistingProducts</td><td/></row>
 		<row><td>RemoveFiles</td><td/><td>3500</td><td>RemoveFiles</td><td/></row>
 		<row><td>RemoveFolders</td><td/><td>3600</td><td>RemoveFolders</td><td/></row>
 		<row><td>RemoveIniValues</td><td/><td>3100</td><td>RemoveIniValues</td><td/></row>
@@ -4229,11 +4247,11 @@
 		<col def="S0">Value</col>
 		<row><td>ActiveLanguage</td><td>1033</td></row>
 		<row><td>Comments</td><td/></row>
-		<row><td>CurrentMedia</td><td dt:dt="bin.base64" md5="a4f66fafb30885f14d732b73e196bba0">
-RABWAEQALQA1AAEARQB4AHAAcgBlAHMAcwA=
+		<row><td>CurrentMedia</td><td dt:dt="bin.base64" md5="de9f554a3bc05c12be9c31b998217995">
+UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 			</td></row>
 		<row><td>DefaultProductConfiguration</td><td>Express</td></row>
-		<row><td>EnableSwidtag</td><td>0</td></row>
+		<row><td>EnableSwidtag</td><td>1</td></row>
 		<row><td>ISCompilerOption_CompileBeforeBuild</td><td>1</td></row>
 		<row><td>ISCompilerOption_Debug</td><td>0</td></row>
 		<row><td>ISCompilerOption_IncludePath</td><td/></row>
@@ -4260,6 +4278,8 @@ RABWAEQALQA1AAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>SccEnabled</td><td>0</td></row>
 		<row><td>SccPath</td><td/></row>
 		<row><td>SchemaVersion</td><td>774</td></row>
+		<row><td>SwidtagLocalComponent</td><td>ISO19770_LocalTag</td></row>
+		<row><td>SwidtagSystemComponent</td><td>ISO19770_SystemTag</td></row>
 		<row><td>Type</td><td>MSIE</td></row>
 	</table>
 
@@ -4277,6 +4297,7 @@ RABWAEQALQA1AAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>FileCost</td><td/><td>900</td><td>FileCost</td><td/></row>
 		<row><td>FindRelatedProducts</td><td/><td>430</td><td>FindRelatedProducts</td><td/></row>
 		<row><td>ISPreventDowngrade</td><td>ISFOUNDNEWERPRODUCTVERSION</td><td>450</td><td>ISPreventDowngrade</td><td/></row>
+		<row><td>ISSetAllUsers</td><td>Not Installed</td><td>10</td><td/><td/></row>
 		<row><td>IsolateComponents</td><td/><td>950</td><td>IsolateComponents</td><td/></row>
 		<row><td>LaunchConditions</td><td>Not Installed</td><td>410</td><td>LaunchConditions</td><td/></row>
 		<row><td>MaintenanceWelcome</td><td>Installed And Not RESUME And Not Preselected And Not PATCH</td><td>1230</td><td>MaintenanceWelcome</td><td/></row>
@@ -4637,7 +4658,7 @@ RABWAEQALQA1AAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>PROGMSG_IIS_ROLLBACKVROOTS</td><td>##IDS_PROGMSG_IIS_ROLLBACKVROOTS##</td><td/></row>
 		<row><td>PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS</td><td>##IDS_PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS##</td><td/></row>
 		<row><td>PROGRAMFILETOLAUNCHATEND</td><td>[INSTALLDIR]MediaPoint.exe</td><td/></row>
-		<row><td>ProductCode</td><td>{DB187314-9DC0-4185-8711-BB3AEBED488B}</td><td/></row>
+		<row><td>ProductCode</td><td>{F6D44801-A480-46BE-A85D-CD75BAC57EF8}</td><td/></row>
 		<row><td>ProductName</td><td>MediaPoint</td><td/></row>
 		<row><td>ProductVersion</td><td>1.00.0000</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
@@ -4652,7 +4673,7 @@ RABWAEQALQA1AAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>SERIALNUMBER</td><td/><td/></row>
 		<row><td>SERIALNUMVALSUCCESSRETVAL</td><td>1</td><td/></row>
 		<row><td>SHOWLAUNCHPROGRAM</td><td>-1</td><td/></row>
-		<row><td>SecureCustomProperties</td><td>ISFOUNDNEWERPRODUCTVERSION;USERNAME;COMPANYNAME;ISX_SERIALNUM;SUPPORTDIR;DOTNETVERSION35SP1</td><td/></row>
+		<row><td>SecureCustomProperties</td><td>ISFOUNDNEWERPRODUCTVERSION;USERNAME;COMPANYNAME;ISX_SERIALNUM;SUPPORTDIR;DOTNETVERSION35SP1;ISACTIONPROP1</td><td/></row>
 		<row><td>SelectedSetupType</td><td>##IDS__DisplayName_Typical##</td><td/></row>
 		<row><td>SetupType</td><td>Typical</td><td/></row>
 		<row><td>UpgradeCode</td><td>{B024E284-8F46-4B71-80C2-0B6FAB01AA80}</td><td/></row>
@@ -4928,6 +4949,7 @@ RABWAEQALQA1AAEARQB4AHAAcgBlAHMAcwA=
 		<col def="s72">ActionProperty</col>
 		<col def="S72">ISDisplayName</col>
 		<row><td>{00000000-0000-0000-0000-000000000000}</td><td>***ALL_VERSIONS***</td><td></td><td></td><td>2</td><td/><td>ISFOUNDNEWERPRODUCTVERSION</td><td>ISPreventDowngrade</td></row>
+		<row><td>{B024E284-8F46-4B71-80C2-0B6FAB01AA80}</td><td>1.00.0000</td><td>1.00.0000</td><td></td><td>1792</td><td/><td>ISACTIONPROP1</td><td>upgrade</td></row>
 	</table>
 
 	<table name="Verb">

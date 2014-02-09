@@ -44,6 +44,8 @@ namespace MediaPoint.VM
 		#region Ctor
 		public Main()
 		{
+            ShowEqualizer = true;
+            Equalizer = new Equalizer();
 		    SubtitleColor = Colors.White;
 		    AutoLoadSubtitles = true;
             SubtitleLanguages = new List<ITag>() {new Tag() {Id = "eng", Name="English"}};
@@ -150,6 +152,18 @@ namespace MediaPoint.VM
 		#endregion
 
 		#region "Properties"
+
+        public bool ShowEqualizer
+        {
+            get { return GetValue(() => ShowEqualizer); }
+            set { SetValue(() => ShowEqualizer, value); }
+        }
+
+        public Equalizer Equalizer
+        {
+            get { return GetValue(() => Equalizer); }
+            set { SetValue(() => Equalizer, value); }
+        }
 
         public FontCharSet SubEncoding
         {
@@ -349,7 +363,24 @@ namespace MediaPoint.VM
 
 				return _openCommand;
 			}
-		}	
+		}
+
+        public ICommand ShowEqualizerCommand
+        {
+            get
+            {
+                return new Command(o =>
+                {
+                    if (!string.IsNullOrEmpty(o as string) && (string)o == "hide")
+                        ShowEqualizer = false;
+                    else
+                        ShowEqualizer = true;
+                }, can =>
+                {
+                    return true;
+                });
+            }
+        }
 
 		public ICommand MinimizeCommand
 		{

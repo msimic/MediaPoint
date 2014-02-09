@@ -15,6 +15,7 @@ using MediaPoint.Common.Threading;
 using MediaPoint.Subtitles;
 using Size=System.Windows.Size;
 using MediaPoint.Common.Interfaces;
+using System.Text;
 #endregion
 
 namespace MediaPoint.Common.DirectShow.MediaPlayers
@@ -243,7 +244,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
     /// It inherits from DispatcherObject to allow easy communication with COM objects
     /// from different apartment thread models.
     /// </summary>
-    public abstract class MediaPlayerBase : WorkDispatcherObject, INotifyPropertyChanged
+    public abstract class MediaPlayerBase : WorkDispatcherObject, INotifyPropertyChanged, IEqualizer
     {
         [DllImport("user32.dll", SetLastError = false)]
         private static extern IntPtr GetDesktopWindow();
@@ -361,7 +362,10 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         protected IFileSourceFilter _splitter;
         protected IBaseFilter _video;
         protected IBaseFilter _audio;
-
+        protected IDCEqualizer _equalizer;
+        protected IDCDSPFilterInterface _dspFilter;
+        protected IDCDownMix _downmix;
+        protected IDCAmplify _amplify;
 
         protected MediaPlayerBase()
         {
@@ -1675,5 +1679,30 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 				pc(this, new PropertyChangedEventArgs(name));
 			}
 		}
-	}
+
+
+        public void SetBand(int channel, int band, sbyte value)
+        {
+            if (_equalizer == null || _dspFilter == null) return;            
+
+            int hr = _equalizer.set_Enabled(true);
+
+            int num = -1;
+            _dspFilter.get_PresetCount(ref num);
+
+            _amplify.get_Seperate(false);
+            _amplify.set_Enabled(true);
+
+            if (channel == -1)
+                hr = _equalizer.set_Seperate(false);
+            else
+                hr = _equalizer.set_Seperate(true);
+
+            StringBuilder s = new StringBuilder();
+            hr = _dspFilter.get_FilterName(2, s);
+            _downmix.set_Enabled(true);
+            hr = _equalizer.set_Band( channel == -1 ? (byte)0 : (byte)channel, (ushort)band, (sbyte)(value*2));
+            
+        }
+    }
 }

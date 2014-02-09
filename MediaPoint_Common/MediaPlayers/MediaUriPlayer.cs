@@ -12,6 +12,7 @@ using System.Text;
 using MediaPoint.Common.Interfaces;
 using MediaPoint.Common.MediaFoundation;
 using MediaPoint.Common.MediaFoundation.Interop;
+using MediaPoint.Common.MediaPlayers;
 
 #endregion
 
@@ -269,21 +270,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 					m_graph.AddFilter((IBaseFilter)splitter, "LavSplitter");
 				}
 
-				//StreamSourceFilter file = new StreamSourceFilter();
-				//var ass = Assembly.GetAssembly(typeof (StreamSourceFilter));
-				//Directory.SetCurrentDirectory(Path.GetDirectoryName(ass.Location));
-				//var file = Activator.CreateComInstanceFrom(Path.GetFileName(ass.Location), "MediaPoint.Common.MediaFoundation.StreamSourceFilter");
-				//int ret1; 
-				//m_graph.AddFilter((IBaseFilter)file, "dummy");
-				//IPin p1 = ByDirection((IBaseFilter)file, PinDirection.Output, 0);
-				//IPin p2 = ByDirection(splitter, PinDirection.Input, 0);
-				//m_graph.Connect(p1, p2);
-				
+                int hr = 0;
 
-				//IBaseFilter sourceFilter = splitter;
-				/* Have DirectShow find the correct source filter for the Uri */
-				int hr = 0; //filterGraph.AddSourceFilter(fileSource, fileSource, out sourceFilter);
-				//DsError.ThrowExceptionForHR(hr);
 
 				/* We will want to enum all the pins on the source filter */
 				IEnumPins pinEnum;
@@ -335,6 +323,40 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 				}
 
 				int ret;
+
+                IBaseFilter dcDsp = FilterProvider.GetDCDSPFilter();
+                if (dcDsp != null)
+                {
+                    _dspFilter = (IDCDSPFilterInterface)dcDsp;
+
+                    //hr = i.set_PCMDataBeforeMainDSP(true);
+                    hr = m_graph.AddFilter((IBaseFilter)dcDsp, "Audio");
+
+                    ret = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)splitter, PinDirection.Output, 1), DsFindPin.ByDirection(audioDecoder, PinDirection.Input, 0));
+                    ret = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)audioDecoder, PinDirection.Output, 0), DsFindPin.ByDirection(_dspFilter, PinDirection.Input, 0));
+                    ret = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)_dspFilter, PinDirection.Output, 0), DsFindPin.ByDirection(audioRenderer, PinDirection.Input, 0));
+
+                    //bool d = false;
+                    //int delay = 0;
+                    //hr = i.get_EnableDelay(ref d);
+                    int cnt = 0;
+                    object intf = null;
+                    //hr = i.set_EnableDelay(true);
+                    //hr = i.set_Delay(0);
+                    hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftEqualizer);
+                    hr = _dspFilter.get_FilterCount(ref cnt);
+                    hr = _dspFilter.get_FilterInterface(0, out intf);
+                    _equalizer = (IDCEqualizer)intf;
+                    hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftDownMix);
+                    hr = _dspFilter.get_FilterInterface(0, out intf);
+                    _downmix = (IDCDownMix)intf;
+                    hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftAmplify);
+                    hr = _dspFilter.get_FilterInterface(0, out intf);
+                    _amplify = (IDCAmplify)intf;
+
+                    _equalizer.set_Seperate(false);
+                }
+
 			    bool subconnected = false;
 				ret = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)splitter, PinDirection.Output, 0), DsFindPin.ByDirection(lavVideo, PinDirection.Input, 0));
                 ret = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)lavVideo, PinDirection.Output, 0), DsFindPin.ByDirection(vobSub, PinDirection.Input, 0));

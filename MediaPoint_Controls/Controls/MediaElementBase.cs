@@ -15,6 +15,7 @@ using MediaPoint.Subtitles;
 using MediaPoint.VM;
 using MediaPoint.VM.ViewInterfaces;
 using MediaPoint.Controls.Extensions;
+using MediaPoint.MVVM.Services;
 
 namespace MediaPoint.Controls
 {
@@ -23,7 +24,7 @@ namespace MediaPoint.Controls
 	/// making custom media players.  The MediaElement uses the
 	/// D3DRenderer class for rendering video
 	/// </summary>
-	public abstract class MediaElementBase : D3DRenderer, INotifyPropertyChanged, IPlayerView
+	public abstract class MediaElementBase : D3DRenderer, INotifyPropertyChanged, IPlayerView, IEqualizer
 	{
 		private Window m_currentWindow;
 		private bool m_windowHooked;
@@ -1094,6 +1095,8 @@ namespace MediaPoint.Controls
 			}
 
 			OnLoadedOverride();
+
+            ServiceLocator.RegisterOverrideService((IEqualizer)this);
 		}
 
 		/// <summary>
@@ -1306,5 +1309,11 @@ namespace MediaPoint.Controls
 				pc(this, new PropertyChangedEventArgs(property));
 			}
 		}
-	}
+
+        public void SetBand(int channel, int band, sbyte value)
+        {
+            if (!MediaPlayerBase.Dispatcher.Shutdown || !MediaPlayerBase.Dispatcher.ShuttingDown)
+                MediaPlayerBase.Dispatcher.BeginInvoke((Action)(() => MediaPlayerBase.SetBand(channel, band, value)));
+        }
+    }
 }

@@ -26,6 +26,15 @@ namespace MediaPoint.Common.Interfaces
 
 	#endregion
 
+    #region DCDSP
+
+    [ComImport, Guid("B38C58A0-1809-11D6-A458-EDAE78F1DF12")]
+    public class DCDSPFilter
+    {
+    }
+
+    #endregion
+
     #region "LAV COM classes"
 
     [ComImport, Guid("9852A670-F845-491b-9BE6-EBD841B8A613")]
@@ -595,7 +604,6 @@ namespace MediaPoint.Common.Interfaces
         public string lfFaceName = string.Empty;
     }
 
-
     [ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,
      Guid("EBE1FB08-3957-47ca-AF13-5827E5442E56"),
      InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -892,6 +900,11 @@ namespace MediaPoint.Common.Interfaces
         /// </summary>
         public static readonly Guid IVOBSUB_GUID = typeof(DirectVobSub).GUID; //new Guid("{9852A670-F845-491b-9BE6-EBD841B8A613}");
 
+        /// <summary>
+        /// The GUID of VSFilter / VOBSub
+        /// </summary>
+        public static readonly Guid IDCDSPFILTER_GUID = typeof(DCDSPFilter).GUID; //new Guid("{B38C58A0-1809-11D6-A458-EDAE78F1DF12}");
+
 		/// <summary>
 		/// The GUID of LAVVideo
 		/// </summary>
@@ -1038,6 +1051,97 @@ namespace MediaPoint.Common.Interfaces
                     var getClassObject = (LavVideoDllGetClassObject)Marshal.GetDelegateForFunctionPointer(proc, typeof(LavVideoDllGetClassObject));
 
                     int hr = getClassObject(IVOBSUB_GUID, IUNKNOWN_GUID, out oFactory);
+
+                    IClassFactory factory = oFactory as IClassFactory;
+
+                    if (factory == null)
+                    {
+                        if (oFactory != null) Marshal.ReleaseComObject(oFactory);
+                        throw new Exception("Could not QueryInterface for the IClassFactory interface");
+                    }
+
+                    Guid baseFilterGUID = typeof(IBaseFilter).GUID;
+                    hr = factory.CreateInstance(null, ref baseFilterGUID, out oFilter);
+
+                    filter = oFilter as IBaseFilter;
+                    if (filter == null)
+                    {
+                        if (oFilter != null) Marshal.ReleaseComObject(oFilter);
+                        throw new Exception("Could not QueryInterface for the IBaseFilter interface");
+                    }
+
+                    //Guid videoSettingsGUID = new Guid("{FA40D6E9-4D38-4761-ADD2-71A9EC5FD32F}");
+                    //hr = factory.CreateInstance(null, ref videoSettingsGUID, out oSettings);
+
+                    //settings = oSettings as ILAVVideoSettings;
+                    //if (filter == null)
+                    //{
+                    //    if (oSettings != null) Marshal.ReleaseComObject(oSettings);
+                    //    throw new Exception("Could not QueryInterface for the ILAVVideoSettings interface");
+                    //}
+
+                }
+                catch
+                {
+                    // if somehting bad happens give back the path since we will rethrow the exception ater cleanup
+                    Directory.SetCurrentDirectory(currentDir);
+
+                    if (oFactory != null)
+                        Marshal.FinalReleaseComObject(oFactory);
+
+                    if (oFilter != null)
+                        Marshal.FinalReleaseComObject(oFilter);
+
+                    if (oSettings != null)
+                        Marshal.FinalReleaseComObject(oSettings);
+
+                    throw;
+                }
+                finally
+                {
+                    // even if nothing bad happens we need to clenup and give back to the original path
+                    Directory.SetCurrentDirectory(currentDir);
+
+                    if (oFactory != null)
+                        Marshal.FinalReleaseComObject(oFactory);
+
+                }
+
+                return filter;
+            }
+        }
+
+        public static IBaseFilter GetDCDSPFilter(string subDir = @"codecs\")
+        {
+            lock (threadSync)
+            {
+                //settings = null;
+                object oFactory = null;
+                object oFilter = null;
+                object oSettings = null;
+                IBaseFilter filter = null;
+                string currentDir = Directory.GetCurrentDirectory();
+                // we have the filters in the subdirectory 'codecs' of the running app
+                string path = Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath), subDir);
+
+                try
+                {
+                    // we need to be in the filter directory since it will load a bunch 
+                    // of other dlls that are there, and they won't resolve otherwise
+                    Directory.SetCurrentDirectory(path);
+
+                    path = Path.Combine(path, "dcdspfilter.ax");
+
+                    IntPtr lavVideoDll = LoadLibrary(path);
+                    IntPtr proc = GetProcAddress(lavVideoDll, "DllGetClassObject");
+
+                    var getClassObject = (LavVideoDllGetClassObject)Marshal.GetDelegateForFunctionPointer(proc, typeof(LavVideoDllGetClassObject));
+
+                    int hr = getClassObject(IDCDSPFILTER_GUID, IUNKNOWN_GUID, out oFactory);
+                    if (hr != 0)
+                    {
+                        Marshal.ThrowExceptionForHR(hr);
+                    }
 
                     IClassFactory factory = oFactory as IClassFactory;
 
