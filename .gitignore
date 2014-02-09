@@ -220,3 +220,7 @@ pip-log.txt
 
 /output
 MediaPoint_Setup_x86/MediaPoint Setup x86 - Copy.isproj
+InstallTool.exe
+WPFSpark.dll
+VSFilter.dll
+*.asm
