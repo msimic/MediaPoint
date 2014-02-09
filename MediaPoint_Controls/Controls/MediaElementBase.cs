@@ -916,7 +916,10 @@ namespace MediaPoint.Controls
 	                InvalidateArrange();
 	                InvalidateVisual();
 
-	                if (m_currentWindow.WindowState == WindowState.Normal)
+                    if (m_currentWindow.WindowState == WindowState.Normal &&
+                        MediaPlayerBase.NaturalVideoWidth > 0 &&
+                        MediaPlayerBase.NaturalVideoHeight > 0 &&
+                        MediaPlayerBase.HasVideo)
 	                {
 	                    var source = PresentationSource.FromVisual(m_currentWindow);
 	                    Matrix transformFromDevice =

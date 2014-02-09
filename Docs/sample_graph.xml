@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<graph name="Unnamed Graph">
+    <filter name="LAV Splitter Source" clsid="{B98D13E7-55DB-4385-A33D-09FD1BA26338}">
+        <ifilesourcefilter source="Y:\Video\unsorted\Computer.Chess.2013.480p.mkv"/>
+    </filter>
+    <filter name="Default DirectSound Device" clsid="{79376820-07D0-11CF-A24D-0020AFD79767}"/>
+    <filter name="Enhanced Video Renderer" clsid="{FA10746C-9B63-4B6C-BC49-FC300EA5F256}"/>
+    <filter name="LAV Audio Decoder" clsid="{E8E73B6B-4CB3-44A4-BE99-4F7BCB96E491}"/>
+    <filter name="LAV Video Decoder" clsid="{EE30215D-164F-4A92-A4EB-9D4C13390F9F}"/>
+    <filter name="DirectVobSub" clsid="{93A22E7A-5091-45EF-BA61-6DA26156A5D0}"/>
+</graph>

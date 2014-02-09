@@ -1498,12 +1498,18 @@ namespace MediaPoint.App.Behaviors
                                 return IntPtr.Zero;
                             }
                             var mu = AssociatedObject.FindName("mediaPlayer") as MediaUriElement;
-                            if (mu != null && mu.NaturalVideoWidth != 0 && mu.NaturalVideoHeight != 0)
+                            if (mu != null && mu.NaturalVideoWidth != 0 && mu.NaturalVideoHeight != 0 && mu.HasVideo)
                             {
                                 double r = (double)mu.NaturalVideoWidth / (double)mu.NaturalVideoHeight;
 
                                 pos.cx = (int)(pos.cy * r);
                                 pos.cy = (int)(pos.cx / r);
+
+                                if (pos.cx == 0 || pos.cy == 0)
+                                {
+                                    handled = false;
+                                    return IntPtr.Zero;
+                                }
 
                                 var ms = new Size(AssociatedObject.MinWidth, AssociatedObject.MinHeight);
                                     //(Size)

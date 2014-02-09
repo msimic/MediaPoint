@@ -342,6 +342,11 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         private bool m_hasVideo;
 
         /// <summary>
+        /// Flag for if our media has audio
+        /// </summary>
+        private bool m_hasAudio;
+
+        /// <summary>
         /// The natural video pixel height, if applicable
         /// </summary>
         private int m_naturalVideoHeight;
@@ -357,15 +362,18 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         private System.Timers.Timer m_timer;
 
         protected IMFVideoDisplayControl _displayControl;
+        protected IVideoWindow _displayControlVMR;
 
         protected IBaseFilter _renderer;
         protected IFileSourceFilter _splitter;
         protected IBaseFilter _video;
         protected IBaseFilter _audio;
+        protected IBaseFilter _audioRenderer;
         protected IDCEqualizer _equalizer;
         protected IDCDSPFilterInterface _dspFilter;
         protected IDCDownMix _downmix;
         protected IDCAmplify _amplify;
+        protected ILAVAudioStatus _audioStatus;
 
         protected MediaPlayerBase()
         {
@@ -538,6 +546,21 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 GetMainWindowHwndHelper();
 
                 return m_window;
+            }
+        }
+
+        /// <summary>
+        /// Is true if the media contains renderable audio
+        /// </summary>
+        public virtual bool HasAudio
+        {
+            get
+            {
+                return m_hasAudio;
+            }
+            protected set
+            {
+                m_hasAudio = value;
             }
         }
 
@@ -1071,7 +1094,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// <param name="graph">The DirectShow graph to add the renderer to</param>
         /// <param name="streamCount">Number of input pins for the renderer</param>
         /// <returns>An initialized DirectShow renderer</returns>
-        protected IBaseFilter CreateVideoRenderer(VideoRendererType rendererType, IGraphBuilder graph, int streamCount)
+        protected IBaseFilter InsertVideoRenderer(VideoRendererType rendererType, IGraphBuilder graph, int streamCount)
         {
             IBaseFilter renderer;
 
@@ -1101,7 +1124,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// <returns>An initialized DirectShow renderer</returns>
         protected IBaseFilter CreateVideoRenderer(VideoRendererType rendererType, IGraphBuilder graph)
         {
-            return CreateVideoRenderer(rendererType, graph, 1);
+            return InsertVideoRenderer(rendererType, graph, 1);
         }
 
 		/// <summary>
@@ -1207,6 +1230,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 IntPtr handle = GetDesktopWindow();//HwndHelper.Handle;
 
                 /* QueryInterface the IMFVideoDisplayControl */
+                if (_displayControl != null) Marshal.ReleaseComObject(_displayControl);
                 _displayControl = presenter.VideoPresenter as IMFVideoDisplayControl;
 
                 if (_displayControl == null)
@@ -1248,6 +1272,9 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             int hr = filterConfig.SetNumberOfStreams(streamCount);
             DsError.ThrowExceptionForHR(hr);
 
+            if (_displayControlVMR != null) Marshal.ReleaseComObject(_displayControlVMR);
+            _displayControlVMR = (IVideoWindow)vmr9;
+
             /* Setting the renderer to "Renderless" mode
              * sounds counter productive, but its what we
              * need to do for setting up a custom allocator */
@@ -1259,7 +1286,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
             if (vmrSurfAllocNotify == null)
                 throw new Exception("Could not query the VMR surface allocator.");
-            
+
             var allocator = new Vmr9Allocator();
 
             /* We supply our custom allocator to the renderer */
@@ -1447,8 +1474,6 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
             NaturalVideoHeight = (int)size.Height;
             NaturalVideoWidth = (int)size.Width;
-
-            HasVideo = true;
         }
 
         /// <summary>
@@ -1543,6 +1568,55 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 while (Marshal.ReleaseComObject(filtersArray[i]) > 0)
                 {}
             }
+        }
+
+
+        protected static IEnumerable<string> EnumAllFilters(IGraphBuilder graphBuilder)
+        {
+            IEnumFilters enumFilters;
+
+            /* The list of filters from the DirectShow graph */
+            var filtersArray = new List<IBaseFilter>();
+
+            if (graphBuilder == null)
+                throw new ArgumentNullException("graphBuilder");
+
+            /* Gets the filter enumerator from the graph */
+            int hr = graphBuilder.EnumFilters(out enumFilters);
+            DsError.ThrowExceptionForHR(hr);
+
+            try
+            {
+                /* This array is filled with reference to a filter */
+                var filters = new IBaseFilter[1];
+                IntPtr fetched = IntPtr.Zero;
+
+                /* Get reference to all the filters */
+                while (enumFilters.Next(filters.Length, filters, fetched) == 0)
+                {
+                    /* Add the filter to our array */
+                    filtersArray.Add(filters[0]);
+                }
+            }
+            finally
+            {
+                /* Enum filters is a COM, so release that */
+                Marshal.ReleaseComObject(enumFilters);
+            }
+
+            for (int i = 0; i < filtersArray.Count; i++)
+            {
+                FilterInfo fi;
+                filtersArray[i].QueryFilterInfo(out fi);
+                yield return fi.achName;
+            }
+
+            /* Loop over and release each COM */
+            //for (int i = 0; i < filtersArray.Count; i++)
+            //{
+            //    while (Marshal.ReleaseComObject(filtersArray[i]) > 0)
+            //    { }
+            //}
         }
 
 		/// <summary>
@@ -1701,8 +1775,11 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             StringBuilder s = new StringBuilder();
             hr = _dspFilter.get_FilterName(2, s);
             _downmix.set_Enabled(true);
-            hr = _equalizer.set_Band( channel == -1 ? (byte)0 : (byte)channel, (ushort)band, (sbyte)(value*2));
-            
+            if (channel == -1)
+                for (byte i = 0; i < 10; i++)
+                    hr = _equalizer.set_Band(i, (ushort)band, (sbyte)(value));
+            else
+                hr = _equalizer.set_Band((byte)channel, (ushort)band, (sbyte)(value));
         }
     }
 }

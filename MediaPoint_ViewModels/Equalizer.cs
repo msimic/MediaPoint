@@ -11,7 +11,7 @@ namespace MediaPoint.VM
     public class Equalizer : ViewModel
     {
         private Dictionary<int, int> _values = new Dictionary<int, int>() { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 }, { 7, 0 }, { 8, 0 }, { 9, 0 }, { 10, 0}};
-        private int[] _frequencyPerBand = { 0, 3, 9, 16, 29, 48, 100, 141, 280, 559, 1024 };
+        private int[] _frequencyPerBand = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
 
         public int this[int i]
         {
@@ -47,7 +47,20 @@ namespace MediaPoint.VM
         void OnEqualizerChanged(int index, int value)
         {
             var eq = ServiceLocator.GetService<IEqualizer>();
-            eq.SetBand(-1, _frequencyPerBand[index], (sbyte)value);
+            int f1, f2;
+            GetFrequencyRange(index, out f1, out f2);
+            for (int f = f1; f < f2; f++)
+            {
+                eq.SetBand(-1, f, (sbyte)(value * 2));
+            }
+        }
+
+        void GetFrequencyRange(int index, out int f1, out int f2)
+        {
+            f1 = 0;
+
+            if (index > 0) f1 = _frequencyPerBand[index - 1];
+            f2 = _frequencyPerBand[index];
         }
     }
 }
