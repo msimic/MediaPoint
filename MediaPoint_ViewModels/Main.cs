@@ -44,13 +44,12 @@ namespace MediaPoint.VM
 		#region Ctor
 		public Main()
 		{
-            ShowEqualizer = true;
             Equalizer = new Equalizer();
 		    SubtitleColor = Colors.White;
 		    AutoLoadSubtitles = true;
             SubtitleLanguages = new List<ITag>() {new Tag() {Id = "eng", Name="English"}};
             AllSubtitleServices = new List<ITag>() { new Tag() { Id = "Podnapisi", Name = "Podnapisi" }, new Tag() { Id = "OpenSubtitles", Name = "OpenSubtitles" } };
-            SubtitleServices = new List<ITag>() { new Tag() { Id = "Podnapisi", Name = "Podnapisi" }, new Tag() { Id = "Podnapisi", Name = "Podnapisi" } };
+            SubtitleServices = new List<ITag>() { new Tag() { Id = "Podnapisi", Name = "Podnapisi" }, new Tag() { Id = "OpenSubtitles", Name = "OpenSubtitles" } };
             AllLanguages = new List<ITag> { new Tag("bos", "Bosnian"),
                                             new Tag("slv", "Slovenian"),
                                             new Tag("hrv", "Croatian"),
@@ -152,6 +151,12 @@ namespace MediaPoint.VM
 		#endregion
 
 		#region "Properties"
+
+        public bool ShowVisualizations
+        {
+            get { return GetValue(() => ShowVisualizations); }
+            set { SetValue(() => ShowVisualizations, value); }
+        }
 
         public bool ShowEqualizer
         {
@@ -365,6 +370,24 @@ namespace MediaPoint.VM
 			}
 		}
 
+
+        public ICommand ShowVisualizationsCommand
+        {
+            get
+            {
+                return new Command(o =>
+                {
+                    if (!string.IsNullOrEmpty(o as string) && (string)o == "hide")
+                        ShowVisualizations = false;
+                    else
+                        ShowVisualizations = !ShowVisualizations;
+                }, can =>
+                {
+                    return true;
+                });
+            }
+        }
+
         public ICommand ShowEqualizerCommand
         {
             get
@@ -374,7 +397,7 @@ namespace MediaPoint.VM
                     if (!string.IsNullOrEmpty(o as string) && (string)o == "hide")
                         ShowEqualizer = false;
                     else
-                        ShowEqualizer = true;
+                        ShowEqualizer = !ShowEqualizer;
                 }, can =>
                 {
                     return true;

@@ -136,6 +136,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\AllArchitectures\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
     </Reference>
+    <Reference Include="NAudio">
+      <HintPath>..\Libs\AllArchitectures\NAudio.dll</HintPath>
+    </Reference>
     <Reference Include="ShaderEffectLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\AllArchitectures\ShaderEffectLibrary.dll</HintPath>
@@ -154,6 +157,9 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WPFSoundVisualizationLib">
+      <HintPath>..\Libs\AllArchitectures\WPFSoundVisualizationLib.dll</HintPath>
+    </Reference>
     <Reference Include="WPFToolkit, Version=3.5.40128.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\AllArchitectures\WPFToolkit.dll</HintPath>
@@ -204,9 +210,9 @@
     <Compile Include="Effects\WaterEffect.cs" />
     <Compile Include="Extensions\AnimationExtensions.cs" />
     <Compile Include="Extensions\AssemblyExtensions.cs" />
-    <Compile Include="Extensions\UIExtensions.cs" />
     <Compile Include="Extensions\WindowInteropExtensions.cs" />
     <Compile Include="Resources\EmbeddedFonts.cs" />
+    <Compile Include="Audio\SampleAggregator.cs" />
     <Compile Include="Themes\StyleLoader.cs" />
     <Compile Include="Window1.xaml.cs">
       <DependentUpon>Window1.xaml</DependentUpon>
@@ -324,7 +330,7 @@
     <Content Include="Themes\default\Images\close_hover.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Themes\default\Images\loading.gif" />
+    <Resource Include="Themes\default\Images\loading.png" />
     <Content Include="Themes\default\Images\max.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -7,7 +7,7 @@ using System.Windows.Interactivity;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using MediaPoint.App.Extensions;
+using MediaPoint.Controls.Extensions;
 using System.Windows.Controls;
 
 namespace MediaPoint.App.Behaviors

@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using MediaPoint.App.Extensions;
+using MediaPoint.Controls.Extensions;
 using MediaPoint.VM;
 
 namespace MediaPoint.App.Behaviors

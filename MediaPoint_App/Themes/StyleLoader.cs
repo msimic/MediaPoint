@@ -103,7 +103,7 @@ namespace MediaPoint.App.Themes
 
 		public static string[] GetAllStyles()
 		{
-			string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MediaPoint");
+			string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MediaPoint");
 			string fileName = Path.Combine(path, @"Themes\");
 
 			if (!Directory.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))
@@ -123,7 +123,7 @@ namespace MediaPoint.App.Themes
 		public string LoadStyles(string appname, string styleName, ResourceDictionary appDic)
 		{
 
-			string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appname);
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appname);
 			string fileName = Path.Combine(path, @"Themes\" + styleName + @"\style.xaml");
 
 			if (!File.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))

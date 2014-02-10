@@ -253,7 +253,7 @@ namespace MediaPoint.VM
             set {
                 SetValue(() => ShowOnlineSubtitles, value);
 
-                if (value == true && OnlineSubtitleChoices.Count == 0)
+                if (value == true && OnlineSubtitleChoices.Count == 0 && Source != null)
                 {
                     RefreshOnlineSubs();
                 }
@@ -392,7 +392,7 @@ namespace MediaPoint.VM
                     if (!string.IsNullOrEmpty(o as string) && (string)o == "hide")
                         ShowOnlineSubtitles = false;
                     else
-                        ShowOnlineSubtitles = true;
+                        ShowOnlineSubtitles = !ShowOnlineSubtitles;
                 }, can =>
                 {
                     return true;
@@ -416,7 +416,7 @@ namespace MediaPoint.VM
                     }
                 }, can =>
                 {
-                    return true;
+                    return Source != null;
                 });
             }
         }
@@ -449,6 +449,20 @@ namespace MediaPoint.VM
 			}
 		}
 
+        public ICommand DecreaseRateCommand
+        {
+            get
+            {
+                return new Command(o =>
+                {
+                    Rate = Rate / 2;
+                }, can =>
+                {
+                    return IsPlaying && Rate > 1;
+                });
+            }
+        }
+
 		public ICommand IncreaseRateCommand
 		{
 			get
@@ -458,7 +472,7 @@ namespace MediaPoint.VM
 					Rate = Rate * 2;
 				}, can =>
 				{
-					return true;
+                    return IsPlaying && Rate < 8;
 				});
 			}
 		}

@@ -381,6 +381,7 @@
 		<row><td>Microsoft.Expression.Interactions.dll</td><td>{91BC0FB6-C5FE-439E-8CBE-686443AB663F}</td><td>INSTALLDIR</td><td>2</td><td/><td>microsoft.expression.interac</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>Microsoft.WindowsAPICodePack.Shell.dll</td><td>{6CC7012F-EE52-44B1-B9B7-05E79F6EC6F4}</td><td>INSTALLDIR</td><td>2</td><td/><td>microsoft.windowsapicodepack1</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>Microsoft.WindowsAPICodePack.dll</td><td>{D8D4C710-A572-49E3-8CDF-2BFB56DFFB18}</td><td>INSTALLDIR</td><td>2</td><td/><td>microsoft.windowsapicodepack</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>NAudio.dll</td><td>{716581B3-0DD1-4AED-BDFF-46130069BB16}</td><td>INSTALLDIR</td><td>2</td><td/><td>naudio.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>ShaderEffectLibrary.dll</td><td>{A878BF93-2096-4288-BA53-C8029F646A44}</td><td>INSTALLDIR</td><td>2</td><td/><td>shadereffectlibrary.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>SubtitleDownloader.dll</td><td>{B8946B54-A71F-40DE-AA46-4C97934C8404}</td><td>INSTALLDIR</td><td>2</td><td/><td>subtitledownloader.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>System.Reactive.dll</td><td>{4983EAA3-D09B-4C49-863E-1AEA5C7071A8}</td><td>INSTALLDIR</td><td>2</td><td/><td>system.reactive.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
@@ -388,6 +389,7 @@
 		<row><td>System.Windows.Controls.Layout.Toolkit.dll</td><td>{072BC611-738C-4C94-9AD4-B831144E7BD6}</td><td>INSTALLDIR</td><td>2</td><td/><td>system.windows.controls.layo</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>System.Windows.Interactivity.dll</td><td>{78AE0B57-5F4D-44CE-B7C4-F1C867A2B315}</td><td>INSTALLDIR</td><td>2</td><td/><td>system.windows.interactivity</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>VSFilter.dll</td><td>{716D12A5-78B5-452B-8507-9D852A9CD967}</td><td>CODECS</td><td>2</td><td/><td>vsfilter.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>WPFSoundVisualizationLib.dll</td><td>{8F7756EE-F476-46BD-8266-142104556A3C}</td><td>INSTALLDIR</td><td>2</td><td/><td>wpfsoundvisualizationlib.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>WPFSpark.dll</td><td>{937DAD22-082E-44DA-B71A-80A326854598}</td><td>INSTALLDIR</td><td>2</td><td/><td>wpfspark.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>WPFToolkit.dll</td><td>{9DD900C9-A651-4FDA-B96B-D45DA7F57C47}</td><td>INSTALLDIR</td><td>2</td><td/><td>wpftoolkit.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>Xceed.Wpf.Toolkit.dll</td><td>{D5DDDF70-722A-42B4-9A7D-BB40CA5CE969}</td><td>INSTALLDIR</td><td>2</td><td/><td>xceed.wpf.toolkit.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
@@ -1983,6 +1985,7 @@
 		<row><td>AlwaysInstall</td><td>Microsoft.Expression.Interactions.dll</td></row>
 		<row><td>AlwaysInstall</td><td>Microsoft.WindowsAPICodePack.Shell.dll</td></row>
 		<row><td>AlwaysInstall</td><td>Microsoft.WindowsAPICodePack.dll</td></row>
+		<row><td>AlwaysInstall</td><td>NAudio.dll</td></row>
 		<row><td>AlwaysInstall</td><td>ShaderEffectLibrary.dll</td></row>
 		<row><td>AlwaysInstall</td><td>SubtitleDownloader.dll</td></row>
 		<row><td>AlwaysInstall</td><td>System.Reactive.dll</td></row>
@@ -1990,6 +1993,7 @@
 		<row><td>AlwaysInstall</td><td>System.Windows.Controls.Layout.Toolkit.dll</td></row>
 		<row><td>AlwaysInstall</td><td>System.Windows.Interactivity.dll</td></row>
 		<row><td>AlwaysInstall</td><td>VSFilter.dll</td></row>
+		<row><td>AlwaysInstall</td><td>WPFSoundVisualizationLib.dll</td></row>
 		<row><td>AlwaysInstall</td><td>WPFSpark.dll</td></row>
 		<row><td>AlwaysInstall</td><td>WPFToolkit.dll</td></row>
 		<row><td>AlwaysInstall</td><td>Xceed.Wpf.Toolkit.dll</td></row>
@@ -2062,8 +2066,9 @@
 		<row><td>min_hover.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>MIN_HO~1.PNG|min_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\min_hover.png</td><td>1</td><td/></row>
 		<row><td>msvcr100.dll</td><td>msvcr100.dll</td><td>msvcr100.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\msvcr100.dll</td><td>1</td><td/></row>
 		<row><td>msvcr110.dll</td><td>msvcr110.dll</td><td>msvcr110.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\msvcr110.dll</td><td>1</td><td/></row>
-		<row><td>regid.2014_02.io.github_medi</td><td>ISO19770_SystemTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Downloads\MediaPoint\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
-		<row><td>regid.2014_02.io.github_medi1</td><td>ISO19770_LocalTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>C:\Downloads\MediaPoint\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
+		<row><td>naudio.dll</td><td>NAudio.dll</td><td>NAudio.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\NAudio.dll</td><td>1</td><td/></row>
+		<row><td>regid.2014_02.io.github_medi</td><td>ISO19770_SystemTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
+		<row><td>regid.2014_02.io.github_medi1</td><td>ISO19770_LocalTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
 		<row><td>restore.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>restore.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore.png</td><td>1</td><td/></row>
 		<row><td>restore.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>restore.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore.png</td><td>1</td><td/></row>
 		<row><td>restore_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>RESTOR~1.PNG|restore_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore_hover.png</td><td>1</td><td/></row>
@@ -2080,6 +2085,7 @@
 		<row><td>system.windows.controls.layo</td><td>System.Windows.Controls.Layout.Toolkit.dll</td><td>SYSTEM~1.DLL|System.Windows.Controls.Layout.Toolkit.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\System.Windows.Controls.Layout.Toolkit.dll</td><td>1</td><td/></row>
 		<row><td>system.windows.interactivity</td><td>System.Windows.Interactivity.dll</td><td>SYSTEM~1.DLL|System.Windows.Interactivity.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\System.Windows.Interactivity.dll</td><td>1</td><td/></row>
 		<row><td>vsfilter.dll</td><td>VSFilter.dll</td><td>VSFilter.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\VSFilter.dll</td><td>1</td><td/></row>
+		<row><td>wpfsoundvisualizationlib.dll</td><td>WPFSoundVisualizationLib.dll</td><td>WPFSOU~1.DLL|WPFSoundVisualizationLib.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\WPFSoundVisualizationLib.dll</td><td>1</td><td/></row>
 		<row><td>wpfspark.dll</td><td>WPFSpark.dll</td><td>WPFSpark.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\WPFSpark.dll</td><td>1</td><td/></row>
 		<row><td>wpftoolkit.dll</td><td>WPFToolkit.dll</td><td>WPFTOO~1.DLL|WPFToolkit.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\WPFToolkit.dll</td><td>1</td><td/></row>
 		<row><td>xceed.wpf.toolkit.dll</td><td>Xceed.Wpf.Toolkit.dll</td><td>XCEEDW~1.DLL|Xceed.Wpf.Toolkit.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Xceed.Wpf.Toolkit.dll</td><td>1</td><td/></row>
@@ -2261,6 +2267,7 @@
 		<row><td>Microsoft.Expression.Interactions.dll</td><td/><td/><td>_B777AD1C_B236_481E_9856_543AB8220175_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>Microsoft.WindowsAPICodePack.Shell.dll</td><td/><td/><td>_DD78BB1C_4B5F_41A3_89CB_C615528A8504_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>Microsoft.WindowsAPICodePack.dll</td><td/><td/><td>_7E12AF24_4BDC_4E87_8483_2776AD4DE14B_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>NAudio.dll</td><td/><td/><td>_3B5848AB_D6E9_4C2E_8C05_D69C1FB5738B_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>ShaderEffectLibrary.dll</td><td/><td/><td>_E30F490C_3711_4930_8FE0_192B613406D6_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>SubtitleDownloader.dll</td><td/><td/><td>_9269D023_3815_4404_BB19_2FAFDE4539F8_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>System.Reactive.dll</td><td/><td/><td>_31DCCA0A_4327_462F_B254_105808B93BDB_FILTER</td><td/><td/><td/><td/></row>
@@ -2268,6 +2275,7 @@
 		<row><td>System.Windows.Controls.Layout.Toolkit.dll</td><td/><td/><td>_8C72D58F_05D2_47A7_B1F4_217B3832DD21_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>System.Windows.Interactivity.dll</td><td/><td/><td>_FAA543AC_1D27_4195_BA0C_84F269F2A8D3_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>VSFilter.dll</td><td/><td/><td>_6B96F1A5_D0A1_4B0E_8745_C82A80859553_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>WPFSoundVisualizationLib.dll</td><td/><td/><td>_B15EA9B0_EFF7_4458_A4C8_2721C1811BB9_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>WPFSpark.dll</td><td/><td/><td>_7853B35B_9DA7_45FD_9BC2_4DAD3BBF633F_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>WPFToolkit.dll</td><td/><td/><td>_C9F10AE7_9D01_43D5_A89D_B47111C2C6EA_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>Xceed.Wpf.Toolkit.dll</td><td/><td/><td>_E2A2F97B_FED2_4283_AF34_8564FA18DE29_FILTER</td><td/><td/><td/><td/></row>
@@ -4658,7 +4666,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>PROGMSG_IIS_ROLLBACKVROOTS</td><td>##IDS_PROGMSG_IIS_ROLLBACKVROOTS##</td><td/></row>
 		<row><td>PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS</td><td>##IDS_PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS##</td><td/></row>
 		<row><td>PROGRAMFILETOLAUNCHATEND</td><td>[INSTALLDIR]MediaPoint.exe</td><td/></row>
-		<row><td>ProductCode</td><td>{F6D44801-A480-46BE-A85D-CD75BAC57EF8}</td><td/></row>
+		<row><td>ProductCode</td><td>{69369D52-0534-4E97-A15F-439B1794E1E6}</td><td/></row>
 		<row><td>ProductName</td><td>MediaPoint</td><td/></row>
 		<row><td>ProductVersion</td><td>1.00.0000</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>

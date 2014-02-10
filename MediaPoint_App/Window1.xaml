@@ -8,6 +8,7 @@
         xmlns:tb="clr-namespace:MediaPoint.Common.TaskbarNotification;assembly=MediaPoint.Common"
         MouseLeave="mediaPlayer_MouseLeave" Initialized="window_Initialized" Loaded="window_Loaded"
         WindowStartupLocation="CenterScreen" Visibility="Collapsed"
+        xmlns:svl="clr-namespace:WPFSoundVisualizationLib;assembly=WPFSoundVisualizationLib"
         PreviewMouseMove="Window_PreviewMouseMove" SizeChanged="Window_SizeChanged"
         StateChanged="OnStateChanged" IsVisibleChanged="OnIsVisibleChanged">
     <Window.Triggers>
@@ -57,7 +58,8 @@
                                                     Source="{Binding Source}"
                                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                                     VideoRenderer="EnhancedVideoRenderer"
-                                                    LoadedBehavior="Manual"                                                                  
+                                                    LoadedBehavior="Manual"
+                                                    HasVideo="{Binding HasVideo, Mode=OneWayToSource}"
                                                     SubtitlesStreams="{Binding EmbeddedSubtitleStreams, Mode=OneWayToSource}"
                                                     AudioStreams="{Binding AudioStreams, Mode=OneWayToSource}"
                                                     VideoStreams="{Binding VideoStreams, Mode=OneWayToSource}"
@@ -83,17 +85,20 @@
                         </controls:MediaUriElement>
                     </Grid>
                 </Grid>
-                
-                <controls:IMDbOverlay Style="{DynamicResource IMDbOverlay}">
+
+                <controls:IMDbOverlay x:Name="imdbOverlay" Style="{DynamicResource IMDbOverlay}">
                 </controls:IMDbOverlay>
 
-                <controls:OnlineSubs Style="{DynamicResource OnlineSubs}">
+                <controls:OnlineSubs x:Name="onlineSubs" Style="{DynamicResource OnlineSubs}">
                 </controls:OnlineSubs>
 
-                <controls:Equalizer Style="{DynamicResource Equalizer}">
+                <controls:Visualizations x:Name="visualizations" Style="{DynamicResource Visualizations}">
+                </controls:Visualizations>
+
+                <controls:Equalizer x:Name="equalizer" Style="{DynamicResource Equalizer}">
                 </controls:Equalizer>
-                
-                <controls:Options Style="{DynamicResource Options}">
+
+                <controls:Options x:Name="options" Style="{DynamicResource Options}">
                     <Grid Margin="0,-50,0,50">
                         <ComboBox x:Name="themeCombo" Height="20" Width="200" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
                             <ComboBox.ItemTemplate>

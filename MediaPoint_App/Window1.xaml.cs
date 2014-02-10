@@ -19,13 +19,15 @@ using MediaPoint.VM;
 using MediaPoint.Controls;
 using MediaPoint.MVVM.Services;
 using Microsoft.WindowsAPICodePack.Taskbar;
+using WPFSoundVisualizationLib;
+using MediaPoint.App.Audio;
 
 namespace MediaPoint.App
 {
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class Window1 : IMainView
+    public partial class Window1 : IMainView, ISpectrumPlayer, ISpectrumVisualizer
     {
         private WindowState m_storedWindowState = WindowState.Normal;
         private double _skewX = 0;
@@ -403,26 +405,72 @@ namespace MediaPoint.App
             IsHidden = false;
         }
 
-        public override void OnApplyTemplate()
+        public void UnregisterEventsOnControls()
         {
             mediaControls.MouseEnter -= MediaControlsOnMouseEnter;
             mediaControls.MouseLeave -= MediaControlsOnMouseLeave;
-            base.OnApplyTemplate();
+
+            windowControls.MouseEnter -= MediaControlsOnMouseEnter;
+            windowControls.MouseLeave -= MediaControlsOnMouseLeave;
+
+            imdbOverlay.MouseEnter -= MediaControlsOnMouseEnter;
+            imdbOverlay.MouseLeave -= MediaControlsOnMouseLeave;
+
+            onlineSubs.MouseEnter -= MediaControlsOnMouseEnter;
+            onlineSubs.MouseLeave -= MediaControlsOnMouseLeave;
+
+            visualizations.MouseEnter -= MediaControlsOnMouseEnter;
+            visualizations.MouseLeave -= MediaControlsOnMouseLeave;
+
+            equalizer.MouseEnter -= MediaControlsOnMouseEnter;
+            equalizer.MouseLeave -= MediaControlsOnMouseLeave;
+
+            options.MouseEnter -= MediaControlsOnMouseEnter;
+            options.MouseLeave -= MediaControlsOnMouseLeave;
+        }
+
+        public void RegisterEventsOnControls()
+        {
             mediaControls.MouseEnter += MediaControlsOnMouseEnter;
             mediaControls.MouseLeave += MediaControlsOnMouseLeave;
+
+            windowControls.MouseEnter += MediaControlsOnMouseEnter;
+            windowControls.MouseLeave += MediaControlsOnMouseLeave;
+
+            imdbOverlay.MouseEnter += MediaControlsOnMouseEnter;
+            imdbOverlay.MouseLeave += MediaControlsOnMouseLeave;
+
+            onlineSubs.MouseEnter += MediaControlsOnMouseEnter;
+            onlineSubs.MouseLeave += MediaControlsOnMouseLeave;
+
+            visualizations.MouseEnter += MediaControlsOnMouseEnter;
+            visualizations.MouseLeave += MediaControlsOnMouseLeave;
+
+            equalizer.MouseEnter += MediaControlsOnMouseEnter;
+            equalizer.MouseLeave += MediaControlsOnMouseLeave;
+
+            options.MouseEnter += MediaControlsOnMouseEnter;
+            options.MouseLeave += MediaControlsOnMouseLeave;
+        }
+
+        public override void OnApplyTemplate()
+        {
+            UnregisterEventsOnControls();
+            base.OnApplyTemplate();
+            RegisterEventsOnControls();
         }
 
         private bool _mouseOverMediaControls;
 
         private void MediaControlsOnMouseLeave(object sender, MouseEventArgs e)
         {
-            _mouseOverMediaControls = false;
+            _isOverUIControl = false;
             HideUI();
         }
 
         private void MediaControlsOnMouseEnter(object sender, MouseEventArgs mouseEventArgs)
         {
-            _mouseOverMediaControls = true;
+            _isOverUIControl = true;
             ShowUI();
         }
 
@@ -430,16 +478,18 @@ namespace MediaPoint.App
         {
             var diff = DateTime.Now - LastMouseMove;
 
-            if (diff >= TimeoutToHide && !IsHidden && !_mouseOverMediaControls)
+            if (diff >= TimeoutToHide && !IsHidden)
             {
                 if (this.DataContext as Main == null) return;
-                if (!(this.DataContext as Main).IsOptionsVisible && !(this.DataContext as Main).Player.ShowOnlineSubtitles)
+                if (!_isOverUIControl)
                 {
                     Cursor = Cursors.None;
                     HideUI();
                 }
             }
         }
+
+        bool _isOverUIControl;
 
         public DateTime LastMouseMove { get; set; }
         public bool IsHidden { get; set; }
@@ -547,17 +597,24 @@ namespace MediaPoint.App
 
         private void mediaPlayer_MediaOpened(object sender, RoutedEventArgs e)
         {
-
+            OnPropertyChanged("IsPlaying");
         }
 
         private void mediaPlayer_MediaClosed(object sender, RoutedEventArgs e)
         {
+            OnPropertyChanged("IsPlaying");
+        }
 
+        private void OnPropertyChanged(string p)
+        {
+            var pc = PropertyChanged;
+            if (pc != null)
+                pc(this, new PropertyChangedEventArgs(p));
         }
 
         private void mediaPlayer_MediaEnded(object sender, RoutedEventArgs e)
         {
-
+            OnPropertyChanged("IsPlaying");
         }
 
         private void mediaPlayer_MediaFailed(object sender, Common.DirectShow.MediaPlayers.MediaFailedEventArgs e)
@@ -689,6 +746,8 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         private bool _onceDone;
         private void window_Loaded(object sender, RoutedEventArgs e)
         {
+            ServiceLocator.RegisterOverrideService(this as ISpectrumVisualizer);
+
             if (!_once)
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
@@ -776,5 +835,59 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         {
             return this;
         }
+
+        public bool GetFFTData(float[] fftDataBuffer)
+        {
+            _sampleAggregator.GetFFTResults(fftDataBuffer);
+            return IsPlaying;
+        }
+
+        SampleAggregator _sampleAggregator = new SampleAggregator((int)FFTDataSize.FFT2048);
+
+        public int GetFFTFrequencyIndex(int frequency)
+        {
+            double maxFrequency;
+            if (_frequency > 0)
+                maxFrequency = _frequency / 2.0d;
+            else
+                maxFrequency = 22050; // Assume a default 44.1 kHz sample rate./2
+            return (int)((frequency / maxFrequency) * ((int)FFTDataSize.FFT2048/2)); // only real
+        }
+
+        public bool IsPlaying
+        {
+            get
+            {
+                return mediaPlayer.IsPlaying;
+            }
+        }
+
+        int _numSamples;
+        public void SetNumSamples(int num)
+        {
+            _numSamples = num;
+            _sampleAggregator.Clear();
+        }
+
+        float[] _data;
+        public void DisplayFFTData(float[] data)
+        {
+            OnPropertyChanged("IsPlaying");
+            _data = data;
+            for (int i = 0; i < data.Length; i++)
+                _sampleAggregator.Add(data[i], data[i]);
+        }
+
+        int _channels, _bits, _frequency;
+        public void SetStreamInfo(int channels, int bits, int frequency)
+        {
+            _channels = channels;
+            _bits = bits;
+            _frequency = frequency;
+            var sa = visualizations.TryFindSpectrumAnalyzer();
+            foreach(var s in sa) s.RegisterSoundPlayer(this);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

@@ -140,6 +140,7 @@
     <Compile Include="ViewInterfaces\IDialogService.cs" />
     <Compile Include="ViewInterfaces\IEqualizer.cs" />
     <Compile Include="ViewInterfaces\IMainView.cs" />
+    <Compile Include="ViewInterfaces\ISpectrumVisualizer.cs" />
     <Compile Include="ViewInterfaces\IStyleLoader.cs" />
     <Compile Include="ViewInterfaces\IViewToViewModelMapping.cs" />
   </ItemGroup>

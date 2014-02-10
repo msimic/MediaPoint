@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Media;
 
-namespace MediaPoint.App.Extensions
+namespace MediaPoint.Controls.Extensions
 {
 	public static class UIExtensions
 	{

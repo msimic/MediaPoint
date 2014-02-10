@@ -24,12 +24,12 @@ namespace MediaPoint.App.AttachedProperties
 
 		private static void SliderOnMouseMove(object obj2, MouseEventArgs mouseEvent)
 		{
-			if (mouseEvent.LeftButton == MouseButtonState.Pressed)
-			(obj2 as Slider).RaiseEvent(new MouseButtonEventArgs(mouseEvent.MouseDevice, mouseEvent.Timestamp, MouseButton.Left)
-			{
-				RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent,
-				Source = mouseEvent.Source,
-			});
+            //if (mouseEvent.LeftButton == MouseButtonState.Pressed)
+            //(obj2 as Slider).RaiseEvent(new MouseButtonEventArgs(mouseEvent.MouseDevice, mouseEvent.Timestamp, MouseButton.Left)
+            //{
+            //    RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent,
+            //    Source = mouseEvent.Source,
+            //});
 		}
 	}
 

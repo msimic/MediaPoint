@@ -12,6 +12,7 @@
                     xmlns:Effects="clr-namespace:MediaPoint.App.Effects;assembly=MediaPoint"
                     xmlns:ShaderEffects="clr-namespace:ShaderEffectLibrary;assembly=ShaderEffectLibrary"
                     xmlns:Attached="clr-namespace:MediaPoint.App.AttachedProperties;assembly=MediaPoint"
+                    xmlns:visualisations="clr-namespace:WPFSoundVisualizationLib;assembly=WPFSoundVisualizationLib"
                     xmlns:Subtitles="clr-namespace:MediaPoint.Subtitles;assembly=MediaPoint.Common"
                     xmlns:Interactivity="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity">
         <TextBlock x:Key="Theme">Default</TextBlock>
@@ -43,7 +44,108 @@
       </Setter.Value>
     </Setter>
   </Style>
-  
+
+    <Style TargetType="Controls:Visualizations" x:Key="Visualizations">
+        <Style.Resources>
+            <ResourceDictionary>
+                <DoubleAnimation x:Key="FadeIn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:1"/>
+                <DoubleAnimation x:Key="FadeOut" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:1"/>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeInVisibility" BeginTime="0:0:0"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Visible</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeOutVisibility" BeginTime="0:0:1"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Collapsed</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+            </ResourceDictionary>
+        </Style.Resources>
+        <Setter Property="Behaviors:StylizedBehaviors.Behaviors">
+            <Setter.Value>
+                <Behaviors:StylizedBehaviorCollection>
+                    <LayoutBehaviors:MouseDragElementBehavior/>
+                </Behaviors:StylizedBehaviorCollection>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Panel.ZIndex" Value="1999"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Width" Value="300"/>
+        <Setter Property="Height" Value="250"/>
+        <Setter Property="Margin" Value="50"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Controls:Visualizations">
+                    <Border Background="#bb777777" CornerRadius="7">
+                        <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
+                            <Border Style="{DynamicResource MenuInnerBorder}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                        <RowDefinition Height="*"></RowDefinition>
+                                    </Grid.RowDefinitions>
+                                    <Button Grid.Column="0"
+                                      Margin="3"
+                                      HorizontalAlignment="Right"
+                                      VerticalAlignment="Top"
+                                      Padding="2"
+                                      Command="{Binding ShowVisualizationsCommand}" CommandParameter="hide"  Width="15" Height="15"
+                                      Style="{StaticResource ImageButton}"
+                                      Behaviors:Buttons.Image="/Themes/default/Images/close.png"
+                                      Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
+                                      Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png"/>
+                                    <visualisations:SpectrumAnalyzer Grid.Row="1" x:Name="spectrumAnalyzer" Margin="5" BarCount="10" Background="Transparent"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Panel.ZIndex="3003" />
+                                </Grid>
+                            </Border>
+                        </Border>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ShowVisualizations}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeIn"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeInVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOut"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.ExitActions>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>   
+
     <Style TargetType="ContextMenu" x:Key="ContextMenuStyle">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -190,7 +292,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Controls:MainWindowContent}">
                     <Grid Background="{TemplateBinding Background}">
-                      <Grid Visibility="{Binding Player.IsStopped, Converter={StaticResource stoppedToVis}}">
+                      <Grid Visibility="{Binding Player.HasVideo, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=True}">
                         <Grid.ColumnDefinitions>
                           <ColumnDefinition Width=".1*"></ColumnDefinition>
                           <ColumnDefinition Width=".3*"></ColumnDefinition>
@@ -302,12 +404,13 @@
                 <ControlTemplate TargetType="{x:Type Controls:MediaControls}">
                   <Grid>
                         <Viewbox Style="{DynamicResource ControlsViewbox}">
-                            <Grid Style="{DynamicResource ControlsContainer}" >
-                                <Border Style="{DynamicResource ControlsOuterBorder}">
-                                    <Border Style="{DynamicResource ControlsInnerBorder}" ClipToBounds="True">
-                                        <Grid VerticalAlignment="Bottom" Height="32">
-                                            <StackPanel Orientation="Vertical" Margin="0,-53,0,0" VerticalAlignment="Top">
-                                                <!--<Border Opacity="0.7" Height="14" IsHitTestVisible="False" Panel.ZIndex="1000" HorizontalAlignment="Right"  Visibility="{Binding Player.IsStopped, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=True}"
+                            <Border Background="#bb777777" CornerRadius="7">
+                                <Grid Style="{DynamicResource ControlsContainer}" >
+                                    <Border Background="#bb000000" Style="{DynamicResource ControlsOuterBorder}" Margin="1">
+                                        <Border Style="{DynamicResource ControlsInnerBorder}" ClipToBounds="True">
+                                            <Grid VerticalAlignment="Bottom" Height="32">
+                                                <StackPanel Orientation="Vertical" Margin="0,-53,0,0" VerticalAlignment="Top">
+                                                    <!--<Border Opacity="0.7" Height="14" IsHitTestVisible="False" Panel.ZIndex="1000" HorizontalAlignment="Right"  Visibility="{Binding Player.IsStopped, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=True}"
                                                         CornerRadius="2" Padding="2" Margin="15,-23,15,-14">
                                                   <StackPanel Orientation="Horizontal">
                                                       <TextBlock Style="{DynamicResource StatusText}" Text="{Binding Player.Position, FallbackValue='-'}" />
@@ -315,67 +418,82 @@
                                                       <TextBlock Style="{DynamicResource StatusText}" Text="{Binding Player.Duration, FallbackValue='-'}" />
                                                   </StackPanel>
                                                 </Border>-->
-                                                <Slider Margin="0,-40,3,0" Height="48" MinHeight="48" Style="{DynamicResource MediaTimeSliderStyle}" IsMoveToPointEnabled="True"
+                                                    <Slider Margin="0,-40,3,0" Height="48" MinHeight="48" Style="{DynamicResource MediaTimeSliderStyle}" IsMoveToPointEnabled="True"
                                             Minimum="0" Name="position" Visibility="{Binding Player.IsStopped, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=True}"
                                             Value="{Binding Path=Player.MediaPosition, Mode=TwoWay}" Attached:TrackbarSlider.DragScroll="True"
                                             Maximum="{Binding Path=Player.MediaDuration, Mode=OneWay}"/>
-                                            </StackPanel>
-                                          <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="20,0,20,0">
-                                            <Grid Margin="0,-20,0,10">
-                                              <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                                <ColumnDefinition Width="*"></ColumnDefinition>
-                                              </Grid.ColumnDefinitions>
-                                              <StackPanel Orientation="Horizontal" Height="26" DockPanel.Dock="Left">
-                                                <Button Margin="0,0,3,0"
+                                                </StackPanel>
+                                                <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="20,0,20,0">
+                                                    <Grid Margin="0,-20,0,10">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                                            <ColumnDefinition Width="*"></ColumnDefinition>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Orientation="Horizontal" Height="26" DockPanel.Dock="Left">
+                                                            <Button Margin="0,0,3,0"
                                                   Style="{DynamicResource ShowImdbButton}"
                                                   Width="28"
                                                   Height="14" ToolTip="Show settings"
                                                   Command="{Binding OptionsCommand}">
-                                                  <Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="13" RenderOptions.BitmapScalingMode="HighQuality" Source="/Themes/default/Images/settings.png"></Image>
-                                                </Button>
-                                                <Button Margin="0,0,3,0" Visibility="{Binding Player.IMDb, Converter={StaticResource NotNullToVisibility}}"
+                                                                <Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="13" RenderOptions.BitmapScalingMode="HighQuality" Source="/Themes/default/Images/settings.png"></Image>
+                                                            </Button>
+                                                            <Button Margin="0,0,3,0" Visibility="{Binding Player.IMDb, Converter={StaticResource NotNullToVisibility}}"
                                                   Style="{DynamicResource ShowImdbButton}"
                                                   Width="28"
                                                   Height="14" ToolTip="Show movie info"
                                                   Command="{Binding Player.ShowImdbCommand}">
-                                                  <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
-                                                  <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >INFO</TextBlock>
-                                                </Button>
-                                              </StackPanel>
-                                              <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Height="26" DockPanel.Dock="Right">
-                                                <Button Name="subsBtn" Margin="0,0,3,0"
+                                                                <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
+                                                                <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >INFO</TextBlock>
+                                                            </Button>
+                                                            <Button Margin="0,0,3,0"
+                                            Style="{DynamicResource ShowImdbButton}"
+                                            Width="28"
+                                            Height="14" ToolTip="Show visualizations"
+                                            Command="{Binding ShowVisualizationsCommand}">
+                                                                <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
+                                                                <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >VIS</TextBlock>
+                                                            </Button>
+                                                            <Button Margin="0,0,3,0"
+                                            Style="{DynamicResource ShowImdbButton}"
+                                            Width="28"
+                                            Height="14" ToolTip="Show equalizer"
+                                            Command="{Binding ShowEqualizerCommand}">
+                                                                <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
+                                                                <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >EQ</TextBlock>
+                                                            </Button>
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Height="26" DockPanel.Dock="Right">
+                                                            <Button Name="subsBtn" Margin="0,0,3,0"
                                                   Style="{DynamicResource ShowImdbButton}"
                                                   Width="28"
                                                   Height="14" ToolTip="Select active subtitle">
-                                                  <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
-                                                  <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >SUBS</TextBlock>
-                                                  <Interactivity:Interaction.Triggers>
-                                                    <Interactivity:EventTrigger EventName="Click" >
-                                                      <Behaviors:SetterAction Popup="{Binding ElementName=substreamsPopup}" Property="Popup.IsOpen" Value="True"/>
-                                                    </Interactivity:EventTrigger>
-                                                  </Interactivity:Interaction.Triggers>
-                                                </Button>
-                                              </StackPanel>
-                                            </Grid>
-                                          </Border>
-                                          <Popup MaxWidth="350" MaxHeight="250" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}" Name="substreamsPopup" StaysOpen="False" PlacementTarget="{Binding ElementName=subsBtn}" AllowsTransparency="True">
-                                            <Border CornerRadius="7,7,7,7" Background="#dd000000">
-                                              <Border Style="{DynamicResource ControlsInnerBorder}" Padding="10">
+                                                                <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
+                                                                <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >SUBS</TextBlock>
+                                                                <Interactivity:Interaction.Triggers>
+                                                                    <Interactivity:EventTrigger EventName="Click" >
+                                                                        <Behaviors:SetterAction Popup="{Binding ElementName=substreamsPopup}" Property="Popup.IsOpen" Value="True"/>
+                                                                    </Interactivity:EventTrigger>
+                                                                </Interactivity:Interaction.Triggers>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                                <Popup MaxWidth="350" MaxHeight="250" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}" Name="substreamsPopup" StaysOpen="False" PlacementTarget="{Binding ElementName=subsBtn}" AllowsTransparency="True">
+                                                    <ContentControl Style="{DynamicResource Popup}">
                                                     <Grid>
                                                         <Grid.RowDefinitions>
                                                             <RowDefinition Height="Auto"/>
                                                             <RowDefinition Height="*"/>
                                                         </Grid.RowDefinitions>
-                                                            <Button Margin="2" HorizontalAlignment="Center" Style="{DynamicResource ShowImdbButton}" Command="{Binding Player.ShowOnlineSubtitlesCommand}">
+                                                        <Button Margin="2" HorizontalAlignment="Center" Style="{DynamicResource ShowImdbButton}" Command="{Binding Player.ShowOnlineSubtitlesCommand}">
                                                             <Interactivity:Interaction.Triggers>
                                                                 <Interactivity:EventTrigger EventName="Click" >
                                                                     <Behaviors:SetterAction Popup="{Binding RelativeSource={RelativeSource AncestorType=Popup}}" Property="Popup.IsOpen" Value="False"/>
                                                                 </Interactivity:EventTrigger>
                                                             </Interactivity:Interaction.Triggers>
-                                                                <TextBlock Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="10" Foreground="White" >GET SUBTITLES FROM ONLINE SERVICES</TextBlock>
-                                                            </Button>
-                                                            <ListBox Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderThickness="0" BorderBrush="#00000000" Background="Transparent" ItemsSource="{Binding Player.SubtitleStreams}" SelectedItem="{Binding Player.SelectedSubtitle}">
+                                                            <TextBlock Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="9" Foreground="White" >Find Subtitles Online</TextBlock>
+                                                        </Button>
+                                                        <ListBox Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderThickness="0" BorderBrush="#00000000" Background="Transparent" ItemsSource="{Binding Player.SubtitleStreams}" SelectedItem="{Binding Player.SelectedSubtitle}">
                                                             <ListBox.Resources>
                                                                 <Style TargetType="{x:Type ListBoxItem}">
                                                                     <Setter Property="Template">
@@ -403,16 +521,15 @@
                                                             </ListBox.ItemTemplate>
                                                         </ListBox>
                                                     </Grid>
-                                                </Border>
-                                            </Border>
-                                          </Popup>
-                                        </Grid>
+                                                    </ContentControl>
+                                                </Popup>
+                                            </Grid>
+                                        </Border>
                                     </Border>
-                                </Border>
-                                <Canvas Margin="0,-15,0,0" Width="319"
+                                    <Canvas Margin="0,-15,0,0" Width="319"
                         Height="41">
 
-                                    <Path Stretch="Fill"
+                                        <Path Stretch="Fill"
                             StrokeLineJoin="Round"
                             StrokeThickness="1.2"
                             Width="318"
@@ -421,18 +538,18 @@
                             Data="M109.24504,0.5 C114.03861,0.49999881 118.43511,2.2003291 121.86445,5.0306299 L122.51595,5.5949948 205.5,5.5949948 C212.12742,5.5949938 217.5,10.967577 217.5,17.594993 L217.5,22.594993 C217.5,29.222412 212.12742,34.594995 205.5,34.594995 L123.03446,34.594995 122.5843,35.024179 C119.06116,38.226331 114.38101,40.177999 109.24504,40.177999 104.10908,40.177999 99.428704,38.226331 95.905301,35.024179 L95.455114,34.594995 12.5,34.594995 C5.8725815,34.594995 0.5,29.222412 0.5,22.594993 L0.5,17.594993 C0.5,10.967577 5.8725815,5.5949938 12.5,5.5949948 L95.973664,5.5949948 96.6252,5.0306299 C100.05478,2.2003291 104.45148,0.49999881 109.24504,0.5 z"
                             Opacity="1"
                             Stroke="{x:Null}">
-                                        <Path.Fill>
-                                            <LinearGradientBrush EndPoint="0.5,1"
+                                            <Path.Fill>
+                                                <LinearGradientBrush EndPoint="0.5,1"
                                                     StartPoint="0.5,0"
                                                     MappingMode="RelativeToBoundingBox">
-                                                <GradientStop Color="#8A000000"
+                                                    <GradientStop Color="#8A000000"
                                                 Offset="0" />
-                                                <GradientStop Color="#8A000000"
+                                                    <GradientStop Color="#8A000000"
                                                 Offset="1" />
-                                            </LinearGradientBrush>
-                                        </Path.Fill>
-                                    </Path>
-                                    <Path Stretch="Fill"
+                                                </LinearGradientBrush>
+                                            </Path.Fill>
+                                        </Path>
+                                        <Path Stretch="Fill"
                             StrokeLineJoin="Round"
                             StrokeThickness="1.2"
                             Width="318"
@@ -441,40 +558,40 @@
                             Data="M109.24504,0.5 C114.03861,0.49999881 118.43511,2.2003291 121.86445,5.0306299 L122.51595,5.5949948 205.5,5.5949948 C212.12742,5.5949938 217.5,10.967577 217.5,17.594993 L217.5,22.594993 C217.5,29.222412 212.12742,34.594995 205.5,34.594995 L123.03446,34.594995 122.5843,35.024179 C119.06116,38.226331 114.38101,40.177999 109.24504,40.177999 104.10908,40.177999 99.428704,38.226331 95.905301,35.024179 L95.455114,34.594995 12.5,34.594995 C5.8725815,34.594995 0.5,29.222412 0.5,22.594993 L0.5,17.594993 C0.5,10.967577 5.8725815,5.5949938 12.5,5.5949948 L95.973664,5.5949948 96.6252,5.0306299 C100.05478,2.2003291 104.45148,0.49999881 109.24504,0.5 z"
                             Opacity="1"
                             Fill="{DynamicResource Glassage}">
-                                        <Path.Stroke>
-                                            <LinearGradientBrush EndPoint="0.5,1"
+                                            <Path.Stroke>
+                                                <LinearGradientBrush EndPoint="0.5,1"
                                                     StartPoint="0.5,0">
-                                                <GradientStop Color="#FF000000"
+                                                    <GradientStop Color="#FF000000"
                                                 Offset="1" />
-                                                <GradientStop Color="#FFC1C1C1"
+                                                    <GradientStop Color="#FFC1C1C1"
                                                 Offset="0" />
-                                            </LinearGradientBrush>
-                                        </Path.Stroke>
-                                    </Path>
-                                    <Canvas HorizontalAlignment="Center"
+                                                </LinearGradientBrush>
+                                            </Path.Stroke>
+                                        </Path>
+                                        <Canvas HorizontalAlignment="Center"
                             Margin="0,0,0,0"
                             VerticalAlignment="Center"
                             Width="132"
                             Height="40"
                             Canvas.Left="43.833"
                             Canvas.Top="-0.084">
-                                        <Button Style="{DynamicResource PreviousButton}"
+                                            <Button Style="{DynamicResource PreviousButton}"
                                 Content="Button"
                                 Canvas.Left="3" Opacity="0.5"
                                 Canvas.Top="8" IsEnabled="False"/>
-                                        <Button Style="{DynamicResource FastBackButton}"
+                                            <Button Style="{DynamicResource FastBackButton}"
                                 Content="Button"
-                                Canvas.Left="50" Opacity="0.5"
-                                Canvas.Top="8" IsEnabled="False" Command="{Binding Player.DecreaseRateCommand}"/>
-                                        <Button Content="Button" Opacity="0.5"
+                                Canvas.Left="50" 
+                                Canvas.Top="8" Command="{Binding Player.DecreaseRateCommand}"/>
+                                            <Button Content="Button" 
                                 Style="{DynamicResource FastForwardStyle}"
                                 Canvas.Left="133"  Command="{Binding Player.IncreaseRateCommand}"
-                                Canvas.Top="8" IsEnabled="False"/>
-                                        <Button Content="Button" IsEnabled="False" Opacity="0.5"
+                                Canvas.Top="8"/>
+                                            <Button Content="Button" IsEnabled="False" Opacity="0.5"
                                 Style="{DynamicResource NextButtonStyle}"
                                 Canvas.Left="180"
                                 Canvas.Top="8" />
-                                        <ToggleButton Style="{DynamicResource MediaPlayPauseToggleStyle}"
+                                            <ToggleButton Style="{DynamicResource MediaPlayPauseToggleStyle}"
                                         Width="36.626"
                                         Height="38.666"
                                         Content="ToggleButton"
@@ -482,15 +599,15 @@
                                         Canvas.Top="2"
                                         Command="{Binding Player.PlayCommand}"
                                         Attached:CheckExtender.IsChecked="{Binding Path=Player.IsPaused, Mode=OneWay}"/>
-                                    </Canvas>
-                                    <Button Content="Button"
+                                        </Canvas>
+                                        <Button Content="Button"
                             Canvas.Top="11"
                             Canvas.Left="15"
                             Style="{DynamicResource StopMediaButton}"
                             Width="20"
                             Height="20"
                             Command="{Binding OpenCommand}"/>
-                                    <Slider Canvas.Top="16.842"
+                                        <Slider Canvas.Top="16.842"
                             Canvas.Left="275.833"
                             Width="34.167"
                             Style="{DynamicResource AudioSliderStyle}"
@@ -499,8 +616,9 @@
                             SmallChange="0.02"
                             Maximum="1"
                             Value="{Binding Path=Player.Volume}" />
-                                </Canvas>
-                            </Grid>
+                                    </Canvas>
+                                </Grid>
+                            </Border>
                         </Viewbox>
                     </Grid>                    
                 </ControlTemplate>
@@ -516,13 +634,13 @@
     </Style>
     
     <Style TargetType="Grid" x:Key="ControlsContainer">
-        <Setter Property="Effect">
+        <!--<Setter Property="Effect">
             <Setter.Value>
                     <DropShadowEffect ShadowDepth="4"
                                               BlurRadius="12"
                                               Direction="295" />
             </Setter.Value>
-        </Setter>
+        </Setter>-->
     </Style>
 
     <Style TargetType="Controls:OnlineSubs" x:Key="OnlineSubs">
@@ -558,8 +676,8 @@
         <Setter Property="Panel.ZIndex" Value="2001"/>
         <Setter Property="ClipToBounds" Value="True"/>
         <Setter Property="Opacity" Value="0"/>
-        <Setter Property="Width" Value="500"/>
-        <Setter Property="Height" Value="350"/>
+        <Setter Property="Width" Value="485"/>
+        <Setter Property="Height" Value="245"/>
         <Setter Property="Margin" Value="50"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -567,8 +685,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:OnlineSubs">
-                    <Border Background="#bb000000" CornerRadius="7">
-                        <Border Style="{DynamicResource MenuOuterBorder}" Margin="4">
+                    <Border Background="#bb777777" CornerRadius="7">
+                        <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
                             <Border Style="{DynamicResource MenuInnerBorder}">
                                 <Grid>
                                     <Grid.Resources>
@@ -596,7 +714,7 @@
                                       Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
                                       Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png"/>
                                     <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
-                                    <Image Grid.Row="2" RenderTransformOrigin="0.5,0.5"  Source="/Themes/default/Images/loading.gif" Margin="30" Visibility="{Binding Player.IsSubtitleSearchInProgress, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=false}">
+                                    <Image Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"  RenderTransformOrigin="0.5,0.5"  Source="/Themes/default/Images/loading.png" Height="100" Width="100" RenderOptions.BitmapScalingMode="HighQuality"  Margin="30" Visibility="{Binding Player.IsSubtitleSearchInProgress, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=false}">
                                         <Image.RenderTransform>
                                             <TransformGroup>
                                                 <RotateTransform x:Name="rt" Angle="0"></RotateTransform>
@@ -736,40 +854,39 @@
         <Setter Property="Panel.ZIndex" Value="2002"/>
         <Setter Property="ClipToBounds" Value="True"/>
         <Setter Property="Opacity" Value="0"/>
-        <Setter Property="Width" Value="500"/>
-        <Setter Property="Height" Value="350"/>
+        <Setter Property="Width" Value="300"/>
+        <Setter Property="Height" Value="250"/>
         <Setter Property="Margin" Value="50"/>
-        <Setter Property="HorizontalAlignment" Value="Center"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
         <Setter Property="Visibility" Value="Collapsed"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:Equalizer">
-                    <Border Background="#bb000000" CornerRadius="7">
-                        <Border Style="{DynamicResource MenuOuterBorder}" Margin="4">
+                    <Border Background="#bb777777" CornerRadius="7">
+                        <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
                             <Border Style="{DynamicResource MenuInnerBorder}">
-                                <Grid HorizontalAlignment="Center">
+                                <Grid HorizontalAlignment="Stretch">
                                     <Grid.Resources>
                                         <!-- hack to get the datacontext in mouse bindings since they are not part of the visual tree -->
                                         <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
                                     </Grid.Resources>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
-                                        <ColumnDefinition Width="20"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"></RowDefinition>
                                         <RowDefinition Height="*"></RowDefinition>
-                                        <RowDefinition Height="Auto"></RowDefinition>
                                     </Grid.RowDefinitions>
                                     <Button Grid.Column="0" Grid.ColumnSpan="11"
                                       Margin="3"
@@ -791,7 +908,6 @@
                                     <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[7]}" Grid.Column="7" />
                                     <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[8]}" Grid.Column="8" />
                                     <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[9]}" Grid.Column="9" />
-                                    <Slider Grid.Row="1" Orientation="Vertical" Height="150" Minimum="-60" Maximum="60" Value="{Binding Equalizer[10]}" Grid.Column="10" />
                                 </Grid>
                             </Border>
                         </Border>
@@ -870,8 +986,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:IMDbOverlay">
-                  <Border Background="#bb000000" CornerRadius="7" Visibility="{Binding Player.IMDb, Converter={StaticResource NotNullToVisibility}}">
-                  <Border Style="{DynamicResource MenuOuterBorder}" Margin="4">
+                 <Border Background="#bb777777" CornerRadius="7" Visibility="{Binding Player.IMDb, Converter={StaticResource NotNullToVisibility}}">
+                  <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
                     <Border Style="{DynamicResource MenuInnerBorder}">
                       <Grid>
                         <Grid.ColumnDefinitions>
@@ -997,14 +1113,28 @@
     </Style>
     
     <Style TargetType="Controls:Options" x:Key="Options">
-        <Setter Property="Panel.ZIndex" Value="3000"/>
-        <Setter Property="ClipToBounds" Value="False"/>
-        <Setter Property="Margin" Value="10,20,10,80"/>
-        <Setter Property="MinWidth" Value="550"/>
-        <Setter Property="MaxWidth" Value="550"/>
-        <Setter Property="Height" Value="250"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Visibility" Value="{Binding IsOptionsVisible, Converter={StaticResource Boolean2VisibilityConverter}}"/>
+        <Style.Resources>
+            <ResourceDictionary>
+                <DoubleAnimation x:Key="FadeIn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:1"/>
+                <DoubleAnimation x:Key="FadeOut" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:1"/>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeInVisibility" BeginTime="0:0:0"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Visible</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+                <ObjectAnimationUsingKeyFrames x:Key="FadeOutVisibility" BeginTime="0:0:1"
+                        Storyboard.TargetProperty="Visibility">
+                    <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                            <Visibility>Collapsed</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+            </ResourceDictionary>
+        </Style.Resources>
         <Setter Property="Behaviors:StylizedBehaviors.Behaviors">
             <Setter.Value>
                 <Behaviors:StylizedBehaviorCollection>
@@ -1012,243 +1142,281 @@
                 </Behaviors:StylizedBehaviorCollection>
             </Setter.Value>
         </Setter>
+        <Setter Property="Panel.ZIndex" Value="3000"/>
+        <Setter Property="ClipToBounds" Value="False"/>
+        <Setter Property="Margin" Value="10,20,10,80"/>
+        <Setter Property="MinWidth" Value="550"/>
+        <Setter Property="MaxWidth" Value="550"/>
+        <Setter Property="Height" Value="250"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Visibility" Value="Collapsed"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:Options">
                     <Border x:Name="settings">
-                        <Grid Margin="0,0,0,0" Background="#ff000000">
-                            <Rectangle Fill="{DynamicResource Glassage}"
-                        RadiusX="5"
-                        RadiusY="5"
-                        HorizontalAlignment="Stretch"
-                        Margin="0,0,0,0"
-                        Width="Auto"
-                        Opacity="0.7"
-                        StrokeThickness="1">
-                                <Rectangle.Stroke>
-                                    <LinearGradientBrush EndPoint="0.5,1"
-                                            StartPoint="0.5,0">
-                                        <GradientStop Color="#FF2C2C2C"
-                                        Offset="1" />
-                                        <GradientStop Color="#FF7C7C7C"
-                                        Offset="0" />
-                                    </LinearGradientBrush>
-                                </Rectangle.Stroke>
-                            </Rectangle>
-                          <Button Grid.Column="0"
-                                  Margin="3"
-                                  HorizontalAlignment="Right"
-                                  VerticalAlignment="Top"
-                                  Padding="2"
-                                  Command="{Binding OptionsCommand}" Width="15" Height="15"
-                                  Style="{StaticResource ImageButton}"
-                                  Behaviors:Buttons.Image="/Themes/default/Images/close.png"
-                                  Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
-                                  Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png">
-                          </Button>
-                                  <WPFSpark:PivotPanel Margin="10,10,10,10" HeaderHeight="40" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <WPFSpark:PivotItem>
-                                      <WPFSpark:PivotItem.PivotHeader>
-                                        <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
-                                          <TextBlock Margin="4">Video settings</TextBlock>
-                                        </WPFSpark:PivotHeaderControl>
-                                      </WPFSpark:PivotItem.PivotHeader>
-                                      <WPFSpark:PivotItem.PivotContent>
-                                        <WPFSpark:PivotContentControl AnimateContent="True">
-                                          <CheckBox IsChecked="{Binding Player.IsDeeperColor}" Margin="5">
-                                            <TextBlock Margin="0,3,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">OUTPUT COLOR RANGE 16-236 (DEEPER COLOR)</TextBlock>
-                                          </CheckBox>
-                                        </WPFSpark:PivotContentControl>
-                                      </WPFSpark:PivotItem.PivotContent>
-                                    </WPFSpark:PivotItem>
-                                    <WPFSpark:PivotItem>
-                                      <WPFSpark:PivotItem.PivotHeader>
-                                        <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
-                                          <TextBlock Margin="4">Audio output</TextBlock>
-                                        </WPFSpark:PivotHeaderControl>
-                                      </WPFSpark:PivotItem.PivotHeader>
-                                      <WPFSpark:PivotItem.PivotContent>
-                                        <WPFSpark:PivotContentControl AnimateContent="True">
-                                          <ItemsControl Name="audiodevices" ItemsSource="{Binding AudioRenderers}">
-                                            <ItemsControl.ItemTemplate>
-                                              <DataTemplate>
-                                                <RadioButton GroupName="audiodevices" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}" Command="{Binding Path=DataContext.SetAudioRendererCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" CommandParameter="{Binding .}"></RadioButton>
-                                              </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                          </ItemsControl>
-                                        </WPFSpark:PivotContentControl>
-                                      </WPFSpark:PivotItem.PivotContent>
-                                    </WPFSpark:PivotItem>
-                                    <WPFSpark:PivotItem>
-                                      <WPFSpark:PivotItem.PivotHeader>
-                                        <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
-                                          <TextBlock Margin="4">Subtitle settings</TextBlock>
-                                        </WPFSpark:PivotHeaderControl>
-                                      </WPFSpark:PivotItem.PivotHeader>
-                                      <WPFSpark:PivotItem.PivotContent>
-                                        <WPFSpark:PivotContentControl AnimateContent="True">
-                                          <StackPanel>
-                                            <StackPanel Orientation="Vertical">
-                                              <CheckBox IsChecked="{Binding AutoLoadSubtitles}">
-                                                <TextBlock FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">AUTOMATICALLY DOWNLOAD MISSING SUBTITLE</TextBlock>
-                                              </CheckBox>
-                                              <StackPanel Orientation="Horizontal">
-                                                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">LANGUAGE PREFERENCE (ORDERED):</TextBlock>
-                                                <Controls:EvernoteTagControl SelectedTags="{Binding SubtitleLanguages}" AllTags="{Binding AllLanguages}" ></Controls:EvernoteTagControl>
-                                              </StackPanel>
-                                              <StackPanel Orientation="Horizontal">
-                                                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUB SERVICE PREFERENCE (ORDERED):</TextBlock>
-                                                <Controls:EvernoteTagControl SelectedTags="{Binding SubtitleServices}" AllTags="{Binding AllSubtitleServices}" ></Controls:EvernoteTagControl>
-                                              </StackPanel>
-                                              <StackPanel Orientation="Horizontal">
-                                                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE FONT:</TextBlock>
-                                                <ComboBox x:Name="fontCombo" HorizontalAlignment="Left" SelectedValue="{Binding SubtitleFont}" Background="Transparent" ItemsSource="{Binding AllFonts}">
-                                                  <ComboBox.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                      <VirtualizingStackPanel Width="175" />
-                                                    </ItemsPanelTemplate>
-                                                  </ComboBox.ItemsPanel>
-                                                  <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                      <Grid Background="#00000000" HorizontalAlignment="Stretch" Height="16">
-                                                        <ContentPresenter VerticalAlignment="Center">
-                                                          <ContentPresenter.Content>
-                                                            <PriorityBinding>
-                                                              <Binding Path="BuildStyledFontName" />
-                                                              <!--<Binding Path="BuildTextBlock" />-->
-                                                            </PriorityBinding>
-                                                          </ContentPresenter.Content>
-                                                        </ContentPresenter>
-                                                      </Grid>
-                                                    </DataTemplate>
-                                                  </ComboBox.ItemTemplate>
-                                                </ComboBox>
-                                              </StackPanel>
-                                              <StackPanel Orientation="Horizontal">
-                                                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE ENCODING:</TextBlock>
-                                                <ComboBox x:Name="encodingCombo" Text="(System Default)" HorizontalAlignment="Left" SelectedValue="{Binding SubEncoding}" ItemsSource="{Binding Encodings}">
-                                                  <ComboBox.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                      <VirtualizingStackPanel Width="175" />
-                                                    </ItemsPanelTemplate>
-                                                  </ComboBox.ItemsPanel>
-                                                  <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                      <Grid Background="#00000000" HorizontalAlignment="Stretch" Height="16">
-                                                        <ContentPresenter VerticalAlignment="Center">
-                                                          <ContentPresenter.Content>
-                                                            <PriorityBinding>
-                                                              <Binding Path="."/>
-                                                              <!--<Binding Path="BuildTextBlock" />-->
-                                                            </PriorityBinding>
-                                                          </ContentPresenter.Content>
-                                                        </ContentPresenter>
-                                                      </Grid>
-                                                    </DataTemplate>
-                                                  </ComboBox.ItemTemplate>
-                                                </ComboBox>
-                                              </StackPanel>
-                                              <StackPanel Orientation="Horizontal">
-                                                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE SIZE:</TextBlock>
-                                                <TextBox Text="{Binding SubtitleSize}" Margin="0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Background="Black" Foreground="White"></TextBox>
-                                              </StackPanel>
-                                              <StackPanel Orientation="Horizontal">
-                                                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE COLOR:</TextBlock>
-                                                <Rectangle Width="30" Height="16">
-                                                  <Rectangle.Style>
-                                                    <Style TargetType="Rectangle">
-                                                      <Setter Property="Stroke" Value="White"/>
-                                                      <Setter Property="StrokeThickness" Value="1"/>
-                                                      <Setter Property="Fill">
-                                                        <Setter.Value>
-                                                          <SolidColorBrush Color="{Binding SubtitleColor}">
-                                                          </SolidColorBrush>
-                                                        </Setter.Value>
-                                                      </Setter>
-                                                    </Style>
-                                                  </Rectangle.Style>
-                                                  <Interactivity:Interaction.Triggers>
-                                                    <Interactivity:EventTrigger EventName="MouseLeftButtonUp" >
-                                                      <Behaviors:SetterAction Popup="{Binding ElementName=colorPopup}" Property="Popup.IsOpen" Value="True"/>
-                                                    </Interactivity:EventTrigger>
-                                                  </Interactivity:Interaction.Triggers>
-                                                </Rectangle>
-                                                <Popup x:Name="colorPopup" StaysOpen="False" Placement="Mouse" AllowsTransparency="True">
-                                                  <Border CornerRadius="7,7,7,7" Background="#dd000000">
-                                                    <Border Style="{DynamicResource ControlsInnerBorder}" Padding="10">
-                                                      <xceed:ColorCanvas SelectedColor="{Binding SubtitleColor}" Background="Black" Foreground="White" BorderThickness="0">
-                                                      </xceed:ColorCanvas>
-                                                    </Border>
-                                                  </Border>
-                                                </Popup>
-                                              </StackPanel>
-                                            </StackPanel>
-                                          </StackPanel>
-                                        </WPFSpark:PivotContentControl>
-                                      </WPFSpark:PivotItem.PivotContent>
-                                    </WPFSpark:PivotItem>
-                                    <WPFSpark:PivotItem>
-                                      <WPFSpark:PivotItem.PivotHeader>
-                                        <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
-                                          <TextBlock Margin="4">Theme</TextBlock>
-                                        </WPFSpark:PivotHeaderControl>
-                                      </WPFSpark:PivotItem.PivotHeader>
-                                      <WPFSpark:PivotItem.PivotContent>
-                                        <WPFSpark:PivotContentControl AnimateContent="True">
-                                          <ComboBox x:Name="themeCombo" Width="200" VerticalAlignment="Top" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
-                                            <ComboBox.ItemTemplate>
-                                              <DataTemplate>
-                                                <TextBlock Text="{Binding .}" FontSize="15" Height="20"/>
-                                              </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                          </ComboBox>
-                                        </WPFSpark:PivotContentControl>
-                                      </WPFSpark:PivotItem.PivotContent>
-                                    </WPFSpark:PivotItem>
-                                    <WPFSpark:PivotItem>
-                                      <WPFSpark:PivotItem.PivotHeader>
-                                        <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
-                                          <TextBlock Margin="4">Current media info</TextBlock>
-                                        </WPFSpark:PivotHeaderControl>
-                                      </WPFSpark:PivotItem.PivotHeader>
-                                      <WPFSpark:PivotItem.PivotContent>
-                                        <WPFSpark:PivotContentControl AnimateContent="True">
-                                          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                            <TextBlock FontFamily="Consolas" FontWeight="Bold" FontSize="10" Foreground="DarkGray" Text="{Binding Player.MediaInfo}" TextWrapping="Wrap"></TextBlock>
-                                          </ScrollViewer>
-                                        </WPFSpark:PivotContentControl>
-                                      </WPFSpark:PivotItem.PivotContent>
-                                    </WPFSpark:PivotItem>
-                                  </WPFSpark:PivotPanel>
+                        <Border Background="#bb777777" CornerRadius="7">
+                            <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
+                                <Border Style="{DynamicResource MenuInnerBorder}">
+                                    <Grid Margin="0,0,0,0">
+                                        <Button Grid.Column="0"
+                                                Margin="3"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                Padding="2"
+                                                Command="{Binding OptionsCommand}" Width="15" Height="15"
+                                                Style="{StaticResource ImageButton}"
+                                                Behaviors:Buttons.Image="/Themes/default/Images/close.png"
+                                                Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
+                                                Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png">
+                                        </Button>
+                                            <WPFSpark:PivotPanel ClipToBounds="True"  Margin="10,10,10,10" HeaderHeight="40" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                <WPFSpark:PivotItem>
+                                                    <WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
+                                                        <TextBlock Margin="4">Video settings</TextBlock>
+                                                    </WPFSpark:PivotHeaderControl>
+                                                    </WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotItem.PivotContent>
+                                                    <WPFSpark:PivotContentControl AnimateContent="True">
+                                                        <CheckBox IsChecked="{Binding Player.IsDeeperColor}" Margin="5">
+                                                        <TextBlock Margin="0,3,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">OUTPUT COLOR RANGE 16-236 (DEEPER COLOR)</TextBlock>
+                                                        </CheckBox>
+                                                    </WPFSpark:PivotContentControl>
+                                                    </WPFSpark:PivotItem.PivotContent>
+                                                </WPFSpark:PivotItem>
+                                                <WPFSpark:PivotItem>
+                                                    <WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
+                                                        <TextBlock Margin="4">Audio output</TextBlock>
+                                                    </WPFSpark:PivotHeaderControl>
+                                                    </WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotItem.PivotContent>
+                                                    <WPFSpark:PivotContentControl AnimateContent="True">
+                                                        <ItemsControl Name="audiodevices" ItemsSource="{Binding AudioRenderers}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                            <RadioButton GroupName="audiodevices" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}" Command="{Binding Path=DataContext.SetAudioRendererCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" CommandParameter="{Binding .}"></RadioButton>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </WPFSpark:PivotContentControl>
+                                                    </WPFSpark:PivotItem.PivotContent>
+                                                </WPFSpark:PivotItem>
+                                                <WPFSpark:PivotItem>
+                                                    <WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
+                                                        <TextBlock Margin="4">Subtitle settings</TextBlock>
+                                                    </WPFSpark:PivotHeaderControl>
+                                                    </WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotItem.PivotContent>
+                                                    <WPFSpark:PivotContentControl AnimateContent="True">
+                                                        <StackPanel>
+                                                            <StackPanel.Resources>
+                                                                <!-- hack to get the datacontext in mouse bindings since they are not part of the visual tree -->
+                                                                <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
+                                                            </StackPanel.Resources>
+                                                            <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
+                                                            <StackPanel Orientation="Vertical">
+                                                            <CheckBox IsChecked="{Binding AutoLoadSubtitles}">
+                                                            <TextBlock FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">AUTOMATICALLY DOWNLOAD MISSING SUBTITLE</TextBlock>
+                                                            </CheckBox>
+                                                            <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">LANGUAGE PREFERENCE (ORDERED):</TextBlock>
+                                                            <Controls:EvernoteTagControl SelectedTags="{Binding SubtitleLanguages}" AllTags="{Binding AllLanguages}" ></Controls:EvernoteTagControl>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUB SERVICE PREFERENCE (ORDERED):</TextBlock>
+                                                            <Controls:EvernoteTagControl SelectedTags="{Binding SubtitleServices}" AllTags="{Binding AllSubtitleServices}" ></Controls:EvernoteTagControl>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE FONT:</TextBlock>
+                                                            <ComboBox x:Name="fontCombo" HorizontalAlignment="Left" SelectedValue="{Binding SubtitleFont}" Background="Transparent" ItemsSource="{Binding AllFonts}">
+                                                                <ComboBox.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <VirtualizingStackPanel Width="175" />
+                                                                </ItemsPanelTemplate>
+                                                                </ComboBox.ItemsPanel>
+                                                                <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Grid Background="#00000000" HorizontalAlignment="Stretch" Height="16">
+                                                                    <ContentPresenter VerticalAlignment="Center">
+                                                                        <ContentPresenter.Content>
+                                                                        <PriorityBinding>
+                                                                            <Binding Path="BuildStyledFontName" />
+                                                                            <!--<Binding Path="BuildTextBlock" />-->
+                                                                        </PriorityBinding>
+                                                                        </ContentPresenter.Content>
+                                                                    </ContentPresenter>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                                </ComboBox.ItemTemplate>
+                                                            </ComboBox>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE ENCODING:</TextBlock>
+                                                            <ComboBox x:Name="encodingCombo" Text="(System Default)" HorizontalAlignment="Left" SelectedValue="{Binding SubEncoding}" ItemsSource="{Binding Encodings}">
+                                                                <ComboBox.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <VirtualizingStackPanel Width="175" />
+                                                                </ItemsPanelTemplate>
+                                                                </ComboBox.ItemsPanel>
+                                                                <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Grid Background="#00000000" HorizontalAlignment="Stretch" Height="16">
+                                                                    <ContentPresenter VerticalAlignment="Center">
+                                                                        <ContentPresenter.Content>
+                                                                        <PriorityBinding>
+                                                                            <Binding Path="."/>
+                                                                            <!--<Binding Path="BuildTextBlock" />-->
+                                                                        </PriorityBinding>
+                                                                        </ContentPresenter.Content>
+                                                                    </ContentPresenter>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                                </ComboBox.ItemTemplate>
+                                                            </ComboBox>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE SIZE:</TextBlock>
+                                                            <TextBox Text="{Binding SubtitleSize}" Margin="0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Background="Black" Foreground="White"></TextBox>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">SUBTITLE COLOR:</TextBlock>
+                                                            
+                                                            <Button ClickMode="Release" Width="30" Height="16">
+                                                                <Button.Style>
+                                                                <Style TargetType="Button">
+                                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                                    <Setter Property="Template">
+                                                                        <Setter.Value>
+                                                                            <ControlTemplate>
+                                                                                <Rectangle Fill="{TemplateBinding Background}" />
+                                                                            </ControlTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Style>
+                                                                </Button.Style>
+                                                                <Button.Background>
+                                                                    <SolidColorBrush Color="{Binding DataContext.SubtitleColor, Source={StaticResource ProxyElement}}">
+                                                                    </SolidColorBrush>
+                                                                </Button.Background>
+                                                                <Interactivity:Interaction.Triggers>
+                                                                <Interactivity:EventTrigger EventName="Click" >
+                                                                    <Behaviors:SetterAction Popup="{Binding ElementName=colorPopup}" Property="Popup.IsOpen" Value="True"/>
+                                                                </Interactivity:EventTrigger>
+                                                                </Interactivity:Interaction.Triggers>
+                                                            </Button>
+                                                            <Popup x:Name="colorPopup" StaysOpen="False" Placement="Mouse" AllowsTransparency="True">
+                                                                <ContentControl Style="{DynamicResource Popup}" Focusable="True">
+                                                                    <xceed:ColorCanvas Focusable="True" Background="Transparent"  SelectedColor="{Binding SubtitleColor}" TextBlock.Foreground="White" Foreground="White" BorderThickness="0">
+                                                                        <Interactivity:Interaction.Triggers>
+                                                                        <Interactivity:EventTrigger EventName="MouseLeftButtonDown" >
+                                                                            <Behaviors:SetterAction Popup="{Binding ElementName=colorPopup}" Property="Popup.IsOpen" Value="False"/>
+                                                                        </Interactivity:EventTrigger>
+                                                                        </Interactivity:Interaction.Triggers>
+                                                                    </xceed:ColorCanvas>
+                                                                </ContentControl>
+                                                            </Popup>
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                        </StackPanel>
+                                                    </WPFSpark:PivotContentControl>
+                                                    </WPFSpark:PivotItem.PivotContent>
+                                                </WPFSpark:PivotItem>
+                                                <WPFSpark:PivotItem>
+                                                    <WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
+                                                        <TextBlock Margin="4">Theme</TextBlock>
+                                                    </WPFSpark:PivotHeaderControl>
+                                                    </WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotItem.PivotContent>
+                                                    <WPFSpark:PivotContentControl AnimateContent="True">
+                                                        <ComboBox x:Name="themeCombo" Width="200" VerticalAlignment="Top" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate>
+                                                            <TextBlock Text="{Binding .}" FontSize="15" Height="20"/>
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                        </ComboBox>
+                                                    </WPFSpark:PivotContentControl>
+                                                    </WPFSpark:PivotItem.PivotContent>
+                                                </WPFSpark:PivotItem>
+                                                <WPFSpark:PivotItem>
+                                                    <WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotHeaderControl ActiveForeground="White" InactiveForeground="DarkGray">
+                                                        <TextBlock Margin="4">Current media info</TextBlock>
+                                                    </WPFSpark:PivotHeaderControl>
+                                                    </WPFSpark:PivotItem.PivotHeader>
+                                                    <WPFSpark:PivotItem.PivotContent>
+                                                    <WPFSpark:PivotContentControl AnimateContent="True">
+                                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                                        <TextBlock FontFamily="Consolas" FontWeight="Bold" FontSize="10" Foreground="DarkGray" Text="{Binding Player.MediaInfo}" TextWrapping="Wrap"></TextBlock>
+                                                        </ScrollViewer>
+                                                    </WPFSpark:PivotContentControl>
+                                                    </WPFSpark:PivotItem.PivotContent>
+                                                </WPFSpark:PivotItem>
+                                                </WPFSpark:PivotPanel>
                                     
-                                    <!--<Expander Margin="10" Header="Video Streams" Foreground="#ff999999" HorizontalAlignment="Stretch">
-                                        <ItemsControl Name="videostreams" ItemsSource="{Binding Player.VideoStreams}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <RadioButton GroupName="videostreams" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}"></RadioButton>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Expander>
-                                    <Expander Margin="10" Header="Audio Streams" Foreground="#ff999999" HorizontalAlignment="Stretch">
-                                        <ItemsControl Name="audiostreams" ItemsSource="{Binding Player.AudioStreams}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <RadioButton GroupName="audiostreams" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}"></RadioButton>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Expander>
-                                    <Expander Margin="10" Header="Themes | Skin" Foreground="#ff999999" HorizontalAlignment="Stretch">
+                                                <!--<Expander Margin="10" Header="Video Streams" Foreground="#ff999999" HorizontalAlignment="Stretch">
+                                                    <ItemsControl Name="videostreams" ItemsSource="{Binding Player.VideoStreams}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <RadioButton GroupName="videostreams" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}"></RadioButton>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Expander>
+                                                <Expander Margin="10" Header="Audio Streams" Foreground="#ff999999" HorizontalAlignment="Stretch">
+                                                    <ItemsControl Name="audiostreams" ItemsSource="{Binding Player.AudioStreams}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <RadioButton GroupName="audiostreams" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}"></RadioButton>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Expander>
+                                                <Expander Margin="10" Header="Themes | Skin" Foreground="#ff999999" HorizontalAlignment="Stretch">
                                         
-                                    </Expander>-->
-                                <!--</StackPanel>
-                            </ScrollViewer>-->
-                        </Grid>
+                                                </Expander>-->
+                                            <!--</StackPanel>
+                                        </ScrollViewer>-->
+                                    </Grid>
+                                </Border>
+                            </Border>
+                        </Border>
                     </Border>                    
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsOptionsVisible}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeIn"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeInVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOut"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.ExitActions>
+            </DataTrigger>
+        </Style.Triggers>
     </Style>                    
     
     <Style TargetType="Controls:HidingOverlay" x:Key="HidingOverlay">
@@ -1257,79 +1425,81 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:HidingOverlay">
-                    <Border Style="{DynamicResource MenuOuterBorder}">
-                        <Border Style="{DynamicResource MenuInnerBorder}">
-                            <Grid>
-                              <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                              </Grid.ColumnDefinitions>
-                                <Grid Grid.Column="0">
+                    <Border Background="#bb777777" CornerRadius="7" Margin="5">
+                        <Border Background="#bb000000" Margin="1" Style="{DynamicResource MenuOuterBorder}">
+                            <Border Style="{DynamicResource MenuInnerBorder}">
+                                <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
                                     <ColumnDefinition Width="*"></ColumnDefinition>
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                                   </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
-                                    Padding="2"
-                                    Command="{Binding OptionsCommand}" Width="15" Height="15"
-                                    Style="{StaticResource ImageButton}"
-                                    Behaviors:Buttons.Image="/Themes/default/Images/settings.png"
-                                    Behaviors:Buttons.NormalImage="/Themes/default/Images/settings.png"
-                                    Behaviors:Buttons.HoverImage="/Themes/default/Images/settings_hover.png">
-                                    </Button>
-                                    <TextBlock Grid.Column="1" Margin="8,-4,10,-3" VerticalAlignment="Center" HorizontalAlignment="Left" Style="{DynamicResource DefaultFontStyle}">MEDIAPOINT v0.1a</TextBlock>
-                                    <TextBlock TextAlignment="Right" Grid.Column="2" Margin="8,-4,15,-3" VerticalAlignment="Center" HorizontalAlignment="Right" Style="{DynamicResource DefaultFontStyle}" Text="{Binding Player.Source.LocalPath}"></TextBlock>
-                                    <TextBlock Grid.Column="3" Margin="8,-4,15,-3" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" Text="{Binding Time, StringFormat='Time: {0}'}"></TextBlock>
+                                    <Grid Grid.Column="0">
+                                      <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                      </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Padding="2"
+                                        Command="{Binding OptionsCommand}" Width="15" Height="15"
+                                        Style="{StaticResource ImageButton}"
+                                        Behaviors:Buttons.Image="/Themes/default/Images/settings.png"
+                                        Behaviors:Buttons.NormalImage="/Themes/default/Images/settings.png"
+                                        Behaviors:Buttons.HoverImage="/Themes/default/Images/settings_hover.png">
+                                        </Button>
+                                        <TextBlock Grid.Column="1" Margin="8,-4,10,-3" VerticalAlignment="Center" HorizontalAlignment="Left" Style="{DynamicResource DefaultFontStyle}">MEDIAPOINT v0.1a</TextBlock>
+                                        <TextBlock TextAlignment="Right" Grid.Column="2" Margin="8,-4,15,-3" VerticalAlignment="Center" HorizontalAlignment="Right" Style="{DynamicResource DefaultFontStyle}" Text="{Binding Player.Source.LocalPath}"></TextBlock>
+                                        <TextBlock Grid.Column="3" Margin="8,-4,15,-3" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" Text="{Binding Time, StringFormat='Time: {0}'}"></TextBlock>
+                                    </Grid>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Padding="2"
+                                        Command="{Binding MiniPlayerCommand}" Width="15" Height="15"
+                                        Style="{StaticResource ImageButton}"
+                                        Behaviors:Buttons.Image="/Themes/default/Images/mini.png"
+                                        Behaviors:Buttons.NormalImage="/Themes/default/Images/mini.png"
+                                        Behaviors:Buttons.HoverImage="/Themes/default/Images/mini_hover.png">
+                                        </Button>
+                                        <Button
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Padding="2"
+                                        Command="{Binding MinimizeCommand}" Width="15" Height="15"
+                                        Style="{StaticResource ImageButton}"
+                                        Behaviors:Buttons.Image="/Themes/default/Images/min.png"
+                                        Behaviors:Buttons.NormalImage="/Themes/default/Images/min.png"
+                                        Behaviors:Buttons.HoverImage="/Themes/default/Images/min_hover.png">
+                                        </Button>
+                                        <Button
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Padding="2"
+                                        Command="{Binding WindowStateCommand}" Width="15" Height="15"
+                                        Style="{StaticResource ImageButton}"
+                                        Behaviors:Buttons.Image="/Themes/default/Images/max.png"
+                                        Behaviors:Buttons.NormalImage="/Themes/default/Images/max.png"
+                                        Behaviors:Buttons.HoverImage="/Themes/default/Images/max_hover.png">
+                                        </Button>
+                                        <Button
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Padding="2"
+                                        Command="{Binding ExitCommand}" Width="15" Height="15"
+                                        Style="{StaticResource ImageButton}"
+                                        Behaviors:Buttons.Image="/Themes/default/Images/close.png"
+                                        Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
+                                        Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png">
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
-                                    Padding="2"
-                                    Command="{Binding MiniPlayerCommand}" Width="15" Height="15"
-                                    Style="{StaticResource ImageButton}"
-                                    Behaviors:Buttons.Image="/Themes/default/Images/mini.png"
-                                    Behaviors:Buttons.NormalImage="/Themes/default/Images/mini.png"
-                                    Behaviors:Buttons.HoverImage="/Themes/default/Images/mini_hover.png">
-                                    </Button>
-                                    <Button
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
-                                    Padding="2"
-                                    Command="{Binding MinimizeCommand}" Width="15" Height="15"
-                                    Style="{StaticResource ImageButton}"
-                                    Behaviors:Buttons.Image="/Themes/default/Images/min.png"
-                                    Behaviors:Buttons.NormalImage="/Themes/default/Images/min.png"
-                                    Behaviors:Buttons.HoverImage="/Themes/default/Images/min_hover.png">
-                                    </Button>
-                                    <Button
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
-                                    Padding="2"
-                                    Command="{Binding WindowStateCommand}" Width="15" Height="15"
-                                    Style="{StaticResource ImageButton}"
-                                    Behaviors:Buttons.Image="/Themes/default/Images/max.png"
-                                    Behaviors:Buttons.NormalImage="/Themes/default/Images/max.png"
-                                    Behaviors:Buttons.HoverImage="/Themes/default/Images/max_hover.png">
-                                    </Button>
-                                    <Button
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
-                                    Padding="2"
-                                    Command="{Binding ExitCommand}" Width="15" Height="15"
-                                    Style="{StaticResource ImageButton}"
-                                    Behaviors:Buttons.Image="/Themes/default/Images/close.png"
-                                    Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
-                                    Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png">
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
+                            </Border>
                         </Border>
-                    </Border>                    
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -1344,13 +1514,15 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ToolTip">
-          <Border Name="Border" CornerRadius="7,7,7,7" Background="#dd000000">
-            <Border Style="{DynamicResource ControlsInnerBorder}" Padding="5">
-              <ContentPresenter Margin="4" TextBlock.Foreground="White"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top" />
-            </Border>
-          </Border>          
+            <Border Name="Border" Background="#bb777777" CornerRadius="7">
+                <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
+                    <Border Style="{DynamicResource MenuInnerBorder}">
+                        <ContentPresenter Margin="4" TextBlock.Foreground="White"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top" />
+                    </Border>
+                </Border>
+            </Border>          
           <ControlTemplate.Triggers>
             <Trigger Property="HasDropShadow"
                      Value="true">
@@ -1363,7 +1535,28 @@
       </Setter.Value>
     </Setter>
   </Style>
-  
+
+    <Style x:Key="Popup"
+       TargetType="ContentControl">
+        <Setter Property="OverridesDefaultStyle"
+            Value="true" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border Name="Border" Background="#bb777777" CornerRadius="7">
+                        <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
+                            <Border Style="{DynamicResource MenuInnerBorder}">
+                                <ContentPresenter Margin="4" TextBlock.Foreground="White"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top" />
+                            </Border>
+                        </Border>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="Border" x:Key="MenuOuterBorder">
         <Setter Property="CornerRadius" Value="7"/>
         <Setter Property="Background" Value="#99000000"/>
@@ -1382,7 +1575,7 @@
         <Setter Property="Background" Value="#99000000"/>
         <Setter Property="Width" Value="388"/>
         <Setter Property="Height" Value="110"/>
-        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="BorderThickness" Value="0"/>
     </Style>
     <Style TargetType="Border" x:Key="ControlsInnerBorder">
         <Setter Property="CornerRadius" Value="7,7,7,7"/>
@@ -1683,7 +1876,7 @@
             <Setter Property="Focusable"
                 Value="false" />
             <Setter Property="IsHitTestVisible"
-                Value="false" />
+                Value="true" />
             <Setter Property="OverridesDefaultStyle"
                 Value="true" />
             <Setter Property="Height"
@@ -1756,7 +1949,16 @@
                               </LinearGradientBrush>
                             </Path.Fill>
                           </Path>
-                          <TextBlock Style="{DynamicResource StatusText}" Text="{Binding Player.Position, FallbackValue='00:00:00'}" Width="58" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock Style="{DynamicResource StatusText}" Text="{Binding Player.Position, FallbackValue='00:00:00'}" Width="58" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock.ToolTip>
+                                    <ToolTip DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                        <StackPanel>
+                                            <TextBlock Style="{DynamicResource StatusText}" Text="Total length:" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock FontSize="10" Style="{DynamicResource StatusText}" Text="{Binding Player.Duration, FallbackValue='00:00:00'}" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
                         </Canvas>
                       </Grid>
                         <ControlTemplate.Triggers>
@@ -2823,7 +3025,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.5"></Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
         <Style x:Key="NextButtonStyle"
            TargetType="{x:Type Button}">
             <Setter Property="FocusVisualStyle"
@@ -3253,7 +3460,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.5"></Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
         <Style x:Key="MediaPlayPauseToggleStyle"
            TargetType="{x:Type ToggleButton}">
             <Setter Property="FocusVisualStyle"
@@ -3796,6 +4008,9 @@
             </Border>
           </Grid>
           <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.5"/>
+            </Trigger>
             <Trigger Property="IsPressed"
                  Value="True">
               <Trigger.ExitActions>

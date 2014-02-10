@@ -742,6 +742,9 @@ namespace MediaPoint.Controls
 			MediaPlayerBase.MediaClosed += OnMediaPlayerClosedPrivate;
 			MediaPlayerBase.MediaFailed += OnMediaPlayerFailedPrivate;
 			MediaPlayerBase.MediaEnded += OnMediaPlayerEndedPrivate;
+            MediaPlayerBase.NewFFTData += OnMediaPlayerBaseNewFFTData;
+            MediaPlayerBase.NewSamplesNumber += OnMediaPlayerBaseNewSamplesNumber;
+            MediaPlayerBase.NewAudioStream += OnMediaPlayerBaseNewAudioStream;
             MediaPlayerBase.NoSubtitleLoaded += OnNoSubtitleLoadedPrivate;
 
 			/* These events fire when we get new D3Dsurfaces or frames */
@@ -749,6 +752,36 @@ namespace MediaPoint.Controls
 			MediaPlayerBase.NewAllocatorSurface += OnMediaPlayerNewAllocatorSurfacePrivate;
 			AudioRenderers = new ObservableCollection<string>(MediaPlayerBase.AudioRenderers);
 		}
+
+        void OnMediaPlayerBaseNewAudioStream()
+        {
+            var data = MediaPlayerBase.AudioStreamInfo;
+
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                ServiceLocator.GetService<ISpectrumVisualizer>().SetStreamInfo(data.Channels, data.Bits, data.Frequency);
+            }));
+        }
+
+        void OnMediaPlayerBaseNewSamplesNumber()
+        {
+            var data = MediaPlayerBase.NumSamples;
+
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                ServiceLocator.GetService<ISpectrumVisualizer>().SetNumSamples(data);
+            }));
+        }
+
+        void OnMediaPlayerBaseNewFFTData()
+        {
+            var data = MediaPlayerBase.FFTData;
+
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                ServiceLocator.GetService<ISpectrumVisualizer>().DisplayFFTData(data);
+            }));
+        }
 
         private void OnNoSubtitleLoadedPrivate(object sender, EventArgs e)
         {
@@ -846,6 +879,7 @@ namespace MediaPoint.Controls
 		{
 			Dispatcher.BeginInvoke((Action)(() => SetIsPlaying(false)));
 			Dispatcher.BeginInvoke((Action)(() => RaiseEvent(new RoutedEventArgs(MediaClosedEvent))));
+            Dispatcher.BeginInvoke((Action)(() => HasVideo = false));           
 		}
 
 		/// <summary>
@@ -855,6 +889,7 @@ namespace MediaPoint.Controls
 		{
 			Dispatcher.BeginInvoke((Action)(() => SetIsPlaying(false)));
 			Dispatcher.BeginInvoke((Action)(() => RaiseEvent(new RoutedEventArgs(MediaEndedEvent))));
+            Dispatcher.BeginInvoke((Action)(() => HasVideo = false));
 		}
 
         [DllImport("user32.dll")]
@@ -886,7 +921,7 @@ namespace MediaPoint.Controls
 				SetNaturalVideoHeight(videoHeight);
 
 				/* Set our dp values to match the media player */
-				SetHasVideo(hasVideo);
+				//SetHasVideo(hasVideo);
 
 				/* Get our DP values */
 				volume = Volume;
@@ -903,6 +938,7 @@ namespace MediaPoint.Controls
 
 				SetIsPlaying(true);
 				RaiseEvent(new RoutedEventArgs(MediaOpenedEvent));
+                HasVideo = hasVideo;
 			});
 		}
 
@@ -1157,7 +1193,18 @@ namespace MediaPoint.Controls
 		public static readonly DependencyProperty VideoStreamsProperty =
 			DependencyProperty.Register("VideoStreams", typeof(ObservableCollection<string>), typeof(MediaElementBase), new UIPropertyMetadata(null));
 
-		
+
+        public new bool HasVideo
+        {
+            get { return (bool)GetValue(HasVideoProperty); }
+            set { SetValue(HasVideoProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for VideoStreams.  This enables animation, styling, binding, etc...
+        public static readonly new DependencyProperty HasVideoProperty =
+            DependencyProperty.Register("HasVideo", typeof(bool), typeof(MediaElementBase), new UIPropertyMetadata(false));
+
+
 		/// <summary>
 		/// Executes the actions associated to a MediaState
 		/// </summary>

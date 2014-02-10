@@ -30,6 +30,11 @@ namespace MediaPoint.App.Behaviors
         protected override void Invoke(object parameter)
         {
             Popup.SetValue(Property, Convert.ChangeType(Value, Property.PropertyType));
+            Popup.Focus();
+            if (parameter is RoutedEventArgs)
+            {
+                (parameter as RoutedEventArgs).Handled = true;
+            }
         }
     }
 }

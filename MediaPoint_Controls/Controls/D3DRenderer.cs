@@ -192,28 +192,28 @@ namespace MediaPoint.Controls
 
         #region HasVideo
 
-        private static readonly DependencyPropertyKey HasVideoPropertyKey
-            = DependencyProperty.RegisterReadOnly("HasVideo", typeof(bool), typeof(MediaElementBase),
-                new FrameworkPropertyMetadata(false));
+        //private static readonly DependencyPropertyKey HasVideoPropertyKey
+        //    = DependencyProperty.RegisterReadOnly("HasVideo", typeof(bool), typeof(MediaElementBase),
+        //        new FrameworkPropertyMetadata(false));
 
-        public static readonly DependencyProperty HasVideoProperty
-            = HasVideoPropertyKey.DependencyProperty;
+        //public static readonly DependencyProperty HasVideoProperty
+        //    = HasVideoPropertyKey.DependencyProperty;
 
-        /// <summary>
-        /// Is true if the media contains renderable video
-        /// </summary>
-        public bool HasVideo
-        {
-            get { return (bool)GetValue(HasVideoProperty); }
-        }
+        ///// <summary>
+        ///// Is true if the media contains renderable video
+        ///// </summary>
+        //public bool HasVideo
+        //{
+        //    get { return (bool)GetValue(HasVideoProperty); }
+        //}
 
         /// <summary>
         /// Internal method for setting the read-only HasVideo DP
         /// </summary>
-        protected void SetHasVideo(bool value)
-        {
-            SetValue(HasVideoPropertyKey, value);
-        }
+        //protected void SetHasVideo(bool value)
+        //{
+        //    SetValue(HasVideoPropertyKey, value);
+        //}
         #endregion
 
         #region DeeperColor

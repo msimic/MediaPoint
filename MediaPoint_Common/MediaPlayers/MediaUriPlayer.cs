@@ -745,24 +745,28 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                     if (HasAudio)
                     {
                         hr = m_graph.AddFilter((IBaseFilter)_dspFilter, "AudioProcessor");
-
+                        hr = _dspFilter.set_EnableBitrateConversionBeforeDSP(true);
+                        hr = ((IDCDSPFilterVisualInterface)_dspFilter).set_VISafterDSP(true);
                         hr = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)_audio, PinDirection.Output, 0), DsFindPin.ByDirection(_dspFilter, PinDirection.Input, 0));
                         DsError.ThrowExceptionForHR(hr);
                         hr = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)_dspFilter, PinDirection.Output, 0), DsFindPin.ByDirection(_audioRenderer, PinDirection.Input, 0));
 
+                        var cb = new AudioCallback(this);
+                        hr = _dspFilter.set_CallBackPCM(cb);
+
                         int cnt = 0;
                         object intf = null;
                         hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftEqualizer);
-                        hr = _dspFilter.get_FilterCount(ref cnt);
+                        //hr = _dspFilter.get_FilterCount(ref cnt);
                         hr = _dspFilter.get_FilterInterface(0, out intf);
                         _equalizer = (IDCEqualizer)intf;
-                        hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftDownMix);
-                        hr = _dspFilter.get_FilterInterface(0, out intf);
-                        _downmix = (IDCDownMix)intf;
-                        hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftAmplify);
-                        hr = _dspFilter.get_FilterInterface(0, out intf);
-                        _amplify = (IDCAmplify)intf;
-
+                        //hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftDownMix);
+                        //hr = _dspFilter.get_FilterInterface(0, out intf);
+                        //_downmix = (IDCDownMix)intf;
+                        //hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftAmplify);
+                        //hr = _dspFilter.get_FilterInterface(0, out intf);
+                        //_amplify = (IDCAmplify)intf;
+                        //_amplify.set_Enabled(true);
                         _equalizer.set_Seperate(false);
                     }
                 }

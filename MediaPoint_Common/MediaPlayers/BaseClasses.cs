@@ -447,6 +447,48 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             get { return _subsettings; }
         }
 
+        private int _numSamples;
+        public int NumSamples
+        {
+            get { return _numSamples; }
+            set
+            {
+                _numSamples = value;
+                InvokeNewSamplesNumber();
+            }
+        }
+
+        private TDSStream _audioStreamInfo;
+        public TDSStream AudioStreamInfo
+        {
+            get { return _audioStreamInfo; }
+            set
+            {
+                var oldStream = _audioStreamInfo;
+
+                _audioStreamInfo = value;
+
+                if (oldStream.Channels != value.Channels ||
+                    oldStream.Bits != value.Bits ||
+                    oldStream.Frequency != value.Frequency ||
+                    oldStream._Float != value._Float)
+                {
+                    InvokeNewAudioStream();
+                }
+            }
+        }
+
+        private float[] _FFTData;
+        public float[] FFTData
+        {
+            get { return _FFTData; }
+            set
+            {
+                _FFTData = value;
+                InvokeNewFFT();
+            }
+        }
+
         private static uint MakeCOLORREF(byte r, byte g, byte b)
         {
             return (uint)(((uint)r) | (((uint)g) << 8) | (((uint)b) << 16));
@@ -990,6 +1032,21 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         public event Action MediaClosed;
 
         /// <summary>
+        /// Notifies when we have new fft data
+        /// </summary>
+        public event Action NewFFTData;
+
+        /// <summary>
+        /// Notifies when we have new fft samples
+        /// </summary>
+        public event Action NewSamplesNumber;
+
+        /// <summary>
+        /// Notifies when we have NewAudioStream
+        /// </summary>
+        public event Action NewAudioStream;
+
+        /// <summary>
         /// Notifies when the media has failed and produced an exception
         /// </summary>
         public event EventHandler<MediaFailedEventArgs> MediaFailed;
@@ -1417,6 +1474,36 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         }
 
         /// <summary>
+        /// Invokes the FFTData event
+        /// </summary>
+        protected void InvokeNewFFT()
+        {
+            var ev = NewFFTData;
+            if (ev != null)
+                ev();
+        }
+
+        /// <summary>
+        /// Invokes the NewAudioStream event
+        /// </summary>
+        protected void InvokeNewAudioStream()
+        {
+            var ev = NewAudioStream;
+            if (ev != null)
+                ev();
+        }
+        
+        /// <summary>
+        /// Invokes the NewSamplesNumber event
+        /// </summary>
+        protected void InvokeNewSamplesNumber()
+        {
+            var ev = NewSamplesNumber;
+            if (ev != null)
+                ev();
+        }
+
+        /// <summary>
         /// Invokes the MediaFailed event, notifying any subscriber that there was
         /// a media exception.
         /// </summary>
@@ -1761,20 +1848,18 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
             int hr = _equalizer.set_Enabled(true);
 
-            int num = -1;
-            _dspFilter.get_PresetCount(ref num);
+            //int num = -1;
+            //_dspFilter.get_PresetCount(ref num);
 
-            _amplify.get_Seperate(false);
-            _amplify.set_Enabled(true);
+            //_amplify.get_Seperate(false);
+            //_amplify.set_Enabled(true);
 
             if (channel == -1)
                 hr = _equalizer.set_Seperate(false);
             else
                 hr = _equalizer.set_Seperate(true);
 
-            StringBuilder s = new StringBuilder();
-            hr = _dspFilter.get_FilterName(2, s);
-            _downmix.set_Enabled(true);
+            //_downmix.set_Enabled(true);
             if (channel == -1)
                 for (byte i = 0; i < 10; i++)
                     hr = _equalizer.set_Band(i, (ushort)band, (sbyte)(value));
