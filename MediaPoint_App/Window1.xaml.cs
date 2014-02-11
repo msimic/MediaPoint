@@ -836,9 +836,37 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             return this;
         }
 
+        void DoPreEmphesis(float[] data, float value)
+        {
+            int i;
+            float f, ac0;
+
+            f = value * data[0];
+            for (i = 1; i < data.Length; i++ )
+            {
+                ac0 = value * data[i];
+                data[i] = data[i] - f;
+                f = ac0;
+            }
+        }
+
+        void DoLogarithmic(float[] data, float minY, float maxY)
+        {
+            float range = maxY - minY;
+
+            for (int i = 1; i < data.Length; i++)
+            {
+                data[i] = (float)Math.Sqrt(data[i] * range);
+                data[i] = data[i] + minY;
+            }
+
+        }
+
         public bool GetFFTData(float[] fftDataBuffer)
         {
             _sampleAggregator.GetFFTResults(fftDataBuffer);
+            DoPreEmphesis(fftDataBuffer, 90f / 100);
+            //DoLogarithmic(fftDataBuffer, 0.0f, 1f);
             return IsPlaying;
         }
 

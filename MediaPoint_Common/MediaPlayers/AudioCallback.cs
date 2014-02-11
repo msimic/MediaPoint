@@ -12,7 +12,7 @@ namespace MediaPoint.Common.MediaPlayers
     [ComVisible(true)]
     public class AudioCallback : IDCDSPFilterPCMCallBack
     {
-       
+
         int _numSamples;
         int _channels;
         int _frequency;
@@ -90,7 +90,7 @@ namespace MediaPoint.Common.MediaPlayers
 
                     var window24 = (float)(255 << 16 | 255 << 8 | 255);
 
-                    for (int j = 0; j < buffer24.Length; j+=3)
+                    for (int j = 0; j < buffer24.Length; j += 3)
                     {
                         samples[j / 3] = (buffer24[j] << 16 | buffer24[j + 1] << 8 | buffer24[j + 2]) / window24;
                     }
@@ -102,9 +102,9 @@ namespace MediaPoint.Common.MediaPlayers
                         byte[] buffer32f = new byte[numSamples * 4];
                         Marshal.Copy(Buffer, buffer32f, 0, numSamples * 4);
 
-                        for (int j = 0; j < buffer32f.Length; j+=4)
+                        for (int j = 0; j < buffer32f.Length; j += 4)
                         {
-                            samples[j / 4] = System.BitConverter.ToSingle(new byte[] { buffer32f[j + 0], buffer32f[j + 1], buffer32f[j + 2], buffer32f[j + 3]}, 0);
+                            samples[j / 4] = System.BitConverter.ToSingle(new byte[] { buffer32f[j + 0], buffer32f[j + 1], buffer32f[j + 2], buffer32f[j + 3] }, 0);
                         }
                     }
                     else
@@ -122,22 +122,62 @@ namespace MediaPoint.Common.MediaPlayers
                     break;
             }
 
-            float[] result = new float[samplesPerChannel];
+            float[] result = new float[samplesPerChannel / 2];
 
-            for (int i = 0; i < numSamples; i += Stream.Channels)
+            // 5.1 downmix to stereo
+            //L = clamp((FL + RL + C*0.708 + LFE*0.708) / 2) 
+            //R = clamp((FR + RR + C*0.708 + LFE*0.708) / 2)
+
+            for (int i = 0; i < numSamples; i += Stream.Channels * 2)
             {
                 double tmp = 0;
 
                 for (int j = 0; j < Stream.Channels; j++)
                     tmp += samples[i + j] / Stream.Channels;
 
-                result[i / Stream.Channels] = (float)(tmp);
+                result[i / (Stream.Channels * 2)] = GetWindowingValue((float)(tmp), i, 2048, WindowMode.wmBlackmanHarris);
             }
 
             _owner.FFTData = result;
 
             NewSize = Length;
             return 0;
+        }
+
+        public enum WindowMode
+        {
+            wmRectangular,
+            wmBlackmanHarris,
+            wmHamming,
+            wmHanning,
+            wmBlackman,
+            wmGaussian,
+            wmBartlett
+        }
+
+        public Single GetWindowingValue(Single Value, int Index, int FFTSize, WindowMode Window)
+        {
+            float TWO_PI = (float)(Math.PI * 2);
+            float FOUR_PI = (float)(Math.PI * 4);
+            double Result = Value;
+            switch (Window)
+            {
+                case WindowMode.wmRectangular: Result = Value; break;
+                case WindowMode.wmBlackmanHarris: Result = Value * (0.35875 - 0.48829 * Math.Cos(TWO_PI * (Index + 0.5) / FFTSize) + 0.14128 * Math.Cos(TWO_PI * 2 * (Index + 0.5) / FFTSize) - 0.01168 * Math.Cos(TWO_PI * 3 * (Index + 0.5) / FFTSize)); break;
+                case WindowMode.wmHamming: Result = Value * (0.54 - (0.46 * Math.Cos(TWO_PI * Index / FFTSize))); break;
+                case WindowMode.wmHanning: Result = Value * (0.50 - (0.50 * Math.Cos(TWO_PI * Index / FFTSize))); break;
+                case WindowMode.wmBlackman: Result = Value * (0.42 - 0.50 * Math.Cos(TWO_PI * Index / FFTSize) + 0.08 * Math.Cos(FOUR_PI * Index / FFTSize)); break;
+                case WindowMode.wmGaussian: Result = Value * (Math.Exp(-5.0 / (Math.Sqrt(FFTSize)) * (2 * Index - FFTSize) * (2 * Index - FFTSize))); break;
+                case WindowMode.wmBartlett:
+
+                    if (Index < (FFTSize / 2))
+                        Result = Value * (2 * Index / (FFTSize - 1));
+                    else
+                        Result = Value * (2 - (2 * Index / (FFTSize - 1)));
+
+                    break;
+            }
+            return (float)Result;
         }
 
         public int MediaTypeChanged(ref TDSStream Stream)

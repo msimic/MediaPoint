@@ -175,7 +175,7 @@ namespace MediaPoint.VM
 				{
 					Position = TimeSpan.FromSeconds(MediaPosition / 10000000).ToString();
 				}
-				if (MediaPosition >= MediaDuration && MediaDuration > 0 && IsPlaying)
+				if (MediaPosition > MediaDuration && MediaDuration > 0 && IsPlaying)
 				{
                     ForceStop();
 				}
@@ -456,9 +456,13 @@ namespace MediaPoint.VM
                 return new Command(o =>
                 {
                     Rate = Rate / 2;
+                    if (((int)(Rate * 100)) / 100 == 1 && Rate != 1)
+                    {
+                        Rate = 1;
+                    }
                 }, can =>
                 {
-                    return IsPlaying && Rate > 1;
+                    return IsPlaying && Rate > (1.0/8);
                 });
             }
         }
@@ -470,6 +474,10 @@ namespace MediaPoint.VM
 				return new Command(o =>
 				{
 					Rate = Rate * 2;
+                    if (((int)(Rate * 100)) / 100 == 1 && Rate != 1)
+                    {
+                        Rate = 1;
+                    }
 				}, can =>
 				{
                     return IsPlaying && Rate < 8;
@@ -762,7 +770,7 @@ namespace MediaPoint.VM
 
             if (sub != null)
             {
-                ServiceLocator.GetService<IMainView>().DelayedInvoke(() => { SelectedSubtitle = sub; }, 200);
+                ServiceLocator.GetService<IMainView>().DelayedInvoke(() => { SelectedSubtitle = sub; CommandManager.InvalidateRequerySuggested(); }, 200);
             }
             
 			return true;
