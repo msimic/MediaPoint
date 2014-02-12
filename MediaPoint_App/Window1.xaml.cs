@@ -36,6 +36,7 @@ namespace MediaPoint.App
         private double _scaleY = 1;
         private double _rotation = 0;
         private readonly System.Drawing.Icon _icon = new System.Drawing.Icon(Properties.Resources.app, new System.Drawing.Size(32, 32));
+        private SynchronizationContext _sync = SynchronizationContext.Current;
 
         private string _startFile;
         public string StartupFile
@@ -460,10 +461,9 @@ namespace MediaPoint.App
             RegisterEventsOnControls();
         }
 
-        private bool _mouseOverMediaControls;
-
         private void MediaControlsOnMouseLeave(object sender, MouseEventArgs e)
         {
+            _timeToDelayReShowing = DateTime.Now + TimeSpan.FromMilliseconds(800);
             _isOverUIControl = false;
             HideUI();
         }
@@ -478,9 +478,8 @@ namespace MediaPoint.App
         {
             var diff = DateTime.Now - LastMouseMove;
 
-            if (diff >= TimeoutToHide && !IsHidden)
+            if (diff >= TimeoutToHide && (!IsHidden || Cursor != Cursors.None))
             {
-                if (this.DataContext as Main == null) return;
                 if (!_isOverUIControl)
                 {
                     Cursor = Cursors.None;
@@ -493,6 +492,7 @@ namespace MediaPoint.App
 
         public DateTime LastMouseMove { get; set; }
         public bool IsHidden { get; set; }
+        private DateTime _timeToDelayReShowing = DateTime.Now;
         private TimeSpan TimeoutToHide
         {
             get { return TimeSpan.FromSeconds(5); }
@@ -539,8 +539,14 @@ namespace MediaPoint.App
 
             var delta = Math.Sqrt(2) * (Math.Abs(lastpoint.X - p.X) + Math.Abs(lastpoint.Y - p.Y));
             lastpoint = p;
-            if (delta < 8) return;
+            
+            if (DateTime.Now < _timeToDelayReShowing)
+            {
+                return;
+            }
 
+            if (delta < 6 || DateTime.Now < LastMouseMove) return;
+            CommandManager.InvalidateRequerySuggested();
             LastMouseMove = DateTime.Now;
             if (IsHidden)
             {
@@ -738,7 +744,10 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
 
         public void DelayedInvoke(Action action, int millisenconds = 100)
         {
-            Timer t = new Timer((o) => Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, action), null, millisenconds, 0);
+            Timer t = new Timer((o) =>
+            {
+                Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, action);
+            }, null, millisenconds, 0);
         }
 
         private ThumbnailToolBarButton[] _buttons;
@@ -917,5 +926,6 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
     }
 }

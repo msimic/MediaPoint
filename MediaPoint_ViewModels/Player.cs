@@ -766,13 +766,14 @@ namespace MediaPoint.VM
             Source = uri;
             LoadMediaInfo();
             IsPaused = false;
+            IsStopped = false;
             Play(true);
 
             if (sub != null)
             {
-                ServiceLocator.GetService<IMainView>().DelayedInvoke(() => { SelectedSubtitle = sub; CommandManager.InvalidateRequerySuggested(); }, 200);
+                ServiceLocator.GetService<IMainView>().DelayedInvoke(() => SelectedSubtitle = sub, 200);
             }
-            
+
 			return true;
 		}
 
