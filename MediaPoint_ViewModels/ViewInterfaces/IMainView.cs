@@ -35,6 +35,7 @@ namespace MediaPoint.VM.ViewInterfaces
 		bool ExecuteCommand(MainViewCommand command, object parameter = null);
 	    Window GetWindow();
 	    void UpdateTaskbarButtons();
+        void RefreshUIElements();
 	}
 
 	public interface IPlayerView : IService

@@ -266,10 +266,10 @@
 		<row><td>NewBinary19</td><td/><td>&lt;ISProjectFolder&gt;\..\InstallerResources\splash.jpg</td></row>
 		<row><td>NewBinary2</td><td/><td>&lt;ISProductFolder&gt;\Redist\Language Independent\OS Independent\New.ibd</td></row>
 		<row><td>NewBinary20</td><td/><td>&lt;ISProductFolder&gt;\redist\Language independent\i386\SerialNumCAHelper.dll</td></row>
-		<row><td>NewBinary21</td><td/><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\InstallTool.exe</td></row>
+		<row><td>NewBinary21</td><td/><td>&lt;ISProjectFolder&gt;\..\Libs\AllArchitectures\InstallTool.exe</td></row>
 		<row><td>NewBinary22</td><td/><td>&lt;ISProjectFolder&gt;\..\InstallerResources\dotnetfx35setup.exe</td></row>
-		<row><td>NewBinary23</td><td/><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\InstallTool.exe</td></row>
-		<row><td>NewBinary24</td><td/><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\InstallTool.exe</td></row>
+		<row><td>NewBinary23</td><td/><td>&lt;ISProjectFolder&gt;\..\Libs\AllArchitectures\InstallTool.exe</td></row>
+		<row><td>NewBinary24</td><td/><td>&lt;ISProjectFolder&gt;\..\Libs\AllArchitectures\InstallTool.exe</td></row>
 		<row><td>NewBinary3</td><td/><td>&lt;ISProductFolder&gt;\Redist\Language Independent\OS Independent\Up.ibd</td></row>
 		<row><td>NewBinary4</td><td/><td>&lt;ISProductFolder&gt;\Redist\Language Independent\OS Independent\WarningIcon.ibd</td></row>
 		<row><td>NewBinary5</td><td/><td>&lt;ISProductFolder&gt;\Support\Themes\InstallShield Blue Theme\welcome.jpg</td></row>
@@ -398,6 +398,7 @@
 		<row><td>avformat_lav_55.dll</td><td>{776A4DE6-13E5-47A2-9709-3CA3C94A7442}</td><td>CODECS</td><td>2</td><td/><td>avformat_lav_55.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>avresample_lav_1.dll</td><td>{073314E0-833B-423B-AD30-FE6D113BF399}</td><td>CODECS</td><td>2</td><td/><td>avresample_lav_1.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>avutil_lav_52.dll</td><td>{462977EB-09E9-48BA-A331-09DBEF240132}</td><td>CODECS</td><td>2</td><td/><td>avutil_lav_52.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>d3d9.dll</td><td>{5BD11B3F-6374-4CA4-85B3-1F00E6F64B92}</td><td>INSTALLDIR</td><td>2</td><td/><td>d3d9.dll</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>dcdspfilter.ax</td><td>{ACBF05A8-083E-4711-AFEE-21AA597DB4E2}</td><td>CODECS</td><td>2</td><td/><td>dcdspfilter.ax</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>fxc32.exe</td><td>{B145CD90-D0BE-4E1C-B282-1B1280E9F0E3}</td><td>INSTALLDIR</td><td>2</td><td/><td>fxc32.exe</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>libbluray.dll</td><td>{9B563CE3-4C08-4C15-85A8-7ABE29371D16}</td><td>CODECS</td><td>2</td><td/><td>libbluray.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
@@ -1137,7 +1138,7 @@
 		<row><td>ISSetAllUsers</td><td>257</td><td>SetAllUsers.dll</td><td>SetAllUsers</td><td/><td/></row>
 		<row><td>ISUnSelfRegisterFiles</td><td>3073</td><td>ISSELFREG.DLL</td><td>ISUnSelfRegisterFiles</td><td/><td/></row>
 		<row><td>LaunchProgramFileFromSetupCompleteSuccess</td><td>1</td><td>NewBinary20</td><td>LaunchProgram</td><td/><td/></row>
-		<row><td>NGEN</td><td>3074</td><td>NewBinary21</td><td>/ngen "[WindowsFolder]Microsoft.NET\Framework\v2.0.50727\ngen.exe" "[INSTALLDIR]MediaPoint.exe"</td><td/><td/></row>
+		<row><td>NGEN</td><td>3074</td><td>NewBinary21</td><td>/ngen "[WindowsFolder]Microsoft.NET\Framework\v2.0.50727\ngen.exe" /exe "[INSTALLDIR]MediaPoint.exe" /dll "[INSTALLDIR]NAudio.dll" /dll "[INSTALLDIR]Xceed.Wpf.Toolkit.dll" /dll "[INSTALLDIR]ShaderEffectLibrary.dll" /dll "[INSTALLDIR]DirectShowLib-2005.dll" /dll "[INSTALLDIR]WPFSpark.dll" /dll "[INSTALLDIR]MediaPoint.MVVM.dll" /dll "[INSTALLDIR]Microsoft.WindowsAPICodePack.dll" /dll "[INSTALLDIR]Microsoft.WindowsAPICodePack.Shell.dll" /dll "[INSTALLDIR]ICSharpCode.SharpZipLib.dll" /dll "[INSTALLDIR]GoogleSearchAPI.dll" /dll "[INSTALLDIR]SubtitleDownloader.dll" /dll "[INSTALLDIR]MediaPoint.Common.dll" /dll "[INSTALLDIR]Microsoft.Expression.Interactions.dll" /dll "[INSTALLDIR]System.Windows.Interactivity.dll" /dll "[INSTALLDIR]WPFToolkit.dll" /dll "[INSTALLDIR]WPFSoundVisualizationLib.dll" /dll "[INSTALLDIR]System.Windows.Controls.Input.Toolkit.dll" /dll "[INSTALLDIR]System.Windows.Controls.Layout.Toolkit.dll" /dll "[INSTALLDIR]MediaPoint.ViewModels.dll" /dll "[INSTALLDIR]MediaPoint.Controls.dll"</td><td/><td/></row>
 		<row><td>RunDotNetIfNotInstalled</td><td>2</td><td>NewBinary22</td><td/><td/><td/></row>
 		<row><td>SetARPINSTALLLOCATION</td><td>51</td><td>ARPINSTALLLOCATION</td><td>[INSTALLDIR]</td><td/><td/></row>
 		<row><td>SetARPReadme</td><td>51</td><td>ARPREADME</td><td>&lt;ISProjectFolder&gt;\..\Docs\Readme.txt</td><td/><td/></row>
@@ -2002,6 +2003,7 @@
 		<row><td>AlwaysInstall</td><td>avformat_lav_55.dll</td></row>
 		<row><td>AlwaysInstall</td><td>avresample_lav_1.dll</td></row>
 		<row><td>AlwaysInstall</td><td>avutil_lav_52.dll</td></row>
+		<row><td>AlwaysInstall</td><td>d3d9.dll</td></row>
 		<row><td>AlwaysInstall</td><td>dcdspfilter.ax</td></row>
 		<row><td>AlwaysInstall</td><td>fxc32.exe</td></row>
 		<row><td>AlwaysInstall</td><td>libbluray.dll</td></row>
@@ -2027,10 +2029,12 @@
 		<row><td>avformat_lav_55.dll</td><td>avformat_lav_55.dll</td><td>AVFORM~1.DLL|avformat-lav-55.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\avformat-lav-55.dll</td><td>1</td><td/></row>
 		<row><td>avresample_lav_1.dll</td><td>avresample_lav_1.dll</td><td>AVRESA~1.DLL|avresample-lav-1.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\avresample-lav-1.dll</td><td>1</td><td/></row>
 		<row><td>avutil_lav_52.dll</td><td>avutil_lav_52.dll</td><td>AVUTIL~1.DLL|avutil-lav-52.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\avutil-lav-52.dll</td><td>1</td><td/></row>
+		<row><td>background.png</td><td>ISX_DEFAULTCOMPONENT8</td><td>BACKGR~1.PNG|background.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\background.png</td><td>1</td><td/></row>
 		<row><td>close.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>close.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close.png</td><td>1</td><td/></row>
 		<row><td>close.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>close.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close.png</td><td>1</td><td/></row>
 		<row><td>close_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>CLOSE_~1.PNG|close_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close_hover.png</td><td>1</td><td/></row>
 		<row><td>close_hover.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>CLOSE_~1.PNG|close_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close_hover.png</td><td>1</td><td/></row>
+		<row><td>d3d9.dll</td><td>d3d9.dll</td><td>d3d9.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\Libs\x86\d3d9.dll</td><td>1</td><td/></row>
 		<row><td>d3dcompiler_43.dll</td><td>D3DCompiler_43.dll</td><td>D3DCOM~1.DLL|D3DCompiler_43.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\D3DCompiler_43.dll</td><td>1</td><td/></row>
 		<row><td>d3dx9_43.dll</td><td>D3DX9_43.dll</td><td>D3DX9_43.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\D3DX9_43.dll</td><td>1</td><td/></row>
 		<row><td>dcdspfilter.ax</td><td>dcdspfilter.ax</td><td>DCDSPF~1.AX|dcdspfilter.ax</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\dcdspfilter.ax</td><td>1</td><td/></row>
@@ -2045,6 +2049,7 @@
 		<row><td>lavsplitter.ax</td><td>LAVSplitter.ax</td><td>LAVSPL~1.AX|LAVSplitter.ax</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\LAVSplitter.ax</td><td>1</td><td/></row>
 		<row><td>lavvideo.ax</td><td>LAVVideo.ax</td><td>LAVVideo.ax</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\LAVVideo.ax</td><td>1</td><td/></row>
 		<row><td>libbluray.dll</td><td>libbluray.dll</td><td>LIBBLU~1.DLL|libbluray.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\libbluray.dll</td><td>1</td><td/></row>
+		<row><td>loading.png</td><td>ISX_DEFAULTCOMPONENT8</td><td>loading.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\loading.png</td><td>1</td><td/></row>
 		<row><td>max.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>max.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\max.png</td><td>1</td><td/></row>
 		<row><td>max.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>max.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\max.png</td><td>1</td><td/></row>
 		<row><td>max_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>MAX_HO~1.PNG|max_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\max_hover.png</td><td>1</td><td/></row>
@@ -2064,15 +2069,20 @@
 		<row><td>min.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>min.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\min.png</td><td>1</td><td/></row>
 		<row><td>min_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>MIN_HO~1.PNG|min_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\min_hover.png</td><td>1</td><td/></row>
 		<row><td>min_hover.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>MIN_HO~1.PNG|min_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\min_hover.png</td><td>1</td><td/></row>
+		<row><td>mini.png</td><td>ISX_DEFAULTCOMPONENT8</td><td>mini.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\mini.png</td><td>1</td><td/></row>
+		<row><td>mini_hover.png</td><td>ISX_DEFAULTCOMPONENT8</td><td>MINI_H~1.PNG|mini_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\mini_hover.png</td><td>1</td><td/></row>
 		<row><td>msvcr100.dll</td><td>msvcr100.dll</td><td>msvcr100.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\msvcr100.dll</td><td>1</td><td/></row>
 		<row><td>msvcr110.dll</td><td>msvcr110.dll</td><td>msvcr110.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\msvcr110.dll</td><td>1</td><td/></row>
 		<row><td>naudio.dll</td><td>NAudio.dll</td><td>NAudio.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\NAudio.dll</td><td>1</td><td/></row>
+		<row><td>playlist.png</td><td>ISX_DEFAULTCOMPONENT8</td><td>playlist.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\playlist.png</td><td>1</td><td/></row>
 		<row><td>regid.2014_02.io.github_medi</td><td>ISO19770_SystemTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
 		<row><td>regid.2014_02.io.github_medi1</td><td>ISO19770_LocalTag</td><td>REGID2~1.SWI|regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\Installer\Express\Interm\regid.2014-02.io.github,MediaPoint_20BF4BA2-4A2E-4F56-B997-163EA3CBC7AD.swidtag</td><td>1</td><td/></row>
 		<row><td>restore.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>restore.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore.png</td><td>1</td><td/></row>
 		<row><td>restore.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>restore.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore.png</td><td>1</td><td/></row>
 		<row><td>restore_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>RESTOR~1.PNG|restore_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore_hover.png</td><td>1</td><td/></row>
 		<row><td>restore_hover.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>RESTOR~1.PNG|restore_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\restore_hover.png</td><td>1</td><td/></row>
+		<row><td>settings.png</td><td>ISX_DEFAULTCOMPONENT8</td><td>settings.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\settings.png</td><td>1</td><td/></row>
+		<row><td>settings_hover.png</td><td>ISX_DEFAULTCOMPONENT8</td><td>SETTIN~1.PNG|settings_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\settings_hover.png</td><td>1</td><td/></row>
 		<row><td>shadereffectlibrary.dll</td><td>ShaderEffectLibrary.dll</td><td>SHADER~1.DLL|ShaderEffectLibrary.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\ShaderEffectLibrary.dll</td><td>1</td><td/></row>
 		<row><td>style.xaml</td><td>ISX_DEFAULTCOMPONENT2</td><td>STYLE~1.XAM|style.xaml</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\style.xaml</td><td>1</td><td/></row>
 		<row><td>style.xaml1</td><td>ISX_DEFAULTCOMPONENT3</td><td>STYLE~1.XAM|style.xaml</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\noskin\style.xaml</td><td>1</td><td/></row>
@@ -2284,6 +2294,7 @@
 		<row><td>avformat_lav_55.dll</td><td/><td/><td>_74E21804_0099_4807_A6ED_C0972A71DA49_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>avresample_lav_1.dll</td><td/><td/><td>_6421A374_5560_415C_A2E7_8EEFE730A4FA_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>avutil_lav_52.dll</td><td/><td/><td>_2AEFA45F_E6A4_4729_8C50_9B1820751FD2_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>d3d9.dll</td><td/><td/><td>_3589DDE1_D6F5_4F19_B29D_6C68EC72A72D_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>dcdspfilter.ax</td><td/><td/><td>_4862573F_A18F_4F6B_A6A9_2C5CD3B12111_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>fxc32.exe</td><td/><td/><td>_DCF69B19_6D07_4CFD_86C5_5FC0C273B622_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>libbluray.dll</td><td/><td/><td>_0250A4E8_6705_481B_8AC3_DCA63646F15F_FILTER</td><td/><td/><td/><td/></row>
@@ -2596,6 +2607,7 @@
 		<row><td>ISProductFolder</td><td/><td/><td>1</td></row>
 		<row><td>ISProjectDataFolder</td><td/><td/><td>1</td></row>
 		<row><td>ISProjectFolder</td><td/><td/><td>1</td></row>
+		<row><td>MediaPoint_App</td><td>MediaPoint_App\MediaPoint_App.csproj</td><td/><td>2</td></row>
 		<row><td>ProgramFilesFolder</td><td/><td/><td>1</td></row>
 		<row><td>SystemFolder</td><td/><td/><td>1</td></row>
 		<row><td>WindowsFolder</td><td/><td/><td>1</td></row>
@@ -4666,7 +4678,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>PROGMSG_IIS_ROLLBACKVROOTS</td><td>##IDS_PROGMSG_IIS_ROLLBACKVROOTS##</td><td/></row>
 		<row><td>PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS</td><td>##IDS_PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS##</td><td/></row>
 		<row><td>PROGRAMFILETOLAUNCHATEND</td><td>[INSTALLDIR]MediaPoint.exe</td><td/></row>
-		<row><td>ProductCode</td><td>{69369D52-0534-4E97-A15F-439B1794E1E6}</td><td/></row>
+		<row><td>ProductCode</td><td>{54F8B515-9D30-463A-A2AA-A15776AEA2CB}</td><td/></row>
 		<row><td>ProductName</td><td>MediaPoint</td><td/></row>
 		<row><td>ProductVersion</td><td>1.00.0000</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>

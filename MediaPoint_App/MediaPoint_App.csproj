@@ -119,6 +119,9 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>MediaPoint.App.EntryPoint</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="DirectShowLib-2005, Version=2.1.0.0, Culture=neutral, PublicKeyToken=67e7b740cdfc2d3f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -128,6 +131,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\AllArchitectures\Microsoft.Expression.Interactions.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\AllArchitectures\Microsoft.WindowsAPICodePack.dll</HintPath>
@@ -169,10 +173,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
+    <Resource Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </ApplicationDefinition>
+    </Resource>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -182,9 +186,12 @@
     <Compile Include="AttachedProperties\Autohide.cs" />
     <Compile Include="AttachedProperties\CheckExtender.cs" />
     <Compile Include="AttachedProperties\ItemsControlDoubleClickMouseInputBinding.cs" />
+    <Compile Include="AttachedProperties\MouseDownHelper.cs" />
+    <Compile Include="AttachedProperties\ThreatAsInputControl.cs" />
     <Compile Include="AttachedProperties\TrackbarSlider.cs" />
     <Compile Include="Behaviors\BorderlessWindowBehavior.cs" />
     <Compile Include="Behaviors\Buttons.cs" />
+    <Compile Include="Behaviors\MouseLeaveBehavior.cs" />
     <Compile Include="Behaviors\SetterAction.cs" />
     <Compile Include="Behaviors\DraggableBehavior.cs" />
     <Compile Include="Behaviors\FullScreenBehavior.cs" />
@@ -293,7 +300,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\app.ico" />
-    <Resource Include="Themes\default\Images\background.png" />
+    <Content Include="Themes\default\Images\background.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="Images\imdb.png" />
     <Resource Include="Images\eject.ico" />
     <Resource Include="Images\next.ico" />
@@ -330,7 +339,9 @@
     <Content Include="Themes\default\Images\close_hover.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Themes\default\Images\loading.png" />
+    <Content Include="Themes\default\Images\loading.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Themes\default\Images\max.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -340,9 +351,16 @@
     <Content Include="Themes\default\Images\min.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Themes\default\Images\mini.png" />
-    <Resource Include="Themes\default\Images\mini_hover.png" />
+    <Content Include="Themes\default\Images\mini.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Themes\default\Images\mini_hover.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Themes\default\Images\min_hover.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Themes\default\Images\playlist.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Themes\default\Images\restore.png">
@@ -351,17 +369,21 @@
     <Content Include="Themes\default\Images\restore_hover.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Themes\default\Images\settings.png" />
-    <Resource Include="Themes\default\Images\settings_hover.png" />
+    <Content Include="Themes\default\Images\settings.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Themes\default\Images\settings_hover.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Themes\default\style.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Themes\noskin\style.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Page Include="Window1.xaml">
       <SubType>Designer</SubType>

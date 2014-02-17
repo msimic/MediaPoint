@@ -21,6 +21,11 @@ using MediaPoint.MVVM.Services;
 using Microsoft.WindowsAPICodePack.Taskbar;
 using WPFSoundVisualizationLib;
 using MediaPoint.App.Audio;
+using MediaPoint.Common.Helpers;
+using System.Windows.Controls.Primitives;
+using System.Collections.Generic;
+using MediaPoint.VM.Config;
+using System.IO;
 
 namespace MediaPoint.App
 {
@@ -45,22 +50,22 @@ namespace MediaPoint.App
             set {
                 _startFile = value;
 
-                Action load = (() =>
+                Action<string> load = ((s) =>
                 {
-                    if (_startFile != null)
+                    if (s != null)
                     {
                         var main = DataContext as Main;
                         if (main != null && main.Player != null)
                         {
-                            main.Player.OpenCommand.Execute(_startFile);
+                            main.Player.OpenCommand.Execute(s);
                         }
                     }
                 });
 
                 var b = new BackgroundWorker();
-                b.DoWork += (sender, args) => { while (!_onceDone) Thread.Sleep(200); };
-                b.RunWorkerCompleted += (sender, args) => load();
-                b.RunWorkerAsync();
+                b.DoWork += (sender, args) => { while (!_onceDone) Thread.Sleep(200); args.Result = args.Argument; };
+                b.RunWorkerCompleted += (sender, args) => load((string)args.Result);
+                b.RunWorkerAsync(_startFile);
             }
         }
 
@@ -72,6 +77,90 @@ namespace MediaPoint.App
             timer.Tick += new System.EventHandler(timer_Tick);
             timer.Interval = new TimeSpan(0, 0, 3);
             timer.Start();
+
+            PreviewGotKeyboardFocus += Window1_PreviewGotKeyboardFocus;
+
+            Layout.PreviewDragEnter += Window1_PreviewDragEnter;
+            Layout.PreviewDragLeave += Window1_PreviewDragLeave;
+            Layout.PreviewDragOver += Layout_PreviewDragOver;
+            Layout.PreviewDrop += Window1_PreviewDrop;
+        }
+
+        void Layout_PreviewDragOver(object sender, DragEventArgs e)
+        {
+            CheckDragDrop(e);
+        }
+
+        void Window1_PreviewDrop(object sender, DragEventArgs e)
+        {
+            var dc = DataContext as Main;
+            if (dc == null) return;
+
+            e.Handled = true;
+            var data = e.Data.GetData("FileDrop") as string[];
+            foreach (var file in data)
+            {
+                var ext = Path.GetExtension(file).Substring(1).ToLowerInvariant();
+                if (!SupportedFiles.All.ContainsKey(ext))
+                {
+                    return;
+                }
+            }
+
+            foreach (var file in data)
+            {
+                dc.Playlist.AddTrackIfNotExisting(new Uri(file, UriKind.Absolute));
+            }
+
+            if (dc.Playlist.Tracks.Count > 1)
+            {
+                dc.ShowPlaylist = true;
+            }
+
+            if (data.Length > 0 && !dc.Player.IsPlaying && !dc.Player.IsPaused)
+            {
+                StartupFile = data[0];
+            }
+        }
+
+        void Window1_PreviewDragLeave(object sender, DragEventArgs e)
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        void Window1_PreviewDragEnter(object sender, DragEventArgs e)
+        {
+            CheckDragDrop(e);
+        }
+
+        private static void CheckDragDrop(DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent("FileDrop"))
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            else
+            {
+                var data = e.Data.GetData("FileDrop") as string[];
+                foreach (var file in data)
+                {
+                    var ext = Path.GetExtension(file).Substring(1).ToLowerInvariant();
+                    if (!SupportedFiles.All.ContainsKey(ext))
+                    {
+                        e.Effects = DragDropEffects.None;
+                        e.Handled = true;
+                        return;
+                    }
+                }
+                e.Effects = DragDropEffects.Link;
+            }
+            e.Handled = true;
+        }
+
+        void Window1_PreviewGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            Debug.WriteLine("Focus " + e.NewFocus.GetType().Name + ": " + ((e.NewFocus is FrameworkElement) ? (e.NewFocus as FrameworkElement).Name : ""));
         }
 
         void m_notifyIcon_Click(object sender, EventArgs e)
@@ -408,6 +497,9 @@ namespace MediaPoint.App
 
         public void UnregisterEventsOnControls()
         {
+            playlist.MouseEnter -= MediaControlsOnMouseEnter;
+            playlist.MouseLeave -= MediaControlsOnMouseLeave;
+
             mediaControls.MouseEnter -= MediaControlsOnMouseEnter;
             mediaControls.MouseLeave -= MediaControlsOnMouseLeave;
 
@@ -432,6 +524,9 @@ namespace MediaPoint.App
 
         public void RegisterEventsOnControls()
         {
+            playlist.MouseEnter += MediaControlsOnMouseEnter;
+            playlist.MouseLeave += MediaControlsOnMouseLeave;
+
             mediaControls.MouseEnter += MediaControlsOnMouseEnter;
             mediaControls.MouseLeave += MediaControlsOnMouseLeave;
 
@@ -459,18 +554,47 @@ namespace MediaPoint.App
             UnregisterEventsOnControls();
             base.OnApplyTemplate();
             RegisterEventsOnControls();
+            FindElementsToAutoRefresh();
+        }
+
+        public void RefreshUIElements()
+        {
+            if (_elementsToRefresh.Count == 0)
+            {
+                FindElementsToAutoRefresh();
+            }
+
+            foreach (var item in _elementsToRefresh)
+            {
+                var ex = item.GetBindingExpression(ToggleButton.IsCheckedProperty);
+                ex.UpdateTarget();
+            }
+        }
+
+        private List<FrameworkElement> _elementsToRefresh = new List<FrameworkElement>();
+        private void FindElementsToAutoRefresh()
+        {
+            var el = VisualHelper.FindChildren<ToggleButton>(this);
+            _elementsToRefresh.Clear();
+            foreach (var element in el)
+            {
+                _elementsToRefresh.Add(element);
+            }
         }
 
         private void MediaControlsOnMouseLeave(object sender, MouseEventArgs e)
         {
             _timeToDelayReShowing = DateTime.Now + TimeSpan.FromMilliseconds(800);
             _isOverUIControl = false;
-            HideUI();
+            if (DataContext == null) return;
+            var dc = DataContext as Main;
+            if (dc.Player.HasVideo) HideUI();
         }
 
         private void MediaControlsOnMouseEnter(object sender, MouseEventArgs mouseEventArgs)
         {
             _isOverUIControl = true;
+            if (Cursor == Cursors.None) Cursor = Cursors.Arrow;
             ShowUI();
         }
 
@@ -478,9 +602,13 @@ namespace MediaPoint.App
         {
             var diff = DateTime.Now - LastMouseMove;
 
+            if (DataContext == null) return;
+
+            var dc = DataContext as Main;
+
             if (diff >= TimeoutToHide && (!IsHidden || Cursor != Cursors.None))
             {
-                if (!_isOverUIControl)
+                if (!_isOverUIControl && dc.Player.HasVideo)
                 {
                     Cursor = Cursors.None;
                     HideUI();
@@ -495,7 +623,7 @@ namespace MediaPoint.App
         private DateTime _timeToDelayReShowing = DateTime.Now;
         private TimeSpan TimeoutToHide
         {
-            get { return TimeSpan.FromSeconds(5); }
+            get { return TimeSpan.FromSeconds(3); }
         }
         Point lastpoint;
 
@@ -609,6 +737,10 @@ namespace MediaPoint.App
         private void mediaPlayer_MediaClosed(object sender, RoutedEventArgs e)
         {
             OnPropertyChanged("IsPlaying");
+            if (DataContext is Main)
+            {
+                ((Main)DataContext).Player.OnMediaEnded();
+            }
         }
 
         private void OnPropertyChanged(string p)
@@ -621,6 +753,10 @@ namespace MediaPoint.App
         private void mediaPlayer_MediaEnded(object sender, RoutedEventArgs e)
         {
             OnPropertyChanged("IsPlaying");
+            if (DataContext is Main)
+            {
+                ((Main)DataContext).Player.OnMediaEnded();
+            }
         }
 
         private void mediaPlayer_MediaFailed(object sender, Common.DirectShow.MediaPlayers.MediaFailedEventArgs e)
@@ -725,7 +861,9 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
 
         private void mediaPlayer_MouseLeave(object sender, MouseEventArgs e)
         {
-            HideUI();
+            if (DataContext == null) return;
+            var dc = DataContext as Main;
+            if (dc.Player.HasVideo) HideUI();
         }
 
         private void mediaPlayer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -744,10 +882,10 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
 
         public void DelayedInvoke(Action action, int millisenconds = 100)
         {
-            Timer t = new Timer((o) =>
-            {
+            //Timer t = new Timer((o) =>
+            //{
                 Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, action);
-            }, null, millisenconds, 0);
+            //}, null, millisenconds, 0);
         }
 
         private ThumbnailToolBarButton[] _buttons;
@@ -911,6 +1049,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         {
             OnPropertyChanged("IsPlaying");
             _data = data;
+            if (data == null) return;
             for (int i = 0; i < data.Length; i++)
                 _sampleAggregator.Add(data[i], data[i]);
         }

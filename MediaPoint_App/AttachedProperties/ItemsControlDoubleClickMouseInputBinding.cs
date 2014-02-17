@@ -6,6 +6,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using MediaPoint.Common.Helpers;
+using Xceed.Wpf.Toolkit.Primitives;
 
 namespace MediaPoint.App.AttachedProperties
 {
@@ -94,6 +96,12 @@ namespace MediaPoint.App.AttachedProperties
                     && ((MouseGesture)b.Gesture).MouseAction == MouseAction.LeftDoubleClick
                     && b.Command.CanExecute(null))
                 {
+                    if (control is ListBox)
+                    {
+                        var fe = e.OriginalSource as UIElement;
+                        var li = VisualHelper.TryFindParent<ListBoxItem>(fe);
+                        if (li != null) (control as ListBox).SetValue(ListBox.SelectedValueProperty, li.DataContext);
+                    }
                     b.Command.Execute(b.CommandParameter);
                     e.Handled = true;
                 }

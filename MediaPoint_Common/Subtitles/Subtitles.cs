@@ -13,6 +13,7 @@ using MediaPoint.Subtitles.Logic.BluRaySup;
 using System.Text.RegularExpressions;
 using MediaPoint.Helpers;
 using MediaPoint.Common.Subtitles;
+using MediaPoint.Common.Helpers;
 
 namespace MediaPoint.Subtitles
 {
@@ -845,7 +846,7 @@ namespace MediaPoint.Subtitles
 					subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.Embedded,
 						SubtitleItem.SubtitleSubType.VobSub, 
 						sub.TrackNumber.ToString(),
-						sub.Language + "(" + sub.CodecId + ")"));
+						FormatEmbeddedName(sub)));
 				}
 				else if (sub.CodecId.ToUpper() == "S_HDMV/PGS")
 				{
@@ -854,7 +855,7 @@ namespace MediaPoint.Subtitles
 					subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.Embedded,
 						SubtitleItem.SubtitleSubType.Pgs,
 						sub.TrackNumber.ToString(),
-						sub.Language + "(" + sub.CodecId + ")"));
+                        FormatEmbeddedName(sub)));
 				}
 				else
 				{
@@ -863,11 +864,45 @@ namespace MediaPoint.Subtitles
 					subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.Embedded,
 						SubtitleItem.SubtitleSubType.Srt,
 						sub.TrackNumber.ToString(),
-						sub.Language + "(" + sub.CodecId + ")"));
+                        FormatEmbeddedName(sub)));
 				}
 			}
 			return trackSelected;
 		}
+
+        string FormatEmbeddedName(MatroskaSubtitleInfo sub)
+        {
+            string language = sub.Language;
+            var lng = LanguageISOTranslator.ISO839_2B[language];
+            if (lng != null)
+            {
+                language = "[" + lng.EnglishName + "] ";
+            }
+            return string.Format("Embedded: {0}{1} ({2})", language, sub.Name, sub.CodecId);
+        }
+
+        string FormatName(string file, string videoFile)
+        {
+            string ret = Path.GetFileNameWithoutExtension(file);
+            string ext = Path.GetExtension(file);
+            if (ext.StartsWith(".")) ext = ext.Remove(0, 1);
+            string vf = Path.GetFileNameWithoutExtension(videoFile);
+            if (ret.ToLowerInvariant().StartsWith(vf.ToLowerInvariant()))
+            {
+                ret = ret.Remove(0, vf.Length);
+            }
+            if (ret.StartsWith("_"))
+            {
+                ret = ret.Remove(0, 1);
+            }
+            var lng = LanguageISOTranslator.ISO839_2B[ret];
+            if (lng != null)
+            {
+                ret = lng.EnglishName;
+            }
+            ret = string.Format("File: {0} ({1})", ret, ext);
+            return ret;
+        }
 
 		public string LoadSubtitles(string videoFile, out List<SubtitleItem> subFiles, Encoding overrideEnc = null, bool fillNow = false)
 		{
@@ -891,14 +926,14 @@ namespace MediaPoint.Subtitles
 						switch (Path.GetExtension(file).ToLower())
 						{
 							case ".srt":
-								subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Srt, file, Path.GetFileName(file)));
+								subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Srt, file, FormatName(file, videoFile)));
 								break;
 							case ".sub":
-								subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Sub, file, Path.GetFileName(file)));
+                                subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Sub, file, FormatName(file, videoFile)));
 								break;
 							case ".ass":
 							case ".ssa":
-								subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Ass, file, Path.GetFileName(file)));
+                                subFiles.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Ass, file, FormatName(file, videoFile)));
 								break;
 						}
 				}

@@ -144,6 +144,8 @@
     <Compile Include="Extensions\String.cs" />
     <Compile Include="Helpers\Imdb.cs" />
     <Compile Include="Helpers\LanguageISOTranslator.cs" />
+    <Compile Include="Helpers\ReflectionHelper.cs" />
+    <Compile Include="Helpers\VisualHelper.cs" />
     <Compile Include="Interfaces\DCDSPFilters.cs" />
     <Compile Include="Interfaces\IEqualizer.cs" />
     <Compile Include="Interfaces\ITag.cs" />

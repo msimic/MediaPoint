@@ -16,8 +16,8 @@
       RoutedEvent="tb:TaskbarIcon.TrayToolTipOpen"
       SourceName="trayIcon">
         </EventTrigger>
-    </Window.Triggers>    
-    <Grid x:Name="Layout">
+    </Window.Triggers>
+    <Grid x:Name="Layout" AllowDrop="True">
         <tb:TaskbarIcon
           x:Name="trayIcon"
           VerticalAlignment="Top"
@@ -37,7 +37,7 @@
                 <controls:ToolTip InfoText="{Binding Player.Status}" Style="{DynamicResource TrayTooltip}"  />
             </tb:TaskbarIcon.TrayToolTip>
         </tb:TaskbarIcon>
-        <controls:MainWindowContent Style="{DynamicResource MainWindowContent}">
+        <controls:MainWindowContent Focusable="False" Style="{DynamicResource MainWindowContent}">
             <Grid>
                 <controls:HidingOverlay x:Name="windowControls" Style="{DynamicResource HidingOverlay}">                    
                 </controls:HidingOverlay>
@@ -51,7 +51,7 @@
                         </TransformGroup>
                     </Grid.RenderTransform>
                     <Grid Background="#00000000" x:Name="mediaPlayerContainer" >
-                        <controls:MediaUriElement x:Name="mediaPlayer" DataContext="{Binding Player}"
+                        <controls:MediaUriElement Focusable="False" x:Name="mediaPlayer" DataContext="{Binding Player}"
                                                     DeeperColor="{Binding IsDeeperColor}"
                                                     Stretch="Uniform"
                                                     AudioRenderer="{Binding Main.AudioRenderer}"
@@ -86,19 +86,22 @@
                     </Grid>
                 </Grid>
 
-                <controls:IMDbOverlay x:Name="imdbOverlay" Style="{DynamicResource IMDbOverlay}">
+                <controls:IMDbOverlay Focusable="False" x:Name="imdbOverlay" Style="{DynamicResource IMDbOverlay}">
                 </controls:IMDbOverlay>
 
-                <controls:OnlineSubs x:Name="onlineSubs" Style="{DynamicResource OnlineSubs}">
+                <controls:OnlineSubs Focusable="False" x:Name="onlineSubs" Style="{DynamicResource OnlineSubs}">
                 </controls:OnlineSubs>
 
-                <controls:Visualizations x:Name="visualizations" Style="{DynamicResource Visualizations}">
+                <controls:Visualizations Focusable="False" x:Name="visualizations" Style="{DynamicResource Visualizations}">
                 </controls:Visualizations>
 
-                <controls:Equalizer x:Name="equalizer" Style="{DynamicResource Equalizer}">
+                <controls:Equalizer Focusable="False" x:Name="equalizer" Style="{DynamicResource Equalizer}">
                 </controls:Equalizer>
 
-                <controls:Options x:Name="options" Style="{DynamicResource Options}">
+                <controls:Playlist Focusable="False" x:Name="playlist" Style="{DynamicResource Playlist}">
+                </controls:Playlist>
+                
+                <controls:Options Focusable="False" x:Name="options" Style="{DynamicResource Options}">
                     <Grid Margin="0,-50,0,50">
                         <ComboBox x:Name="themeCombo" Height="20" Width="200" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
                             <ComboBox.ItemTemplate>
@@ -109,7 +112,7 @@
                         </ComboBox>
                     </Grid>
                 </controls:Options>
-                <controls:MediaControls x:Name="mediaControls"
+                <controls:MediaControls Focusable="False" x:Name="mediaControls"
                                     Style="{DynamicResource MediaControls}"
                                     Visibility="{Binding Player, Converter={StaticResource NotNullToVisibility}}">
                     <StackPanel Orientation="Horizontal" Margin="0,50,0,-50">

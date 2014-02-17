@@ -136,7 +136,9 @@
     <Compile Include="Main.cs" />
     <Compile Include="Model\FontObject.cs" />
     <Compile Include="Player.cs" />
+    <Compile Include="Playlist.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Track.cs" />
     <Compile Include="ViewInterfaces\IDialogService.cs" />
     <Compile Include="ViewInterfaces\IEqualizer.cs" />
     <Compile Include="ViewInterfaces\IMainView.cs" />

@@ -9,6 +9,7 @@ using MediaPoint.Helpers;
 using SubtitleDownloader.Core;
 using MediaPoint.Common.Extensions;
 using System.Net;
+using System.Threading;
 
 namespace MediaPoint.Common.Subtitles
 {
@@ -25,13 +26,14 @@ namespace MediaPoint.Common.Subtitles
 
     public class SubtitleUtil
     {
-        public static string DownloadSubtitle(string fileName, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices)
+        public static string DownloadSubtitle(string fileName, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback)
         {
             var fn = Path.GetFileName(fileName);
-            SubtitleMatch subtitle = FindSubtitleForFilename(fn, preferredLanguages, preferredServices, out imdbMatch, out otherChoices);
+            SubtitleMatch subtitle = FindSubtitleForFilename(fn, preferredLanguages, preferredServices, out imdbMatch, out otherChoices, messageCallback);
             return DownloadSubtitle(subtitle, fileName);
         }
 
+        static object _fileLocker = new object();
         public static string DownloadSubtitle(SubtitleMatch subtitle, string fileName)
         {
             string resultFile = null;
@@ -49,14 +51,16 @@ namespace MediaPoint.Common.Subtitles
                     {
                         string subNewName = Path.Combine(dir,
                                                          string.Format("{0}_{1}{2}", Path.GetFileNameWithoutExtension(fileName),
-                                                                       subtitle.Subtitle.LanguageCode,
-                                                                       Path.GetExtension(files[0].FullName)));
-                        if (File.Exists(subNewName))
+                                                                       subtitle.Subtitle.LanguageCode,Path.GetExtension(files[0].FullName)));
+                        lock (_fileLocker)
                         {
-                            File.Delete(subNewName);
+                            if (File.Exists(subNewName))
+                            {
+                                File.Delete(subNewName);
+                            }
+                            resultFile = subNewName;
+                            files[0].MoveTo(subNewName);
                         }
-                        files[0].MoveTo(subNewName);
-                        resultFile = files[0].FullName;
                     }
                     else
                     {
@@ -108,8 +112,10 @@ namespace MediaPoint.Common.Subtitles
             return resultFile;
         }
 
-        public static IMDb GetIMDbFromFilename(string filename, out string strTitle, out string strTitleAndYear, out string strYear)
+        public static IMDb GetIMDbFromFilename(string filename, out string strTitle, out string strTitleAndYear, out string strYear, Action<string> messageCallback)
         {
+            if (messageCallback != null) messageCallback("Matching media with IMDb ...");
+
             // extract meaningful data from the filename
             GetMovieMetadata(
                 filename,
@@ -188,15 +194,15 @@ namespace MediaPoint.Common.Subtitles
 
         }
 
-        public static SubtitleMatch FindSubtitleForFilename(string filename, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, bool noFiltering = false, bool needsImdb = true)
+        public static SubtitleMatch FindSubtitleForFilename(string filename, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback, bool noFiltering = false, bool needsImdb = true)
         {
-            string regexSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            string regexSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars()) + @"\.\_";
             Regex r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
-            filename = r.Replace(filename, "");
+            filename = r.Replace(filename, " ");
 
             filename = Path.GetFileName(filename);
             string strTitle, strYear, strTitleAndYear;
-            imdbMatch = GetIMDbFromFilename(filename, out strTitle, out strTitleAndYear, out strYear);
+            imdbMatch = GetIMDbFromFilename(filename, out strTitle, out strTitleAndYear, out strYear, messageCallback);
             string sep1 = FindSeasonAndEpisode(filename);
 
             if (sep1 != "") needsImdb = false;
@@ -213,10 +219,12 @@ namespace MediaPoint.Common.Subtitles
             if (patterns.Length > 1) patterns[1] = imdbMatch.Title;
             if (patterns.Length > 2) patterns[2] = imdbMatch.OriginalTitle;
             if (imdbMatch != null) for (int i = 1; i < patterns.Length; i++) patterns[i] += string.Format(" ({0})", imdbMatch.Year);
+
+            Array.Reverse(patterns); // we like imdb first sicne we might skip searching further on some matches
+
+            var ret = GetOrderedSubsMatches(preferredServices, preferredLanguages, patterns, messageCallback, noFiltering);
             
-            var ret = GetOrderedSubsMatches(preferredServices, preferredLanguages, patterns, noFiltering);
-            
-            ret.RemoveAll(m => m.Score <= 0.1); // crap
+            ret.RemoveAll(m => m.Score <= 0.4); // crap
 
             if (!needsImdb && imdbMatch == null)
             {
@@ -244,7 +252,7 @@ namespace MediaPoint.Common.Subtitles
             return "";
         }
 
-        public static List<SubtitleMatch> GetOrderedSubsMatches(string[] services, string[] languages, string[] patterns, bool noFiltering = false)
+        public static List<SubtitleMatch> GetOrderedSubsMatches(string[] services, string[] languages, string[] patterns, Action<string> messageCallback, bool noFiltering = false)
         {
             List<SubtitleMatch> scores = new List<SubtitleMatch>();
             List<Subtitle> subtitles = new List<Subtitle>();
@@ -256,6 +264,8 @@ namespace MediaPoint.Common.Subtitles
 
                 for (int i = 0; i < patterns.Length; i++)
                 {
+                    if (messageCallback != null) messageCallback(string.Format("Searching {0} {1}", service, "".PadLeft(i+3, '.') ));
+
                     var q = new SearchQuery(patterns[i].Replace('.', ' '));
                     q.LanguageCodes = languages;
                     var subs = d.SearchSubtitles(q);
@@ -264,6 +274,7 @@ namespace MediaPoint.Common.Subtitles
                     {
                         foundSubtitles.AddRange(subs);
                         if (!noFiltering) break;
+                        if (foundSubtitles.GroupBy(s => s.LanguageCode).Max(s => s.Count()) > 10) break; // 10 per service per language should be enough
                     }
                 }
 
@@ -283,7 +294,19 @@ namespace MediaPoint.Common.Subtitles
             PriritizebyMedium(scores, patterns);
             PriritizebyLanguage(scores, patterns);
 
-            return scores.OrderBy(m => m.Score).Reverse().ToList();
+            return scores.OrderBy(m => ((int)(m.Score * 100))).ThenBy(m => GetLanguagePriority(languages, m.Language)).Reverse().ToList();
+        }
+
+        static int GetLanguagePriority(string[] languages, string language)
+        {
+            var ret = languages.ToList().IndexOf(language);
+
+            if (ret != -1)
+            {
+                ret = languages.Length - ret;
+            }
+
+            return ret;
         }
 
         static void PriritizebyLanguage(IEnumerable<SubtitleMatch> matches, string[] languages)
@@ -391,7 +414,11 @@ namespace MediaPoint.Common.Subtitles
 
         public static void GetMovieMetadata(string strFileName, out string strTitle, out string strTitleAndYear, out string strYear, bool bCleanChars = true)
         {
-            strFileName = strFileName.Length < 5 || !strFileName.Substring(strFileName.Length - 4, 4).StartsWith(".") ? strFileName : Path.GetFileNameWithoutExtension(strFileName);
+            if (strFileName.ToLowerInvariant().Contains(Path.GetDirectoryName(strFileName).ToLowerInvariant()))
+            {
+                strFileName = Path.GetFileNameWithoutExtension(strFileName);
+            }
+
             strTitle = "";
             strYear = "";
 

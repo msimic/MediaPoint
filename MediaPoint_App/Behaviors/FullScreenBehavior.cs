@@ -11,6 +11,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using MediaPoint.Controls.Extensions;
 using MediaPoint.VM;
+using MediaPoint.App.AttachedProperties;
 
 namespace MediaPoint.App.Behaviors
 {
@@ -326,6 +327,8 @@ namespace MediaPoint.App.Behaviors
 			{
 				var ics = (e.OriginalSource as UIElement).TryFindParent<DependencyObject>(typeof (ICommandSource));
                 if (ics == null) ics = (e.OriginalSource as UIElement).TryFindParent<DependencyObject>(typeof(System.Windows.Controls.Primitives.Selector));
+                if ((bool)(e.OriginalSource as UIElement).GetValue(ThreatAsInputControl.TreatProperty) == false)
+                    ics = (e.OriginalSource as UIElement);
 				if (FullScreenOnDoubleClick && ics == null)
 				{
 					bool current = GetIsFullScreen(_wnd);

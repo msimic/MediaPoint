@@ -495,7 +495,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         }
 
         public void LoadCurrentSub()
-        {            
+        {
+            if (!HasVideo) return;
             //Dispatcher.BeginInvoke((Action) (() =>
             //{
                 if (_vobsub != null && SubtitleSettings.Subtitle != null &&

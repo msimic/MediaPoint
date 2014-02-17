@@ -1,14 +1,13 @@
 Build Prerequisites:
 
 - Visual Studio 2012
-- Installshield 2013 LE
-- DirectX 9.0c SDK
-- Windows 7 SDK
-- WPF ShaderEffects Build Task
+- Installshield 2013 LE http://learn.flexerasoftware.com/content/IS-EVAL-InstallShield-Limited-Edition-Visual-Studio
+- DirectX 9.0c SDK http://www.microsoft.com/en-ca/download/details.aspx?id=6812
+- Windows 7 SDK 
+- WPF ShaderEffects Build Task "MediaPoint\Build_dependencies"
 
-When building in debug mode the application will crush when loading file subtitles because of strange bug with our custom VSFilter.
-You can overcome that by setting the VSFilter project to be built in release on the debug configuration. Don't commit that.
-The release build works ok.
+When building in debug mode the application will crush when loading file subtitles because of strange bug with our custom VSFilter if it is built in debug.
+The release build works ok. Therefore VSFilter builds in release always.
 
 Build process goes like this:
 

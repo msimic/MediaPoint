@@ -5,9 +5,11 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using MediaPoint.VM.Config;
 using Microsoft.Win32;
+using System.Linq;
 
 namespace InstallTool
 {
@@ -63,49 +65,130 @@ namespace InstallTool
             }
         }
 
+        static string BuildNgenString(string ngenExe, string exe, List<string> dlls, bool install = true)
+        {
+            // ngen install c:\myfiles\MyLib.dll /ExeConfig:c:\myapps\MyApp.exe
+            string ret = "";
+
+            foreach (var dll in dlls)
+            {
+                ret += string.Format(@" ""{0}"" {3}install ""{1}"" /ExeConfig:""{2}"" ", ngenExe, dll, exe, (!install ? "un" : "")) + Environment.NewLine;
+            }
+
+            ret += string.Format(@" ""{0}"" {2}install ""{1}"" ", ngenExe, exe, (!install ? "un" : "")) + Environment.NewLine;
+            return ret;
+        }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            string[] args = Environment.GetCommandLineArgs();
-            if (args.Length == 4 && args[1].ToLowerInvariant() == "/ngen")
+            try
             {
-                //MessageBox.Show(string.Format("ngen: '{0}' '{1}'", args[2], args[3]));
-                ProcessStartInfo pi = new ProcessStartInfo(args[2], args[3]);
-                pi.WindowStyle = ProcessWindowStyle.Hidden;
-                var p = Process.Start(pi);
-                p.WaitForExit();
-            }
-
-            if (args.Length == 5 && args[1].ToLowerInvariant() == "/associate")
-            {
-                var type = args[2].ToLowerInvariant();
-                _userName = args[4].ToLowerInvariant();
-                var file = ToShortPathName(args[3].ToLowerInvariant());
-                var dict = type == "video" ? SupportedFiles.Video : SupportedFiles.Audio;
-               
-                var userSid = new NTAccount(_userName).Translate(typeof (SecurityIdentifier)).Value;
-                var currentuser = Registry.Users.OpenSubKey(userSid, true);
-                
-                var classesRoot = Registry.LocalMachine.OpenSubKey(@"Software\Classes", true);
-
-                //MessageBox.Show(string.Format("associate: {0} '{1}' {2} {3} {4} {5}", type, file, dict.Count, _userName, currentuser.Name, classesRoot.Name));
-
-                foreach (var ft in dict)
+                string[] args = Environment.GetCommandLineArgs();
+                if (args.Length > 4 && args[1].ToLowerInvariant() == "/ngen" || args[1].ToLowerInvariant() == "/ungen")
                 {
-                    CheckFileAssociation(classesRoot, currentuser,
-                                        file, //Application exe path
-                                        ft.Key, //Document file extension
-                                        ft.Value, //Document type description
-                                        file + ",0", //Document type icon
-                                        "Play media with MediaPoint", //Action name
-                                        "Open" //File command
-                                        );  
+                    bool uninstalling = args[1].ToLowerInvariant() == "/ungen";
+
+                    var ngen = args[2];
+                    var exe = args[4];
+                    var dlls = new List<string>();
+                    for (int i = 5; i < args.Length; i += 2)
+                    {
+                        if (args[i].ToLowerInvariant() == "/dll" && i + 1 < args.Length)
+                        {
+                            dlls.Add(args[i + 1]);
+                        }
+                    }
+
+                    var ngenString = BuildNgenString(ngen, exe, dlls, !uninstalling);
+#if DEBUG
+                    ngenString = ngenString.Replace("[INSTALLDIR]", @"C:\Program Files (x86)\MediaPoint\");
+                    ngenString = ngenString.Replace("[WindowsFolder]", @"C:\Windows\");
+#endif
+
+                    ProcessStartInfo startInfo = new ProcessStartInfo();
+                    startInfo.FileName = @"cmd.exe"; // Specify exe name.
+                    startInfo.Arguments = "/k";
+                    startInfo.UseShellExecute = false;
+                    startInfo.ErrorDialog = false;
+                    startInfo.RedirectStandardInput = true;
+                    startInfo.RedirectStandardOutput = true;
+                    startInfo.RedirectStandardError = true;
+                    startInfo.CreateNoWindow = true;
+                    startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+                    //
+                    // Start the process.
+                    //
+                    Process process = Process.Start(startInfo);
+
+
+                    string[] batchFile = ngenString.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+                    int cmdIndex = 0;
+
+                    while (!process.HasExited)
+                    {
+                        if (cmdIndex < batchFile.Length)
+                        {
+                            process.StandardInput.WriteLine(batchFile[cmdIndex++]);
+                        }
+                        if (cmdIndex >= batchFile.Length)
+                        {
+                            process.StandardInput.WriteLine("exit");
+                            process.StandardInput.WriteLine("");
+                            break;
+                        }
+
+                        Thread.Sleep(100);
+                    }
+
+                    var s = process.StandardOutput.ReadToEnd();
+                    var ok = process.WaitForExit(30000);
+                    var lines = s.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToArray(); ;
+                    lines = lines.Take(Math.Min(lines.Length, 15)).ToArray();
+                    var ret = !ok ? -1 : (((process.ExitCode == 0) || uninstalling) ? 0 : -1);
+                    if (ret != 0) MessageBox.Show("Ngen failed:" + Environment.NewLine + String.Join(Environment.NewLine, lines), "InstallTool.exe Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Environment.Exit(ret);
+                }
+                else if (args.Length == 5 && args[1].ToLowerInvariant() == "/associate")
+                {
+                    var type = args[2].ToLowerInvariant();
+                    _userName = args[4].ToLowerInvariant();
+                    var file = ToShortPathName(args[3].ToLowerInvariant());
+                    var dict = type == "video" ? SupportedFiles.Video : SupportedFiles.Audio;
+
+                    var userSid = new NTAccount(_userName).Translate(typeof(SecurityIdentifier)).Value;
+                    var currentuser = Registry.Users.OpenSubKey(userSid, true);
+
+                    var classesRoot = Registry.LocalMachine.OpenSubKey(@"Software\Classes", true);
+
+                    //MessageBox.Show(string.Format("associate: {0} '{1}' {2} {3} {4} {5}", type, file, dict.Count, _userName, currentuser.Name, classesRoot.Name));
+
+                    foreach (var ft in dict)
+                    {
+                        CheckFileAssociation(classesRoot, currentuser,
+                                            file, //Application exe path
+                                            ft.Key, //Document file extension
+                                            ft.Value, //Document type description
+                                            file + ",0", //Document type icon
+                                            "Play media with MediaPoint", //Action name
+                                            "Open" //File command
+                                            );
+                    }
+
+                    SHChangeNotify(HChangeNotifyEventID.SHCNE_ASSOCCHANGED, HChangeNotifyFlags.SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
                 }
 
-                SHChangeNotify(HChangeNotifyEventID.SHCNE_ASSOCCHANGED, HChangeNotifyFlags.SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
+                Environment.Exit(0);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine + "Stack:" + Environment.NewLine + ex.StackTrace, "InstallTool.exe Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(-1);
             }
         }
 

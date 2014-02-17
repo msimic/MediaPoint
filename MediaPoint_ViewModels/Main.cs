@@ -126,6 +126,7 @@ namespace MediaPoint.VM
 		    SubtitleSize = 20;
             Encodings = Enum.GetValues(typeof(FontCharSet)).Cast<FontCharSet>().ToArray();
 			Player = new Player(this);
+            Playlist = new Playlist(Player);
 		    SubEncoding = Encodings[1];
 
             var updateThread = new Thread((() =>
@@ -164,6 +165,12 @@ namespace MediaPoint.VM
             set { SetValue(() => ShowEqualizer, value); }
         }
 
+        public bool ShowPlaylist
+        {
+            get { return GetValue(() => ShowPlaylist); }
+            set { SetValue(() => ShowPlaylist, value); }
+        }
+
         public Equalizer Equalizer
         {
             get { return GetValue(() => Equalizer); }
@@ -199,6 +206,12 @@ namespace MediaPoint.VM
 			get { return GetValue(() => Player); }
 			set { SetValue(() => Player, value); }
 		}
+
+        public Playlist Playlist
+        {
+            get { return GetValue(() => Playlist); }
+            set { SetValue(() => Playlist, value); }
+        }
 
 		public bool IsHidden
 		{
@@ -240,6 +253,7 @@ namespace MediaPoint.VM
 		{
 			get { return GetValue(() => CurrentTheme); }
 			set {
+                if (value == null) return;
 				if (SetValue(() => CurrentTheme, value))
 				{
 					SetSkin(value);
@@ -313,16 +327,11 @@ namespace MediaPoint.VM
 
 		public void SetSkin(string skin)
 		{
-			Uri src = null;
-			long pos = 0;
-			bool isPlaying = false;
 			try
 			{
 				if (Player != null)
 				{
-					src = Player.Source;
-					pos = Player.MediaPosition;
-					isPlaying = Player.IsPlaying;
+                    Player.ForceStop();
 				}
 				_view.Hide();
 				IsOptionsVisible = false;
@@ -336,22 +345,6 @@ namespace MediaPoint.VM
 			finally
 			{
 				_view.Show();
-				if (Player != null && src != null)
-				{
-					Player.Source = null;
-					Player.WorkQueue.Enqueue(() =>
-					                         	{
-					                         		if (isPlaying)
-					                         		{
-					                         			_view.Invoke(() =>
-					                         			             	{
-					                         			             		Player.Open(src);
-					                         			             		Player.MediaPosition = pos;
-					                         			             		Player.View.ExecuteCommand(PlayerCommand.Play);
-					                         			             	});
-					                         		}
-					                         	});
-				}
 			}
 		}
 
@@ -381,6 +374,23 @@ namespace MediaPoint.VM
                         ShowVisualizations = false;
                     else
                         ShowVisualizations = !ShowVisualizations;
+                }, can =>
+                {
+                    return true;
+                });
+            }
+        }
+
+        public ICommand ShowPlaylistCommand
+        {
+            get
+            {
+                return new Command(o =>
+                {
+                    if (!string.IsNullOrEmpty(o as string) && (string)o == "hide")
+                        ShowPlaylist = false;
+                    else
+                        ShowPlaylist = !ShowPlaylist;
                 }, can =>
                 {
                     return true;

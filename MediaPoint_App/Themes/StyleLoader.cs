@@ -106,18 +106,23 @@ namespace MediaPoint.App.Themes
 			string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MediaPoint");
 			string fileName = Path.Combine(path, @"Themes\");
 
-			if (!Directory.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))
-			{
-				path = Assembly.GetExecutingAssembly().GetPath();
-				fileName = Path.Combine(path, @"Themes\");
+            List<string> dirs = new List<string>();
 
-				if (!Directory.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))
-				{
-					throw new ThemeException("Styles does not exist or cannot be accessed.");
-				}
+
+			if (Directory.Exists(fileName) && HasPermission(fileName, FileSystemRights.Read))
+			{
+                dirs.AddRange(Directory.GetDirectories(fileName).Select(d => new DirectoryInfo(d).Name).ToArray());
+            }
+            
+			path = Assembly.GetExecutingAssembly().GetPath();
+			fileName = Path.Combine(path, @"Themes\");
+
+			if (Directory.Exists(fileName) && HasPermission(fileName, FileSystemRights.Read))
+			{
+                dirs.AddRange(Directory.GetDirectories(fileName).Select(d => new DirectoryInfo(d).Name).ToArray());
 			}
 
-			return Directory.GetDirectories(fileName).Select(d => new DirectoryInfo(d).Name).ToArray();
+            return dirs.Distinct().ToArray();
 		}
 
 		public string LoadStyles(string appname, string styleName, ResourceDictionary appDic)

@@ -1,11 +1,7 @@
-﻿<Application x:Class="MediaPoint.App.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Startup="Application_Startup"
-             xmlns:converters="clr-namespace:MediaPoint.Converters"
-             DispatcherUnhandledException="Application_DispatcherUnhandledException">
-    <Application.Resources>
-        <ResourceDictionary>
+             xmlns:converters="clr-namespace:MediaPoint.Converters;assembly=MediaPoint">
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
                     <BooleanToVisibilityConverter x:Key="Boolean2VisibilityConverter" />
@@ -20,8 +16,7 @@
                     <converters:LanguageToFlagConverter x:Key="LanguageToFlagConverter"/>
                   <converters:MultiplyWithConverter x:Key="MultiplyWithConverter"/>
                 </ResourceDictionary>
-                <ResourceDictionary Source="/Themes/default/style.xaml"/>
+
             </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Application.Resources>
-</Application>
+
+</ResourceDictionary>

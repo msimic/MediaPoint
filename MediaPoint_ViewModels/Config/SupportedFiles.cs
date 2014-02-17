@@ -55,9 +55,22 @@ namespace MediaPoint.VM.Config
             {"vob", "DVD Video Object File"}
         };
 
+        private static readonly Dictionary<string, string> SubFiles = new Dictionary<string, string>()
+        {
+            {"idx", "VobSub subtitle"},
+            {"ssa", "SubStation Alpha subtitle"},
+            {"ass", "Advanced SubStation Alpha subtitle"},
+            {"srt", "SubRip subtitle"},
+            {"sub", "MicroDVD subtitle"},
+            {"smi", "SAMI subtitle"},
+            {"psb", "PowerDivX subtitle"},
+            {"usf", "Universal Subtitle Format subtitle"},
+            {"ssf", "Structured Subtitle Format subtitle"}
+        };
+
         public static Dictionary<string, string> Audio { get { return AudioFiles; } }
         public static Dictionary<string, string> Video { get { return VideoFiles; } }
-        public static Dictionary<string, string> All { get { return AudioFiles.Union(VideoFiles).ToDictionary(k => k.Key, v => v.Value); } }
+        public static Dictionary<string, string> All { get { return AudioFiles.Union(VideoFiles).Union(SubFiles).ToDictionary(k => k.Key, v => v.Value); } }
 
         public static string OpenFileDialogFilter
         {
@@ -69,6 +82,7 @@ namespace MediaPoint.VM.Config
                     "All Media files|" + string.Join(";", VideoFiles.Select(v => "*." + v.Key).ToArray()) + ";" + string.Join(";", AudioFiles.Select(v => "*." + v.Key).ToArray()),
                     "Audio files|" + string.Join(";", AudioFiles.Select(v => "*." + v.Key).ToArray()),
                     "Video files|" + string.Join(";", VideoFiles.Select(v => "*." + v.Key).ToArray()),
+                    "Subtitle files|" + string.Join(";", SubFiles.Select(v => "*." + v.Key).ToArray()),
                     "All files (*.*)|*.*"
                 };
 
