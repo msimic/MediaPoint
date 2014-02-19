@@ -16,6 +16,7 @@ using MediaPoint.Subtitles;
 using Size=System.Windows.Size;
 using MediaPoint.Common.Interfaces;
 using System.Text;
+using MediaPoint.Common.Interfaces.LavAudio;
 #endregion
 
 namespace MediaPoint.Common.DirectShow.MediaPlayers
@@ -369,12 +370,17 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         protected IBaseFilter _video;
         protected IBaseFilter _audio;
         protected IBaseFilter _audioRenderer;
+        protected ILAVVideoSettings _videoSettings;
+        protected ILAVAudioSettings _audioSettings;
         protected IDCEqualizer _equalizer;
         protected IDCDSPFilterInterface _dspFilter;
         protected IDCDownMix _downmix;
         protected IDCAmplify _amplify;
         protected ILAVAudioStatus _audioStatus;
-
+        protected IDirectVobSub _vobsub;
+        protected IEVRPresenterSettings _settings;
+        protected ILAVSplitterSettings _splitterSettings;
+        
         protected MediaPlayerBase()
         {
             if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
@@ -658,8 +664,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             }
         }
 
-        protected static IDirectVobSub _vobsub;
-        public static IDirectVobSub VobSubSettings
+        public IDirectVobSub VobSubSettings
         {
             get
             {
@@ -667,8 +672,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             }
         }
 
-		protected static IEVRPresenterSettings _settings;
-		public static IEVRPresenterSettings EvrSettings
+		public IEVRPresenterSettings EvrSettings
 		{
 			get
 			{
@@ -677,7 +681,6 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 		}
 
 
-		protected ILAVSplitterSettings _splitterSettings;
 		public ILAVSplitterSettings SplitterSettings
 		{
 			get
@@ -1452,6 +1455,10 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// </summary>
         protected void InvokeMediaOpened()
         {
+#if DEBUG
+            //TestLavAudioSettingsInterface();
+            TestLavVideoSettingsInterface();
+#endif
             /* This is generally a good place to start
              * our polling timer */
             StartGraphPollTimer();
@@ -1461,6 +1468,73 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 mediaOpenedHandler();
         }
 
+#if DEBUG
+        private void TestLavVideoSettingsInterface()
+        {
+            
+        }
+
+        //private void TestLavAudioSettingsInterface()
+        //{
+        //    if (_audioStatus == null || _audioSettings == null) return;
+        //    bool ok = _audioStatus.IsSampleFormatSupported(LAVAudioSampleFormat.SampleFormat_32);
+        //    string s1 = new string('\0', 256);
+        //    string s2,s3,s4;
+        //    int i1, i2, i3;
+        //    uint ui1;
+        //    StringBuilder sb1, sb2;
+        //    sb1 = new StringBuilder(256);
+        //    sb2 = new StringBuilder(256);
+
+        //    IntPtr ptr1, ptr2;
+        //    _audioStatus.GetDecodeDetails(out ptr1, out ptr2, out i1, out i2, out ui1);
+        //    s1 = Marshal.PtrToStringAnsi(ptr1);
+        //    s1 = Marshal.PtrToStringAnsi(ptr2);
+        //    _audioStatus.GetOutputDetails(out ptr1, out i1, out i2, out ui1);
+        //    s1 = Marshal.PtrToStringAnsi(ptr1);
+        //    _audioStatus.EnableVolumeStats();
+        //    //_audioStatus.DisableVolumeStats();
+        //    float f1 = 2;
+        //    int hr = (int)_audioStatus.GetChannelVolumeAverage(1, out f1);
+        //    _audioSettings.SetAllowRawSPDIFInput(true);
+        //    bool allowraw = _audioSettings.GetAllowRawSPDIFInput();
+        //    _audioSettings.SetAudioDelay(true, 111);
+        //    bool enabled;
+        //    int value;
+        //    _audioSettings.GetAudioDelay(out enabled, out value);
+        //    _audioSettings.SetAutoAVSync(false);
+        //    enabled = _audioSettings.GetAutoAVSync();
+        //    _audioSettings.SetBitstreamConfig(LAVBitstreamCodec.Bitstream_AC3, true);
+        //    enabled = _audioSettings.GetBitstreamConfig(LAVBitstreamCodec.Bitstream_AC3);
+        //    _audioSettings.GetDRC(out enabled, out value);
+        //    _audioSettings.SetDRC(true, 11);
+        //    enabled = _audioSettings.GetFormatConfiguration(LAVAudioCodec.Codec_AC3);
+        //    _audioSettings.SetFormatConfiguration(LAVAudioCodec.Codec_AC3, false);
+        //    enabled = _audioSettings.GetDTSHDFraming();
+        //    _audioSettings.SetDTSHDFraming(true);
+        //    enabled = _audioSettings.GetOutputStandardLayout();
+        //    _audioSettings.SetOutputStandardLayout(false);
+        //    enabled = _audioSettings.GetExpandMono();
+        //    _audioSettings.SetExpandMono(true);
+        //    enabled = _audioSettings.GetExpand61();
+        //    _audioSettings.SetExpand61(true);
+        //    enabled = _audioSettings.GetSampleFormat(LAVAudioSampleFormat.SampleFormat_32);
+        //    value = (int)_audioSettings.SetSampleFormat(LAVAudioSampleFormat.SampleFormat_32, true);
+        //    enabled = _audioSettings.GetMixingEnabled();
+        //    _audioSettings.SetMixingEnabled(true);
+        //    var ml = _audioSettings.GetMixingLayout();
+        //    value = (int)_audioSettings.SetMixingLayout(LAVSpeakerLayouts.AV_CH_LAYOUT_5POINT1_BACK);
+        //    var v1 = _audioSettings.GetMixingFlags();
+        //    _audioSettings.SetMixingFlags(LAVMixingFlags.NormalizeMatrix);
+        //    var mm = _audioSettings.GetMixingMode();
+        //    _audioSettings.SetMixingMode(LAVAudioMixingMode.MatrixEncoding_DPLII);
+        //    uint a1, a2, a3;
+        //    _audioSettings.GetMixingLevels(out a1, out a2, out a3);
+        //    _audioSettings.SetMixingLevels(11, 11, 11);
+        //    enabled = _audioSettings.GetSampleConvertDithering();
+        //    _audioSettings.SetSampleConvertDithering(false);
+        //}
+#endif
         /// <summary>
         /// Invokes the MediaClosed event, notifying any subscriber that
         /// the opened media has been closed

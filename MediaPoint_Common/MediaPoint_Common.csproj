@@ -149,6 +149,7 @@
     <Compile Include="Interfaces\DCDSPFilters.cs" />
     <Compile Include="Interfaces\IEqualizer.cs" />
     <Compile Include="Interfaces\ITag.cs" />
+    <Compile Include="Interfaces\LavAudio\LavAudioInterfaces.cs" />
     <Compile Include="MediaFoundation\MediaInfoLib.cs" />
     <Compile Include="MediaPlayers\AudioCallback.cs" />
     <Compile Include="MediaPlayers\CharSets.cs" />

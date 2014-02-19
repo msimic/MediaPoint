@@ -15,6 +15,7 @@ using MediaPoint.Common.MediaFoundation.Interop;
 using MediaPoint.Common.MediaPlayers;
 using Microsoft.Win32.SafeHandles;
 using MediaPoint.Common.Helpers;
+using MediaPoint.Common.Interfaces.LavAudio;
 
 #endregion
 
@@ -627,13 +628,15 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 {
                     if (_audio != null) Marshal.ReleaseComObject(_audio);
                     _audio = audioDecoder;
-
-                    if (_audioStatus != null) Marshal.ReleaseComObject(_audioStatus);
                     _audioStatus = lavStatus;
+                    _audioSettings = lavAudioSettings;
 
-                    lavAudioSettings.SetRuntimeConfig(true);
+                    hr = (int)lavAudioSettings.SetRuntimeConfig(true);
                     hr = m_graph.AddFilter((IBaseFilter)audioDecoder, "LavAudio");
                     DsError.ThrowExceptionForHR(hr);
+#if DEBUG
+                    hr = (int)lavAudioSettings.SetTrayIcon(true);
+#endif
                 }
 
                 ILAVSplitterSettings splitterSettings;
@@ -643,15 +646,15 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 {
                     if (_splitter != null) Marshal.ReleaseComObject(_splitter);
                     _splitter = splitter;
-                    splitterSettings.SetRuntimeConfig(true);
-                    splitter.Load(fileSource, null);
+                    
+                    _splitterSettings = (ILAVSplitterSettings)splitterSettings;
+                
+                    hr = splitterSettings.SetRuntimeConfig(true);
+                    hr = splitter.Load(fileSource, null);
                     hr = m_graph.AddFilter((IBaseFilter)splitter, "LavSplitter");
                     DsError.ThrowExceptionForHR(hr);
                 }
 
-                if (_splitterSettings != null) Marshal.ReleaseComObject(_splitterSettings);
-                _splitterSettings = (ILAVSplitterSettings)splitterSettings;
-                
                 IEnumPins pinEnum;
                 hr = ((IBaseFilter)splitter).EnumPins(out pinEnum);
                 DsError.ThrowExceptionForHR(hr);
@@ -676,36 +679,38 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 ILAVVideoSettings lavVideoSettings;
                 IBaseFilter lavVideo = FilterProvider.GetVideoFilter(out lavVideoSettings);
 
-                if (_video != null) Marshal.ReleaseComObject(_video);
-                _video = lavVideo;
-                if (_video != null)
+                if (lavVideo != null)
                 {
+                    if (_video != null) Marshal.ReleaseComObject(_video);
+                    _video = lavVideo;
+                    
                     if (lavVideoSettings != null)
                     {
+                        _videoSettings = lavVideoSettings;
+                    
                         lavVideoSettings.SetRuntimeConfig(true);
-
                         hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_None);
 
                         // check for best acceleration available
                         if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_CUDA) != 0)
                         {
                             hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_CUDA);
+                            hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
                         }
                         else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_QuickSync) != 0)
                         {
                             hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_QuickSync);
+                            hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
                         }
-                        //else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2Native) != 0)
-                        //{
-                        //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2Native);
-                        //}
                         //else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2) != 0)
                         //{
                         //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2);
+                        //    hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
                         //}
                         else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2CopyBack) != 0)
                         {
                             hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2CopyBack);
+                            hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
                         }
 
 #if DEBUG
@@ -867,7 +872,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 m_dsRotEntry = new DsROTEntry(m_graph);
 #endif
 
-                SIZE a, b; int vW, vH;
+                SIZE a, b;
                 if (HasVideo && _displayControl != null && (_displayControl).GetNativeVideoSize(out a, out b) == 0)
                 {
                     if (a.cx > 0 && a.cy > 0)
@@ -875,13 +880,6 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                         SetNativePixelSizes(a);
                     }
                 }
-                //else if (HasVideo && _displayControlVMR != null && _displayControlVMR.GetMaxIdealImageSize(out vW, out vH) == 0)
-                //{
-                //    if (vW > 0 && vH > 0)
-                //    {
-                //        SetNativePixelSizes(new SIZE(vW, vH));
-                //    }
-                //}
 
                 if (!subconnected)
                 {

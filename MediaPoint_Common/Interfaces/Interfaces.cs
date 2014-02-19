@@ -10,6 +10,7 @@ using MediaPoint.Common.MediaFoundation;
 using System.Reflection;
 using MediaPoint.Common.MediaFoundation.Interop;
 using MediaPoint.Subtitles.Logic;
+using MediaPoint.Common.Interfaces.LavAudio;
 
 namespace MediaPoint.Common.Interfaces
 {
@@ -50,10 +51,6 @@ namespace MediaPoint.Common.Interfaces
 	// you will need the apropriate architecture (ie. if your player is 64 bits a 64 bit LAv filter must be installed)
 	// if you want to use your own supplied LAV filter without registration see FilterProvider class
 
-	[ComImport, Guid("E8E73B6B-4CB3-44A4-BE99-4F7BCB96E491")]
-	public class LAVAudio
-	{
-	}
 	[ComImport, Guid("B98D13E7-55DB-4385-A33D-09FD1BA26338")]
 	public class LAVSplitterSource
 	{
@@ -222,6 +219,15 @@ namespace MediaPoint.Common.Interfaces
         DeintMode_Force,
         DeintMode_Disable
     };
+
+    // resolutions for hardware accelerated decoding
+    [Flags]
+    public enum LAVHWResFlag 
+    {
+        SD      = 0x0001,
+        HD      = 0x0002,
+        UHD     = 0x0004
+    }
 
 	// LAV Video configuration interface
 	[ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,
@@ -415,12 +421,12 @@ namespace MediaPoint.Common.Interfaces
         // Set the HW Accel Resolution Flags
         // flags: bitmask of LAVHWResFlag flags
         [PreserveSig]
-        int SetHWAccelResolutionFlags(uint dwResFlags);
+        int SetHWAccelResolutionFlags(LAVHWResFlag dwResFlags);
 
         // Get the HW Accel Resolution Flags
         // flags: bitmask of LAVHWResFlag flags
         [PreserveSig]
-        int GetHWAccelResolutionFlags();
+        LAVHWResFlag GetHWAccelResolutionFlags();
 
         // Toggle Tray Icon
         [PreserveSig]
@@ -445,180 +451,6 @@ namespace MediaPoint.Common.Interfaces
         [PreserveSig]
         int SetGPUDeviceIndex(uint dwDevice);
 	};
-
-	#endregion
-
-	#region "Lav Audio settings and status interfaces, implemented by LavAudio"
-
-	// Codecs supported in the LAV Audio configuration
-	// Codecs not listed here cannot be turned off. You can request codecs to be added to this list, if you wish.
-	public enum LAVAudioCodec
-	{
-		Codec_AAC,
-		Codec_AC3,
-		Codec_EAC3,
-		Codec_DTS,
-		Codec_MP2,
-		Codec_MP3,
-		Codec_TRUEHD,
-		Codec_FLAC,
-		Codec_VORBIS,
-		Codec_LPCM,
-		Codec_PCM,
-		Codec_WAVPACK,
-		Codec_TTA,
-		Codec_WMA2,
-		Codec_WMAPRO,
-		Codec_Cook,
-		Codec_RealAudio
-
-		//Codec_NB            // Number of entrys (do not use when dynamically linking)
-	};
-
-	// Bitstreaming Codecs supported in LAV Audio
-	public enum LAVBitstreamCodec
-	{
-		Bitstream_AC3,
-		Bitstream_EAC3,
-		Bitstream_TRUEHD,
-		Bitstream_DTS,
-		Bitstream_DTSHD
-
-		//Bitstream_NB        // Number of entrys (do not use when dynamically linking)
-	};
-
-
-	// Supported Sample Formats in LAV Audio
-	public enum LAVAudioSampleFormat
-	{
-		SampleFormat_16,
-		SampleFormat_24,
-		SampleFormat_32,
-		SampleFormat_U8,
-		SampleFormat_FP32,
-		SampleFormat_Bitstream
-
-		//SampleFormat_NB     // Number of entrys (do not use when dynamically linking)
-	};
-
-	// LAV Audio status interface
-	[ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,
-		 Guid("A668B8F2-BA87-4F63-9D41-768F7DE9C50E"),
-		 InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	public interface ILAVAudioStatus
-	{
-		// Check if the given sample format is supported by the current playback chain
-		[PreserveSig]
-		bool IsSampleFormatSupported(LAVAudioSampleFormat sfCheck);
-
-		// Get details about the current decoding format
-		[PreserveSig]
-		int GetDecodeDetails([MarshalAs(UnmanagedType.LPStr)]out string pCodec, [MarshalAs(UnmanagedType.LPStr)]out string pDecodeFormat, out int pnChannels, out int pSampleRate, out int pChannelMask);
-
-		// Get details about the current output format
-		[PreserveSig]
-		int GetOutputDetails([MarshalAs(UnmanagedType.LPStr)]out string pOutputFormat, out int pnChannels, out int pSampleRate, out int pChannelMask);
-
-		// Enable Volume measurements
-		[PreserveSig]
-		int EnableVolumeStats();
-
-		// Disable Volume measurements
-		[PreserveSig]
-		int DisableVolumeStats();
-
-		// Get Volume Average for the given channel
-		[PreserveSig]
-		int GetChannelVolumeAverage(int nChannel, out float pfDb);
-	};
-
-	// LAV Audio configuration interface
-	[ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,
-		 Guid("4158A22B-6553-45D0-8069-24716F8FF171"),
-		 InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-	public interface ILAVAudioSettings
-	{
-		// Switch to Runtime Config mode. This will reset all settings to default, and no changes to the settings will be saved
-		// You can use this to programmatically configure LAV Audio without interfering with the users settings in the registry.
-		// Subsequent calls to this function will reset all settings back to defaults, even if the mode does not change.
-		//
-		// Note that calling this function during playback is not supported and may exhibit undocumented behaviour. 
-		// For smooth operations, it must be called before LAV Audio is connected to other filters.
-		[PreserveSig]
-		int SetRuntimeConfig(bool bRuntimeConfig);
-
-		// Dynamic Range Compression
-		// pbDRCEnabled: The state of DRC
-		// piDRCLevel:   The DRC strength (0-100, 100 is maximum)
-		[PreserveSig]
-		int GetDRC(out bool pbDRCEnabled, out int piDRCLevel);
-		[PreserveSig]
-		int SetDRC(bool bDRCEnabled, int iDRCLevel);
-
-		// Configure which codecs are enabled
-		// If aCodec is invalid (possibly a version difference), Get will return FALSE, and Set E_FAIL.
-		[PreserveSig]
-		bool GetFormatConfiguration(LAVAudioCodec aCodec);
-		[PreserveSig]
-		int SetFormatConfiguration(LAVAudioCodec aCodec, bool bEnabled);
-
-		// Control Bitstreaming
-		// If bsCodec is invalid (possibly a version difference), Get will return FALSE, and Set E_FAIL.
-		[PreserveSig]
-		bool GetBitstreamConfig(LAVBitstreamCodec bsCodec);
-		[PreserveSig]
-		int SetBitstreamConfig(LAVBitstreamCodec bsCodec, bool bEnabled);
-
-		// Should "normal" DTS frames be encapsulated in DTS-HD frames when bitstreaming?
-		[PreserveSig]
-		bool GetDTSHDFraming();
-		[PreserveSig]
-		int SetDTSHDFraming(bool bHDFraming);
-
-		// Control Auto A/V syncing
-		[PreserveSig]
-		bool GetAutoAVSync();
-		[PreserveSig]
-		int SetAutoAVSync(bool bAutoSync);
-
-		// Convert all Channel Layouts to standard layouts
-		// Standard are: Mono, Stereo, 5.1, 6.1, 7.1
-		[PreserveSig]
-		bool GetOutputStandardLayout();
-		[PreserveSig]
-		int SetOutputStandardLayout(bool bStdLayout);
-
-		// Expand Mono to Stereo by simply doubling the audio
-		[PreserveSig]
-		bool GetExpandMono();
-		[PreserveSig]
-		int SetExpandMono(bool bExpandMono);
-
-		// Expand 6.1 to 7.1 by doubling the back center
-		[PreserveSig]
-		bool GetExpand61();
-		[PreserveSig]
-		int SetExpand61(bool bExpand61);
-
-		// Allow Raw PCM and SPDIF encoded input
-		[PreserveSig]
-		bool GetAllowRawSPDIFInput();
-		[PreserveSig]
-		int SetAllowRawSPDIFInput(bool bAllow);
-
-		// Configure which sample formats are enabled
-		// Note: SampleFormat_Bitstream cannot be controlled by this
-		[PreserveSig]
-		bool GetSampleFormat(LAVAudioSampleFormat format);
-		[PreserveSig]
-		int SetSampleFormat(LAVAudioSampleFormat format, bool bEnabled);
-
-		// Configure a delay for the audio
-		[PreserveSig]
-		int GetAudioDelay(out bool pbEnabled, out int pDelay);
-		[PreserveSig]
-		int SetAudioDelay(bool bEnabled, int delay);
-	}
 
 	#endregion
 
@@ -1040,15 +872,7 @@ namespace MediaPoint.Common.Interfaces
 						throw new Exception("Could not QueryInterface for the IBaseFilter interface");
 					}
 
-					Guid videoSettingsGUID = new Guid("{FA40D6E9-4D38-4761-ADD2-71A9EC5FD32F}");
-					hr = factory.CreateInstance(null, ref videoSettingsGUID, out oSettings);
-
-					settings = oSettings as ILAVVideoSettings;
-					if (filter == null)
-					{
-						if (oSettings != null) Marshal.ReleaseComObject(oSettings);
-						throw new Exception("Could not QueryInterface for the ILAVVideoSettings interface");
-					}
+                    settings = (ILAVVideoSettings)filter;
 
 				}
 				catch
@@ -1218,16 +1042,6 @@ namespace MediaPoint.Common.Interfaces
                         throw new Exception("Could not QueryInterface for the IBaseFilter interface");
                     }
 
-                    //Guid videoSettingsGUID = new Guid("{FA40D6E9-4D38-4761-ADD2-71A9EC5FD32F}");
-                    //hr = factory.CreateInstance(null, ref videoSettingsGUID, out oSettings);
-
-                    //settings = oSettings as ILAVVideoSettings;
-                    //if (filter == null)
-                    //{
-                    //    if (oSettings != null) Marshal.ReleaseComObject(oSettings);
-                    //    throw new Exception("Could not QueryInterface for the ILAVVideoSettings interface");
-                    //}
-
                 }
                 catch
                 {
@@ -1319,25 +1133,9 @@ namespace MediaPoint.Common.Interfaces
 						throw new Exception("Could not QueryInterface for the IBaseFilter interface");
 					}
 
-					Guid audioSettingsGUID = typeof(ILAVAudioSettings).GUID;
-					hr = factory.CreateInstance(null, ref audioSettingsGUID, out oSettings);
+					settings = (ILAVAudioSettings)filter;
+                    status = (ILAVAudioStatus)filter;
 
-					settings = oSettings as ILAVAudioSettings;
-					if (filter == null)
-					{
-						if (oSettings != null) Marshal.ReleaseComObject(oSettings);
-						throw new Exception("Could not QueryInterface for the ILAVAudioSettings interface");
-					}
-
-					Guid audioStatusGUID = typeof(ILAVAudioStatus).GUID;
-					hr = factory.CreateInstance(null, ref audioStatusGUID, out oStatus);
-
-					status = oStatus as ILAVAudioStatus;
-					if (filter == null)
-					{
-						if (oStatus != null) Marshal.ReleaseComObject(oStatus);
-						throw new Exception("Could not QueryInterface for the ILAVAudioStatus interface");
-					}
 				}
 				catch
 				{
@@ -1425,15 +1223,7 @@ namespace MediaPoint.Common.Interfaces
 						throw new Exception("Could not QueryInterface for the IFileSourceFilter interface");
 					}
 
-					Guid splitterSettingsGUID = typeof(ILAVSplitterSettings).GUID;
-					hr = factory.CreateInstance(null, ref splitterSettingsGUID, out oSettings);
-
-					settings = oSettings as ILAVSplitterSettings;
-					if (filter == null)
-					{
-						if (oSettings != null) Marshal.ReleaseComObject(oSettings);
-						throw new Exception("Could not QueryInterface for the ILAVSplitterSettings interface");
-					}
+					settings = (ILAVSplitterSettings)filter;
 
 				}
 				catch
@@ -1519,15 +1309,7 @@ namespace MediaPoint.Common.Interfaces
 						throw new Exception("Could not QueryInterface for the IBaseFilter interface");
 					}
 
-					Guid splitterSettingsGUID = typeof(ILAVSplitterSettings).GUID;
-					hr = factory.CreateInstance(null, ref splitterSettingsGUID, out oSettings);
-
-					settings = oSettings as ILAVSplitterSettings;
-					if (filter == null)
-					{
-						if (oSettings != null) Marshal.ReleaseComObject(oSettings);
-						throw new Exception("Could not QueryInterface for the ILAVSplitterSettings interface");
-					}
+					settings = (ILAVSplitterSettings)filter;
 
 				}
 				catch
