@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 
+// Interfaces match LAVFilters release 0.60.1
+
 namespace MediaPoint.Common.Interfaces.LavAudio
 {
     #region "Lav Audio settings and status interfaces, implemented by LavAudio"
@@ -78,7 +80,7 @@ namespace MediaPoint.Common.Interfaces.LavAudio
         MatrixEncoding_DPLII,
     };
 
-
+    // lav speaker layouts
     [Flags]
     public enum LAVSpeakerLayouts
     {
