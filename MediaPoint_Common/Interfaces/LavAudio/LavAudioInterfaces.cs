@@ -46,7 +46,15 @@ namespace MediaPoint.Common.Interfaces.LavAudio
         Codec_WMA2,
         Codec_WMAPRO,
         Codec_Cook,
-        Codec_RealAudio
+        Codec_RealAudio,
+        Codec_WMALL,
+        Codec_ALAC,
+        Codec_Opus,
+        Codec_AMR,
+        Codec_Nellymoser,
+        Codec_MSPCM,
+        Codec_Truespeech,
+        Codec_TAK,
     };
 
     // Bitstreaming Codecs supported in LAV Audio
