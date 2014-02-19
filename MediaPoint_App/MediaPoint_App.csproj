@@ -185,6 +185,7 @@
     <Compile Include="AppViewModelToViewMapping.cs" />
     <Compile Include="AttachedProperties\Autohide.cs" />
     <Compile Include="AttachedProperties\CheckExtender.cs" />
+    <Compile Include="AttachedProperties\PanelBringToFrontOnClick.cs" />
     <Compile Include="AttachedProperties\ItemsControlDoubleClickMouseInputBinding.cs" />
     <Compile Include="AttachedProperties\MouseDownHelper.cs" />
     <Compile Include="AttachedProperties\ThreatAsInputControl.cs" />
@@ -201,6 +202,8 @@
     <Compile Include="Behaviors\HyperlinkOpenAction.cs" />
     <Compile Include="Behaviors\StylizedBehaviors.cs" />
     <Compile Include="Behaviors\WindowStateBehavior.cs" />
+    <Compile Include="Converters\BooleanAndConverter.cs" />
+    <Compile Include="Converters\LastStringIfNull.cs" />
     <Compile Include="Converters\LanguageToFlagConverter.cs" />
     <Compile Include="Converters\FullscreenPaddingConverter.cs" />
     <Compile Include="Converters\MultiplyWithConverter.cs" />
@@ -252,6 +255,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <Resource Include="Images\app.ico" />
     <Resource Include="Images\countryflags\alb.gif" />
     <Resource Include="Images\countryflags\bel.gif" />
     <Resource Include="Images\countryflags\cze.gif" />
@@ -299,7 +303,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\app.ico" />
     <Content Include="Themes\default\Images\background.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -102,24 +102,13 @@
                 </controls:Playlist>
                 
                 <controls:Options Focusable="False" x:Name="options" Style="{DynamicResource Options}">
-                    <Grid Margin="0,-50,0,50">
-                        <ComboBox x:Name="themeCombo" Height="20" Width="200" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding .}" FontSize="15" Height="20"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </Grid>
                 </controls:Options>
-                <controls:MediaControls Focusable="False" x:Name="mediaControls"
-                                    Style="{DynamicResource MediaControls}"
-                                    Visibility="{Binding Player, Converter={StaticResource NotNullToVisibility}}">
-                    <StackPanel Orientation="Horizontal" Margin="0,50,0,-50">
-                        <Button Width="60" Height="20" Command="{Binding Player.OpenCommand}">Open</Button>
-                        <Button Width="60" Height="20" Command="{Binding Player.PlayCommand}">Play</Button>
-                    </StackPanel>
+                
+                <controls:MediaControls Focusable="False" x:Name="mediaControls" Style="{DynamicResource MediaControls}" Visibility="{Binding Player, Converter={StaticResource NotNullToVisibility}}">
                 </controls:MediaControls>
+
+                <controls:OSD Focusable="False" x:Name="osd" Style="{DynamicResource OSD}">
+                </controls:OSD>
             </Grid>
         </controls:MainWindowContent>
     </Grid>

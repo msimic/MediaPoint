@@ -155,6 +155,7 @@
   <ItemGroup>
     <Compile Include="Behaviors\DraggableBehavior.cs" />
     <Compile Include="Behaviors\StylizedBehaviors.cs" />
+    <Compile Include="Controls\OSD.cs" />
     <Compile Include="Controls\Playlist.cs" />
     <Compile Include="Controls\Visualizations.cs" />
     <Compile Include="Controls\Equalizer.cs" />

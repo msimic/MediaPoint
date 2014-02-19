@@ -99,8 +99,8 @@ namespace MediaPoint.VM
                     }
                     else
                     {
-                        Main.ShowVisualizations = true;
-                        Main.ShowEqualizer = true;
+                        Main.ShowVisualizations = Source != null && true;
+                        Main.ShowEqualizer = Source != null && true;
                     }
                 }
             }
@@ -118,7 +118,18 @@ namespace MediaPoint.VM
         public bool IsSubtitleSearchInProgress
         {
             get { return GetValue(() => IsSubtitleSearchInProgress); }
-            set { SetValue(() => IsSubtitleSearchInProgress, value); }
+            set
+            {
+                SetValue(() => IsSubtitleSearchInProgress, value);
+                if (IsSubtitleSearchInProgress)
+                {
+                    Main.ShowOsdMessage("Subtitle search is in progress.");
+                }
+                else
+                {
+                    Main.ShowOsdMessage("Subtitle search finished.");
+                }
+            }
         }
 
         public string SubtitleDefaultSearchText
@@ -135,6 +146,7 @@ namespace MediaPoint.VM
 				{
                     Main.Playlist.SetPlaying(value);
 					SourceFileName = Path.GetFileNameWithoutExtension(value.LocalPath);
+                    Main.ShowOsdMessage(string.Format("Opening '{0}'", Path.GetFileName(SourceFileName)));
 				}
 				else
 				{
@@ -167,55 +179,12 @@ namespace MediaPoint.VM
 			set { SetValue<bool>(() => IsDeeperColor, value); }
 		}
 
-        long _desiredTrackPosition = -1;
-        long _currentTrackPosition = -1;
-        Thread _trackbarMediaPositionUpdater;
-
-        private void MediaPositionUpdaterThread(object obj)
-        {
-            while (true)
-            {
-                Thread.Sleep(200);
-                if (_desiredTrackPosition != -1)
-                {
-                    if (!Monitor.TryEnter(_positionLocker, 200))
-                    {
-                        continue;
-                    }
-                    Debug.WriteLine("MediaPositionUpdaterThread " + _desiredTrackPosition);
-                    _currentTrackPosition = _desiredTrackPosition;
-                    SetValue(() => MediaPosition, _desiredTrackPosition);
-                    UpdatePositionInUI(_desiredTrackPosition);
-                    _desiredTrackPosition = -1;
-                    Monitor.Exit(_positionLocker);
-                }
-            }
-        }
-
         public long TrackbarMediaPosition
         {
-            get { return _currentTrackPosition; }
+            get { return GetValue(() => TrackbarMediaPosition); }
             set
             {
-                //if (_trackbarMediaPositionUpdater == null)
-                //{
-                //    _trackbarMediaPositionUpdater = new Thread(MediaPositionUpdaterThread);
-                //    _trackbarMediaPositionUpdater.IsBackground = true;
-                //    _trackbarMediaPositionUpdater.Start();
-                //}
-
-                //if (!Monitor.TryEnter(_positionLocker, 200))
-                //{
-                //    return;
-                //}
-                
-                //Debug.WriteLine("TrackbarMediaPosition " + value);
-                //_desiredTrackPosition = value;
-                //_currentTrackPosition = value;
                 SetValue(() => TrackbarMediaPosition, value);
-
-                //Monitor.Exit(_positionLocker);
-                
             }
         }
 
@@ -224,11 +193,10 @@ namespace MediaPoint.VM
             get { return GetValue(() => IsTrackbarBeingMoved); }
             set
             {
-                Debug.WriteLine("IsTrackbarBeingMoved " + value);
                 SetValue(() => IsTrackbarBeingMoved, value);
             }
         }
-        object _positionLocker = new object();
+
 		public long MediaPosition
 		{
 			get { return GetValue(() => MediaPosition); }
@@ -241,17 +209,14 @@ namespace MediaPoint.VM
                         return;
                     }
                 }
-                Debug.WriteLine("MediaPosition " + value);
-                    SetValue(() => MediaPosition, value);
-                    //TrackbarMediaPosition = value;
-                    UpdatePositionInUI(value);
-                    if (MediaPosition > MediaDuration && MediaDuration > 0 && IsPlaying)
-                    {
-                        ForceStop();
-                    }
-                //}
 
-                //Monitor.Exit(_positionLocker);
+                SetValue(() => MediaPosition, value);
+                    
+                UpdatePositionInUI(value);
+                if (MediaPosition > MediaDuration && MediaDuration > 0 && IsPlaying)
+                {
+                    ForceStop();
+                }
 			}
 		}
 
@@ -314,7 +279,11 @@ namespace MediaPoint.VM
 		public double Rate
 		{
 			get { return GetValue(() => Rate); }
-			set { SetValue(() => Rate, value); }
+			set
+            {
+                SetValue(() => Rate, value);
+                Main.ShowOsdMessage(string.Format("Playback rate changed to '{0}'", value));
+            }
 		}
 
 		public ObservableCollection<SubtitleItem> SubtitleStreams
@@ -356,7 +325,8 @@ namespace MediaPoint.VM
             {
                 if (value == null) return; // listboxes bound would clear this when clearing itemssource, so if need to clear in code use ClearSelectedSubtitle()
 
-                SetValue(() => SelectedSubtitle, value); 
+                SetValue(() => SelectedSubtitle, value);
+                Main.ShowOsdMessage(string.Format("Setting subtitle '{0}'", value.DisplayName));
             }
 		}
 
@@ -371,12 +341,6 @@ namespace MediaPoint.VM
 			get { return GetValue(() => AudioStreams); }
 			set { SetValue(() => AudioStreams, value); }
 		}
-
-        public string ErrorMessage
-        {
-            get { return GetValue(() => ErrorMessage); }
-            set { SetValue(() => ErrorMessage, value); }
-        }
 
 		public ObservableCollection<string> VideoStreams
 		{
@@ -397,12 +361,6 @@ namespace MediaPoint.VM
 			}
 		}
 
-    	public Queue<Action> WorkQueue
-		{
-			get { return GetValue(() => WorkQueue); }
-			set { SetValue(() => WorkQueue, value); }
-		}
-
         public IMDb IMDb
         {
             get { return GetValue(() => IMDb); }
@@ -414,11 +372,9 @@ namespace MediaPoint.VM
                         ShowIMdb = false;
                     else
                     {
+                        Main.ShowOsdMessage(string.Format("Movie matched to '{0} ({1})'", value.Title, value.Year));
                         ShowIMdb = true;
-                        Observable.Return(1).Delay(TimeSpan.FromSeconds(10)).Subscribe(i =>
-                                                                                           {
-                                                                                               if (!_invalidateImdbHiding) ShowIMdb = false;
-                                                                                           });
+                        //Observable.Return(1).Delay(TimeSpan.FromSeconds(10)).Subscribe(i => { if (!_invalidateImdbHiding) ShowIMdb = false; });
                     }
                 }
             }
@@ -575,34 +531,6 @@ namespace MediaPoint.VM
 			}
 		}
 
-        public ICommand PreviousCommand
-        {
-            get
-            {
-                return new Command(o =>
-                {
-                    //todo
-                }, can =>
-                {
-                    return true;
-                });
-            }
-        }
-
-        public ICommand NextCommand
-        {
-            get
-            {
-                return new Command(o =>
-                {
-                    //todo
-                }, can =>
-                {
-                    return true;
-                });
-            }
-        }
-
 		public ICommand OpenCommand
 		{
 			get
@@ -631,7 +559,6 @@ namespace MediaPoint.VM
 
                     ForceStop();
 					Open(uri);
-					//Play(true);
 
 				}, can =>
 				{
@@ -653,6 +580,7 @@ namespace MediaPoint.VM
             IsStopped = true;
             Source = null;
             if (View != null) View.ExecuteCommand(PlayerCommand.Stop);
+            Main.ShowOsdMessage("Stopped");
         }
 
 		public void Stop()
@@ -664,6 +592,8 @@ namespace MediaPoint.VM
 			IsStopped = true;
 			Status = "Stopped";
             ServiceLocator.GetService<IMainView>().UpdateTaskbarButtons();
+            Main.ShowOsdMessage("Stopped");
+
 		}
 
         public void LoadMediaInfo()
@@ -710,6 +640,7 @@ namespace MediaPoint.VM
 				IsPaused = false;
 				IsStopped = false;
 				Status = "Playing";
+                Main.ShowOsdMessage("Playing");
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Normal, ServiceLocator.GetService<IMainView>().GetWindow());
 			}
 
@@ -726,14 +657,18 @@ namespace MediaPoint.VM
             {
                 OpenCommand.Execute(next);
             }
+
+            Main.ShowOsdMessage("Media ended");
         }
 
 		public void Pause()
 		{
+            Main.ShowOsdMessage("Paused");
 			View.ExecuteCommand(PlayerCommand.Pause, null);
 			IsPaused = true;
 			Status = "Paused";
             ServiceLocator.GetService<IMainView>().UpdateTaskbarButtons();
+            Main.ShowOsdMessage("Paused");
 		}
 
         public void LoadSelectedOnlineSubtitle()
@@ -750,7 +685,7 @@ namespace MediaPoint.VM
                 }
                 catch (WebException)
                 {
-                    ErrorMessage = "Internet connection unavailable.";
+                    Main.ShowOsdMessage("Internet connection unavailable.");
                 }
                 finally
                 {
@@ -842,7 +777,7 @@ namespace MediaPoint.VM
 
         void MessageCallback(string message)
         {
-            ErrorMessage = message;
+            Main.ShowOsdMessage(message);
         }
 
         private object _subtitleSearchLocker = new object();
@@ -874,7 +809,7 @@ namespace MediaPoint.VM
                 }
                 catch (WebException)
                 {
-                    ErrorMessage = "Internet connection unavailable.";
+                    Main.ShowOsdMessage("Internet connection unavailable.");
                     args.Result = null;
                 }
                 finally
@@ -927,7 +862,7 @@ namespace MediaPoint.VM
                 {
                     OnlineSubtitleChoices.Add(st);
                 }
-                ErrorMessage = string.Format("{0} subtitles found.", OnlineSubtitleChoices.Count);
+                Main.ShowOsdMessage(string.Format("{0} subtitles found.", OnlineSubtitleChoices.Count));
             }
             FillSubs(uri);
             var loadSub = (DownloadedSubtitle = SubtitleStreams.FirstOrDefault(s => s.Path.ToLowerInvariant() == resultSub.ToLowerInvariant()));
@@ -950,7 +885,7 @@ namespace MediaPoint.VM
                 }
                 catch (WebException)
                 {
-                    ErrorMessage = "Internet connection unavailable.";
+                    Main.ShowOsdMessage("Internet connection unavailable.");
                     args.Result = null;
                 }
             };
@@ -962,7 +897,7 @@ namespace MediaPoint.VM
                 }
                 catch (Exception)
                 {
-                    ErrorMessage = "Querying subtitle providers failed. Please try again.";
+                    Main.ShowOsdMessage("Querying subtitle providers failed. Please try again.");
                 }
                 finally
                 {

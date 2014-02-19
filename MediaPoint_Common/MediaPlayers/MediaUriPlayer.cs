@@ -695,14 +695,14 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                         {
                             hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_QuickSync);
                         }
-                        else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2Native) != 0)
-                        {
-                            hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2Native);
-                        }
-                        else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2) != 0)
-                        {
-                            hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2);
-                        }
+                        //else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2Native) != 0)
+                        //{
+                        //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2Native);
+                        //}
+                        //else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2) != 0)
+                        //{
+                        //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2);
+                        //}
                         else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2CopyBack) != 0)
                         {
                             hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2CopyBack);
@@ -754,19 +754,10 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                         var cb = new AudioCallback(this);
                         hr = _dspFilter.set_CallBackPCM(cb);
 
-                        int cnt = 0;
                         object intf = null;
                         hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftEqualizer);
-                        //hr = _dspFilter.get_FilterCount(ref cnt);
                         hr = _dspFilter.get_FilterInterface(0, out intf);
                         _equalizer = (IDCEqualizer)intf;
-                        //hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftDownMix);
-                        //hr = _dspFilter.get_FilterInterface(0, out intf);
-                        //_downmix = (IDCDownMix)intf;
-                        //hr = _dspFilter.set_AddFilter(0, TDCFilterType.ftAmplify);
-                        //hr = _dspFilter.get_FilterInterface(0, out intf);
-                        //_amplify = (IDCAmplify)intf;
-                        //_amplify.set_Enabled(true);
                         _equalizer.set_Seperate(false);
                     }
                 }

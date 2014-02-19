@@ -19,6 +19,7 @@ using MediaPoint.VM.ViewInterfaces;
 using MediaPoint.MVVM.Services;
 using System.Threading;
 using MediaPoint.Common.Helpers;
+using System.Reactive.Linq;
 
 namespace MediaPoint.VM
 {
@@ -309,17 +310,17 @@ namespace MediaPoint.VM
 			set { SetValue(() => AllFonts, value); }
 		}
 
-		public IEnumerable<Paragraph> CurrentSubtitle
-		{
-			get { return GetValue(() => CurrentSubtitle); }
-			set { SetValue(() => CurrentSubtitle, value); }
-		}
-
         public FontCharSet[] Encodings
 		{
 			get { return GetValue(() => Encodings); }
 			set { SetValue(() => Encodings, value); }
 		}
+
+        public string OSDMessage
+        {
+            get { return GetValue(() => OSDMessage); }
+            set { SetValue(() => OSDMessage, value); }
+        }
 
 		#endregion
 
@@ -564,6 +565,15 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
                 SubtitleFont = AllFonts.First(f => f.Font.ToString().ToLowerInvariant().Contains("impact"));
             };
             b.RunWorkerAsync();
+        }
+
+        public void ShowOsdMessage(string message)
+        {
+            OSDMessage = message;
+            Observable.Return(1).Delay(TimeSpan.FromSeconds(2)).Subscribe(i =>
+            {
+                if (OSDMessage == message) OSDMessage = null;
+            });
         }
 
 		public void ToggleOptions()

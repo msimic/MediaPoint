@@ -4678,7 +4678,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>PROGMSG_IIS_ROLLBACKVROOTS</td><td>##IDS_PROGMSG_IIS_ROLLBACKVROOTS##</td><td/></row>
 		<row><td>PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS</td><td>##IDS_PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS##</td><td/></row>
 		<row><td>PROGRAMFILETOLAUNCHATEND</td><td>[INSTALLDIR]MediaPoint.exe</td><td/></row>
-		<row><td>ProductCode</td><td>{54F8B515-9D30-463A-A2AA-A15776AEA2CB}</td><td/></row>
+		<row><td>ProductCode</td><td>{ED01CDFC-5DD3-4905-A938-3FA3CA320826}</td><td/></row>
 		<row><td>ProductName</td><td>MediaPoint</td><td/></row>
 		<row><td>ProductVersion</td><td>1.00.0000</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>

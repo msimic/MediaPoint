@@ -471,7 +471,7 @@ namespace MediaPoint.App
         {
             bool hideControls = true;
             bool hideOverlay = true;
-
+            //var dc = DataContext as Main;
             if (WindowState == WindowState.Normal)
             {
                 hideControls = Autohide.GetNormalMode(mediaControls);
@@ -484,15 +484,26 @@ namespace MediaPoint.App
             }
 
             if (hideControls) FadeTo(mediaControls, 0);
+            //if (dc.ShowEqualizer) FadeTo(equalizer, 0);
+            //if (dc.Player.ShowIMdb) FadeTo(imdbOverlay, 0);
+            //if (dc.Player.ShowOnlineSubtitles) FadeTo(onlineSubs, 0);
+            //if (dc.IsOptionsVisible) FadeTo(options, 0);
             if (hideOverlay) FadeTo(windowControls, 0);
-            IsHidden = true;
+            //if (dc.ShowPlaylist) FadeTo(playlist, 0);
+            IsUIVIsible = false;
         }
 
         void ShowUI()
         {
+            //var dc = DataContext as Main;
             FadeTo(mediaControls, 1);
             FadeTo(windowControls, 1);
-            IsHidden = false;
+            //if (dc.ShowEqualizer) FadeTo(equalizer, 1);
+            //if (dc.Player.ShowIMdb) FadeTo(imdbOverlay, 1);
+            //if (dc.Player.ShowOnlineSubtitles) FadeTo(onlineSubs, 1);
+            //if (dc.IsOptionsVisible) FadeTo(options, 1);
+            //if (dc.ShowPlaylist) FadeTo(playlist, 1);
+            IsUIVIsible = true;
         }
 
         public void UnregisterEventsOnControls()
@@ -512,8 +523,8 @@ namespace MediaPoint.App
             onlineSubs.MouseEnter -= MediaControlsOnMouseEnter;
             onlineSubs.MouseLeave -= MediaControlsOnMouseLeave;
 
-            visualizations.MouseEnter -= MediaControlsOnMouseEnter;
-            visualizations.MouseLeave -= MediaControlsOnMouseLeave;
+            //visualizations.MouseEnter -= MediaControlsOnMouseEnter;
+            //visualizations.MouseLeave -= MediaControlsOnMouseLeave;
 
             equalizer.MouseEnter -= MediaControlsOnMouseEnter;
             equalizer.MouseLeave -= MediaControlsOnMouseLeave;
@@ -539,8 +550,8 @@ namespace MediaPoint.App
             onlineSubs.MouseEnter += MediaControlsOnMouseEnter;
             onlineSubs.MouseLeave += MediaControlsOnMouseLeave;
 
-            visualizations.MouseEnter += MediaControlsOnMouseEnter;
-            visualizations.MouseLeave += MediaControlsOnMouseLeave;
+            //visualizations.MouseEnter += MediaControlsOnMouseEnter;
+            //visualizations.MouseLeave += MediaControlsOnMouseLeave;
 
             equalizer.MouseEnter += MediaControlsOnMouseEnter;
             equalizer.MouseLeave += MediaControlsOnMouseLeave;
@@ -606,7 +617,7 @@ namespace MediaPoint.App
 
             var dc = DataContext as Main;
 
-            if (diff >= TimeoutToHide && (!IsHidden || Cursor != Cursors.None))
+            if (diff >= TimeoutToHide && (IsUIVIsible || Cursor != Cursors.None))
             {
                 if (!_isOverUIControl && dc.Player.HasVideo)
                 {
@@ -619,7 +630,18 @@ namespace MediaPoint.App
         bool _isOverUIControl;
 
         public DateTime LastMouseMove { get; set; }
-        public bool IsHidden { get; set; }
+
+        public bool IsUIVIsible
+        {
+            get { return (bool)GetValue(IsUIVIsibleProperty); }
+            set { SetValue(IsUIVIsibleProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for IsUIVIsible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty IsUIVIsibleProperty =
+            DependencyProperty.Register("IsUIVIsible", typeof(bool), typeof(Window1), new PropertyMetadata(true));
+
+        
         private DateTime _timeToDelayReShowing = DateTime.Now;
         private TimeSpan TimeoutToHide
         {
@@ -629,6 +651,28 @@ namespace MediaPoint.App
 
         private void FadeTo(UIElement element, double value)
         {
+            //if (element is FrameworkElement)
+            //{
+            //    var fadeIn = ((FrameworkElement)element).TryFindResource("FadeInSB") as Storyboard;
+            //    var fadeOut = ((FrameworkElement)element).TryFindResource("FadeOutSB") as Storyboard;
+            //    var fadeInVis = ((FrameworkElement)element).TryFindResource("FadeInVisibilitySB") as Storyboard;
+            //    var fadeOutVis = ((FrameworkElement)element).TryFindResource("FadeOutVisibilitySB") as Storyboard;
+
+            //    if (value == 0 && fadeOut != null && fadeOutVis != null)
+            //    {
+            //        fadeOut.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
+            //        fadeOut.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
+            //        return;
+            //    }
+
+            //    if (value == 1 && fadeOut != null && fadeOutVis != null)
+            //    {
+            //        fadeIn.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
+            //        fadeInVis.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
+            //        return;
+            //    }
+            //}
+
             if (value > 0)
             {
                 element.Visibility = System.Windows.Visibility.Visible;
@@ -639,25 +683,33 @@ namespace MediaPoint.App
             da.To = value;
             da.Duration = new Duration(TimeSpan.FromSeconds(1));
             da.AutoReverse = false;
-
-            if (value == 0)
-            {
-                // attach autodetaching eventhandler
-                System.EventHandler ev = null;
-                ev = (object o, EventArgs e) =>
-                {
-                    Clock clock = (Clock)o;
-                    if (clock.CurrentState != ClockState.Active)
-                    {
-                        var val = value;
-                        if (val <= 0)
-                            element.Visibility = System.Windows.Visibility.Collapsed;
-                    }
-                    da.CurrentStateInvalidated -= ev;
-                };
-                da.CurrentStateInvalidated += ev;
-            }
-
+            
+            //System.EventHandler ev = null;
+            ////if (value == 0)
+            ////{
+            //    // attach autodetaching eventhandler
+            //    ev = (object o, EventArgs e) =>
+            //    {
+            //        //CopyAnimatedValuesToLocalValues(element);
+            //        if (element.Opacity == 0.0)
+            //        {
+            //            //element.BeginAnimation(OpacityProperty, null);
+            //            //element.Visibility = System.Windows.Visibility.Collapsed;
+            //            //element.Opacity = 0;
+            //        }
+            //        else if (element.Opacity == 1.0)
+            //        {
+            //            //element.BeginAnimation(OpacityProperty, null);
+            //            //element.Visibility = System.Windows.Visibility.Visible;
+            //            //element.Opacity = 1;
+            //        }
+            //        element.Opacity = element.Opacity;
+            //        //element.BeginAnimation(OpacityProperty, null);
+            //        da.Completed -= ev;
+            //    };
+            ////}
+            //da.Completed += ev;
+            da.FillBehavior = FillBehavior.HoldEnd;
             element.BeginAnimation(OpacityProperty, da, HandoffBehavior.SnapshotAndReplace);
         }
 
@@ -676,7 +728,7 @@ namespace MediaPoint.App
             if (delta < 6 || DateTime.Now < LastMouseMove) return;
             CommandManager.InvalidateRequerySuggested();
             LastMouseMove = DateTime.Now;
-            if (IsHidden)
+            if (!IsUIVIsible)
             {
                 Cursor = Cursors.Arrow;
                 ShowUI();
@@ -970,10 +1022,10 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                     dc.Player.Volume -= 0.1;
                     break;
                 case "prev":
-                    dc.Player.PreviousCommand.Execute(null);
+                    dc.Playlist.PreviousCommand.Execute(null);
                     break;
                 case "next":
-                    dc.Player.NextCommand.Execute(null);
+                    dc.Playlist.NextCommand.Execute(null);
                     break;
             }
         }

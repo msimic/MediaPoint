@@ -129,6 +129,38 @@ namespace MediaPoint.VM
             }
         }
 
+        public ICommand PreviousCommand
+        {
+            get
+            {
+                return new Command(o =>
+                {
+                    SelectedTrack = TrackForUri(GetPreviousTrack());
+                    PlayCommand.Execute(null);
+                    CommandManager.InvalidateRequerySuggested();
+                }, can =>
+                {
+                    return GetPreviousTrack() != null;
+                });
+            }
+        }
+
+        public ICommand NextCommand
+        {
+            get
+            {
+                return new Command(o =>
+                {
+                    SelectedTrack = TrackForUri(GetNextTrack());
+                    PlayCommand.Execute(null);
+                    CommandManager.InvalidateRequerySuggested();
+                }, can =>
+                {
+                    return GetNextTrack() != null;
+                });
+            }
+        }
+
         public void SetPlaying(Uri uri)
         {
             foreach (var item in Tracks)
@@ -164,6 +196,43 @@ namespace MediaPoint.VM
         {
             get { return GetValue(() => Shuffle); }
             set { SetValue(() => Shuffle, value); }
+        }
+
+        public Uri GetPreviousTrack()
+        {
+            if (!Tracks.Any()) return null;
+
+            if (Repeat == RepeatMode.Song && CurrentTrack != null)
+            {
+                return CurrentTrack.Uri;
+            }
+
+            if (Repeat == RepeatMode.None && CurrentTrack == Tracks.First() && Shuffle == false)
+            {
+                return null;
+            }
+
+            if (Repeat == RepeatMode.List && CurrentTrack == Tracks.First() && Shuffle == false)
+            {
+                return Tracks.Last().Uri;
+            }
+
+            if ((Repeat == RepeatMode.List || Repeat == RepeatMode.None) && Shuffle == true)
+            {
+                return GetRandomTrack().Uri;
+            }
+
+            if (CurrentTrack == null)
+            {
+                return Tracks.Last().Uri;
+            }
+
+            if (CurrentTrack != Tracks.First())
+            {
+                return Tracks[Tracks.IndexOf(CurrentTrack) - 1].Uri;
+            }
+
+            return null;
         }
 
         public Uri GetNextTrack()

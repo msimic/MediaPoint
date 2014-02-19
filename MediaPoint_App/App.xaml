@@ -14,7 +14,9 @@
                     <converters:IntegerBiggerThanToVisibilityConverter x:Key="IntegerBiggerThanToVisibilityConverter"></converters:IntegerBiggerThanToVisibilityConverter>
                     <converters:FullscreenPaddingConverter x:Key="FullscreenPaddingConverter"/>
                     <converters:LanguageToFlagConverter x:Key="LanguageToFlagConverter"/>
-                  <converters:MultiplyWithConverter x:Key="MultiplyWithConverter"/>
+                    <converters:LastStringIfNull x:Key="LastStringIfNull"/>
+                    <converters:MultiplyWithConverter x:Key="MultiplyWithConverter"/>
+                    <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
                 </ResourceDictionary>
 
             </ResourceDictionary.MergedDictionaries>
