@@ -80,5 +80,5 @@ private:
 
 struct SchedulerCallback
 {
-    virtual HRESULT PresentSample(IMFSample *pSample, LONGLONG llTarget) = 0;
+    virtual HRESULT PresentSample(IMFSample *pSample, LONGLONG llTarget, LONGLONG timeDelta, LONGLONG remainingInQueue, LONGLONG frameDurationDiv4) = 0;
 };

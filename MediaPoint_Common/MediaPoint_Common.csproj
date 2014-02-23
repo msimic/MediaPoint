@@ -126,6 +126,12 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="SharpDX">
+      <HintPath>..\Libs\AllArchitectures\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DirectSound">
+      <HintPath>..\Libs\AllArchitectures\SharpDX.DirectSound.dll</HintPath>
+    </Reference>
     <Reference Include="SubtitleDownloader">
       <HintPath>..\Libs\AllArchitectures\SubtitleDownloader.dll</HintPath>
     </Reference>

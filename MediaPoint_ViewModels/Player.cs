@@ -28,7 +28,6 @@ namespace MediaPoint.VM
 		#region Members
 		IDialogService _dlg;
 		BackgroundWorker _bWork = new BackgroundWorker();
-	    private bool _invalidateImdbHiding;
 	    private volatile bool _subtitleIsDownloading;
 		#endregion
 
@@ -396,7 +395,6 @@ namespace MediaPoint.VM
 			{
 				return new Command(o =>
 				{
-                    _invalidateImdbHiding = true;
 
 					if (ShowIMdb)
 					{
@@ -706,7 +704,6 @@ namespace MediaPoint.VM
 
 		public bool Open(Uri uri = null)
 		{
-            _invalidateImdbHiding = false;
 			if (uri == null)
 				return false;
 

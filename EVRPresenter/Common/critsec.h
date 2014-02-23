@@ -48,15 +48,22 @@ namespace MediaFoundationSamples
     {
     private:
         CritSec *m_pCriticalSection;
+		bool _unlocked;
     public:
         AutoLock(CritSec& crit)
         {
+			_unlocked = false;
             m_pCriticalSection = &crit;
             m_pCriticalSection->Lock();
         }
+		void Unlock()
+		{
+			_unlocked = true;
+			m_pCriticalSection->Unlock();
+		}
         ~AutoLock()
         {
-	        m_pCriticalSection->Unlock();
+	        if (!_unlocked) m_pCriticalSection->Unlock();
         }
     };
 

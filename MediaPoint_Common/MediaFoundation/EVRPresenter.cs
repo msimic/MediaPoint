@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
+using DirectShowLib;
 using MediaPoint.Common.DirectShow.MediaPlayers;
 using MediaPoint.Common.MediaFoundation.Interop;
 using System.IO;
@@ -46,6 +47,19 @@ namespace MediaPoint.Common.MediaFoundation
         int RegisterCallback(IEVRPresenterCallback pCallback);
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT
+    {
+        public Int32 m_x;
+        public Int32 m_y;
+
+        public POINT(Int32 x, Int32 y)
+        {
+            m_x = x;
+            m_y = y;
+        }
+    }
+
     [ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,
      Guid("4527B2E7-49BE-4b61-A19D-429066D93A99"),
      InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -56,7 +70,11 @@ namespace MediaPoint.Common.MediaFoundation
 		[PreserveSig]
 		int GetDirect3DDevice(out IntPtr device);
 		[PreserveSig]
-		int SetPixelShader([MarshalAs(UnmanagedType.BStr)] string code);
+		int SetPixelShader([MarshalAs(UnmanagedType.BStr)] string code, [MarshalAs(UnmanagedType.BStr)] ref string errors);
+        [PreserveSig]
+        int HookEVR(IBaseFilter evr);
+        [PreserveSig]
+        int SetAdapter(POINT p);
     }
     #endregion
 
@@ -74,8 +92,7 @@ namespace MediaPoint.Common.MediaFoundation
         /// <summary>
         /// The GUID of our EVR custom presenter COM object
         /// </summary>
-        public static readonly Guid EVR_PRESENTER_CLSID = new Guid(0x9807fc9c, 0x807b, 0x41e3, 0x98, 0xa8, 0x75, 0x17,
-                                                                    0x6f, 0x95, 0xa0, 0x63);
+        public static readonly Guid EVR_PRESENTER_CLSID = new Guid(0x9807fc9c, 0x807b, 0x41e3, 0x98, 0xa8, 0x75, 0x17, 0x6f, 0x95, 0xa0, 0x63);
 
         /// <summary>
         /// The GUID of IUnknown

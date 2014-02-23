@@ -60,7 +60,16 @@ IEVRPresenterSettings : public IUnknown
 public:
     virtual HRESULT STDMETHODCALLTYPE SetBufferCount(int bufferCount) = 0;
 	virtual HRESULT STDMETHODCALLTYPE GetDirect3DDevice(LPDIRECT3DDEVICE9 *device) = 0;
-	virtual HRESULT STDMETHODCALLTYPE SetPixelShader(BSTR code) = 0;
+	virtual HRESULT STDMETHODCALLTYPE SetPixelShader(BSTR code, BSTR* errors) = 0;
+	virtual HRESULT STDMETHODCALLTYPE HookEVR(IBaseFilter *evr) = 0;
+	virtual HRESULT STDMETHODCALLTYPE SetAdapter(POINT p) = 0;
+};
+
+MIDL_INTERFACE("452782E7-49BE-4bA1-A19D-429466D93A99")
+IDeviceResetCallback : public IUnknown
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE DeviceReset() = 0;
 };
 
 // Project headers.

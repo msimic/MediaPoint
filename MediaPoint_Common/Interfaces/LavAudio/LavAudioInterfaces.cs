@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Text;
 
 // Interfaces match LAVFilters release 0.60.1
 
@@ -19,7 +16,7 @@ namespace MediaPoint.Common.Interfaces.LavAudio
 
     // LAV mixing flags
     [Flags]
-    public enum LAVMixingFlags
+    public enum LavMixingFlags
     {
         UntouchedStereo = 0x0001,
         NormalizeMatrix = 0x0002,
@@ -28,43 +25,43 @@ namespace MediaPoint.Common.Interfaces.LavAudio
 
     // Codecs supported in the LAV Audio configuration
     // Codecs not listed here cannot be turned off. You can request codecs to be added to this list, if you wish.
-    public enum LAVAudioCodec
+    public enum LavCodec
     {
-        Codec_AAC,
-        Codec_AC3,
-        Codec_EAC3,
-        Codec_DTS,
-        Codec_MP2,
-        Codec_MP3,
-        Codec_TRUEHD,
-        Codec_FLAC,
-        Codec_VORBIS,
-        Codec_LPCM,
-        Codec_PCM,
-        Codec_WAVPACK,
-        Codec_TTA,
-        Codec_WMA2,
-        Codec_WMAPRO,
-        Codec_Cook,
-        Codec_RealAudio,
-        Codec_WMALL,
-        Codec_ALAC,
-        Codec_Opus,
-        Codec_AMR,
-        Codec_Nellymoser,
-        Codec_MSPCM,
-        Codec_Truespeech,
-        Codec_TAK,
+        AAC,
+        AC3,
+        EAC3,
+        DTS,
+        MP2,
+        MP3,
+        TRUEHD,
+        FLAC,
+        VORBIS,
+        LPCM,
+        PCM,
+        WAVPACK,
+        TTA,
+        WMA2,
+        WMAPRO,
+        Cook,
+        RealAudio,
+        WMALL,
+        ALAC,
+        Opus,
+        AMR,
+        Nellymoser,
+        MSPCM,
+        Truespeech,
+        TAK,
     };
 
     // Bitstreaming Codecs supported in LAV Audio
     public enum LAVBitstreamCodec
     {
-        Bitstream_AC3,
-        Bitstream_EAC3,
-        Bitstream_TRUEHD,
-        Bitstream_DTS,
-        Bitstream_DTSHD
+        AC3,
+        EAC3,
+        TRUEHD,
+        DTS,
+        DTSHD
     };
 
 
@@ -157,9 +154,9 @@ namespace MediaPoint.Common.Interfaces.LavAudio
         // Configure which codecs are enabled
         // If aCodec is invalid (possibly a version difference), Get will return FALSE, and Set E_FAIL.
         [PreserveSig]
-        bool GetFormatConfiguration(LAVAudioCodec aCodec);
+        bool GetFormatConfiguration(LavCodec aCodec);
         [PreserveSig]
-        uint SetFormatConfiguration(LAVAudioCodec aCodec, bool bEnabled);
+        uint SetFormatConfiguration(LavCodec aCodec, bool bEnabled);
 
         // Control Bitstreaming
         // If bsCodec is invalid (possibly a version difference), Get will return FALSE, and Set E_FAIL.
@@ -232,9 +229,9 @@ namespace MediaPoint.Common.Interfaces.LavAudio
 
         // Set Mixing Flags
         [PreserveSig]
-        uint SetMixingFlags(LAVMixingFlags dwFlags);
+        uint SetMixingFlags(LavMixingFlags dwFlags);
         [PreserveSig]
-        LAVMixingFlags GetMixingFlags();
+        LavMixingFlags GetMixingFlags();
 
         // Set Mixing Mode
         [PreserveSig]

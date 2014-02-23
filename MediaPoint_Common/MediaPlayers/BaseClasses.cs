@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -13,6 +14,7 @@ using MediaPoint.Common.MediaFoundation;
 using MediaPoint.Common.MediaFoundation.Interop;
 using MediaPoint.Common.Threading;
 using MediaPoint.Subtitles;
+using SharpDX.DirectSound;
 using Size=System.Windows.Size;
 using MediaPoint.Common.Interfaces;
 using System.Text;
@@ -378,7 +380,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         protected IDCAmplify _amplify;
         protected ILAVAudioStatus _audioStatus;
         protected IDirectVobSub _vobsub;
-        protected IEVRPresenterSettings _settings;
+        protected IEVRPresenterSettings _presenterSettings;
         protected ILAVSplitterSettings _splitterSettings;
         
         protected MediaPlayerBase()
@@ -443,9 +445,50 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 		{
 			get
 			{
-				return (from m in audioDevs select m.Name).ToArray();
+                return (from m in SharpDX.DirectSound.DirectSound.GetDevices() select m.Description).ToArray();
 			}
 		}
+
+        public enum LavMixerConfig
+        {
+            DirectOut,
+            Channels_1,
+            Channels_2,
+            Channels_4,
+            Channels_51,
+            Channels_71
+        }
+
+        public static LavMixerConfig GetSpeakerConfig(DsDevice device)
+        {
+            var dv = SharpDX.DirectSound.DirectSound.GetDevices();
+            var ds = new SharpDX.DirectSound.DirectSound(dv[2].DriverGuid);
+            
+            SharpDX.DirectSound.SpeakerConfiguration sc;
+            SharpDX.DirectSound.SpeakerGeometry sg;
+            ds.GetSpeakerConfiguration(out sc, out sg);
+
+            switch (sc)
+            {
+                case SpeakerConfiguration.DirectOut:
+                    return LavMixerConfig.DirectOut;
+                case SpeakerConfiguration.Mono:
+                    return LavMixerConfig.Channels_1;
+                case SpeakerConfiguration.Headphone:
+                case SpeakerConfiguration.Stereo:
+                    return LavMixerConfig.Channels_2;
+                case SpeakerConfiguration.Quadrophonic:
+                    return LavMixerConfig.Channels_4;
+                case SpeakerConfiguration.FivePointOneBack:
+                case SpeakerConfiguration.FivePointOneSurround:
+                    return LavMixerConfig.Channels_51;
+                case SpeakerConfiguration.SevenPointOneSurround:
+                case SpeakerConfiguration.SevenPointOneWide:
+                    return LavMixerConfig.Channels_71;
+                default:
+                    return LavMixerConfig.DirectOut;
+            }
+        }
 
         private SubtitleSettings _subsettings;
         public SubtitleSettings SubtitleSettings
@@ -676,7 +719,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 		{
 			get
 			{
-				return _settings;
+				return _presenterSettings;
 			}
 		}
 
@@ -1224,7 +1267,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 				//hr = videoRenderer.UseTheseDevices(d3D9Dev, d3D9Dev, d3D9Dev);
 				//DsError.ThrowExceptionForHR(hr);
 
-				_settings = presenterSettings;
+				_presenterSettings = presenterSettings;
 
 				/* Use our interop hWnd */
 				IntPtr handle = GetDesktopWindow();//HwndHelper.Handle;
@@ -1284,8 +1327,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                     throw new Exception("Could not QueryInterface for the IEVRPresenterSettings");
 
                 presenterSettings.SetBufferCount(3);
-
-				_settings = presenterSettings;
+                presenterSettings.HookEVR(filter);
+                _presenterSettings = presenterSettings;
 
                 /* Use our interop hWnd */
                 IntPtr handle = GetDesktopWindow();//HwndHelper.Handle;
@@ -1301,8 +1344,15 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 hr = _displayControl.SetVideoWindow(handle);
                 DsError.ThrowExceptionForHR(hr);
 
-            	hr = _settings.SetPixelShader(Resources.ToonShader);
-				DsError.ThrowExceptionForHR(hr);
+                //#if SHADERS
+                string errors = "";
+                //hr = _presenterSettings.SetPixelShader(Resources.Shader, ref errors);
+                if (hr != 0)
+                {
+                    MessageBox.Show(errors, "Shader compilation failed", MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                //#endif
 
                 var filterConfig = filter as IEVRFilterConfig;
 
@@ -1457,7 +1507,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         {
 #if DEBUG
             //TestLavAudioSettingsInterface();
-            TestLavVideoSettingsInterface();
+            Test();
 #endif
             /* This is generally a good place to start
              * our polling timer */
@@ -1469,9 +1519,9 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         }
 
 #if DEBUG
-        private void TestLavVideoSettingsInterface()
+        private void Test()
         {
-            
+            Debug.WriteLine(String.Join(Environment.NewLine, EnumAllFilters(m_graph).ToArray()));
         }
 
         //private void TestLavAudioSettingsInterface()
@@ -1639,6 +1689,21 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         }
 
         /// <summary>
+        /// Sets the current adapter for native code
+        /// </summary>
+        /// <param name="pt">point in screen coordintes</param>
+        /// <param name="window">Hwnd of the window where the control is hosted</param>
+        public void SetAdapter(System.Windows.Point pt, IntPtr window)
+        {
+            if (_presenterSettings != null)
+            {
+                ((IMFVideoDisplayControl)_presenterSettings).SetVideoWindow(window);
+                var p = new POINT((int)pt.X, (int)pt.Y);
+                _presenterSettings.SetAdapter(p);
+            }
+        }
+
+        /// <summary>
         /// Gets the video resolution of a pin on a renderer.
         /// </summary>
         /// <param name="renderer">The renderer to inspect</param>
@@ -1735,6 +1800,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
         protected static IEnumerable<string> EnumAllFilters(IGraphBuilder graphBuilder)
         {
+            if (graphBuilder == null) yield break;
+
             IEnumFilters enumFilters;
 
             /* The list of filters from the DirectShow graph */
@@ -1793,7 +1860,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 			var devices = DsDevice.GetDevicesOfCat(deviceCategory);
 
 			var deviceList = (from d in devices
-							  where d.Name == friendlyName
+							  where d.Name == friendlyName || (d.Name.Length < friendlyName.Length && friendlyName.StartsWith(d.Name))
 							  select d);
 			DsDevice device = null;
 			if (deviceList.Count() > 0)
@@ -1808,7 +1875,38 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 			return AddFilterByDevice(graphBuilder, device);
 		}
 
-		protected static IBaseFilter AddFilterByDevicePath(IGraphBuilder graphBuilder, Guid deviceCategory, string devicePath)
+        protected static IBaseFilter AddFilterByDsGuid(IGraphBuilder graphBuilder, Guid deviceCategory, Guid DSGuid)
+        {
+            var devices = DsDevice.GetDevicesOfCat(deviceCategory);
+            Guid propBagGuid = new Guid("55272A00-42CB-11CE-8135-00AA004BB851");
+            foreach (var dsDevice in devices)
+            {
+                object objBag = null;
+                try
+                {
+                    var moniker = dsDevice.Mon;
+                    moniker.BindToStorage(null, null, propBagGuid, out objBag);
+                    var bag = (IPropertyBag) objBag;
+                    object objGuid;
+                    if (bag.Read("DSGuid", out objGuid, null) == 0)
+                    {
+                        if (DSGuid.ToString().ToLowerInvariant() ==
+                            objGuid.ToString().ToLowerInvariant().Replace("{", "").Replace("}", ""))
+                        {
+                            return AddFilterByDevice(graphBuilder, dsDevice);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (objBag != null) Marshal.ReleaseComObject(objBag);
+                }
+            }
+
+            return null;
+        }
+
+        protected static IBaseFilter AddFilterByDevicePath(IGraphBuilder graphBuilder, Guid deviceCategory, string devicePath)
 		{
 			var devices = DsDevice.GetDevicesOfCat(deviceCategory);
 

@@ -71,6 +71,62 @@ namespace MediaFoundationSamples
 
     public:
 
+		virtual T ItemAt(int pos)
+        {
+			Node *pTemp = &m_anchor;
+			for (int i = 0; i < pos+1; i++)
+			{
+				pTemp = pTemp->next;
+			}
+			return pTemp->item;
+		}
+
+		virtual HRESULT InsertAt(DWORD pos, T item)
+        {
+            if (pos < 0 || pos > m_count)
+            {
+                return E_FAIL;
+            }
+
+            Node *pNode = new Node(item);
+            if (pNode == NULL)
+            {
+                return E_OUTOFMEMORY;
+            }
+
+			if (pos == 0)
+			{
+				InsertFront(item);
+				return S_OK;
+			}
+
+			if (pos == m_count)
+			{
+				InsertBack(item);
+				return S_OK;
+			}
+
+            Node *pTemp = &m_anchor;
+            
+			for (DWORD i = 0; i < pos; i++)
+			{
+				pTemp = pTemp->next;
+			}
+
+            pNode->prev = pTemp->prev;
+			pNode->next = pTemp;
+			pTemp->prev = pNode;
+
+            m_count++;
+
+            return S_OK;
+        }
+
+		DWORD Count()
+		{
+			return m_count;
+		}
+
         // Object for enumerating the list.
         class POSITION
         {

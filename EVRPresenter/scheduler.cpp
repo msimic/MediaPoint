@@ -237,7 +237,7 @@ HRESULT Scheduler::ScheduleSample(IMFSample *pSample, BOOL bPresentNow)
     if (bPresentNow || (m_pClock == NULL))
     {
         // Present the sample immediately.
-        m_pCB->PresentSample(pSample, 0);
+        m_pCB->PresentSample(pSample, 0, 0, 1, m_PerFrame_1_4th);
     }
     else
     {
@@ -324,6 +324,7 @@ HRESULT Scheduler::ProcessSample(IMFSample *pSample, LONG *plNextSleep)
 
     BOOL bPresentNow = TRUE;
     LONG lNextSleep = 0;
+	LONGLONG hnsDelta = 0;
 
     if (m_pClock)
     {
@@ -340,19 +341,19 @@ HRESULT Scheduler::ProcessSample(IMFSample *pSample, LONG *plNextSleep)
 
         // Calculate the time until the sample's presentation time. 
         // A negative value means the sample is late.
-        LONGLONG hnsDelta = hnsPresentationTime - hnsTimeNow;   
+        hnsDelta = hnsPresentationTime - hnsTimeNow;   
         if (m_fRate < 0)
         {
             // For reverse playback, the clock runs backward. Therefore the delta is reversed.
             hnsDelta = - hnsDelta;
         }
-
-        if (hnsDelta < - m_PerFrame_1_4th)
+        
+		if (hnsDelta < - m_PerFrame_1_4th)
         {
             // This sample is late. 
             bPresentNow = TRUE;
         }
-        else if (hnsDelta > (3 * m_PerFrame_1_4th))
+		else if (hnsDelta > (3 * m_PerFrame_1_4th))
         {
             // This sample is still too early. Go to sleep.
             lNextSleep = MFTimeToMsec(hnsDelta - (3 * m_PerFrame_1_4th));
@@ -366,15 +367,16 @@ HRESULT Scheduler::ProcessSample(IMFSample *pSample, LONG *plNextSleep)
         }
     }
 
-    if (bPresentNow)
-    {
-        hr = m_pCB->PresentSample(pSample, hnsPresentationTime);
-    }
-    else
-    {
-        // The sample is not ready yet. Return it to the queue.
-        hr = m_ScheduledSamples.PutBack(pSample);
-    }
+	if (bPresentNow)
+	{
+		hr = m_pCB->PresentSample(pSample, hnsPresentationTime, hnsDelta, m_ScheduledSamples.Count(), m_PerFrame_1_4th);
+	}
+	else
+	{
+		// The sample is not ready yet. Return it to the queue.
+		hr = m_ScheduledSamples.PutBack(pSample);
+	}
+
 
     *plNextSleep = lNextSleep;
 

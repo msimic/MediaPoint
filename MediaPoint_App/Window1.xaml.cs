@@ -4,13 +4,12 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using MediaPoint.App.AttachedProperties;
+using MediaPoint.Common.DirectShow.MediaPlayers;
 using MediaPoint.Common.TaskbarNotification;
-using MediaPoint.Controls.Extensions;
 using MediaPoint.VM.ViewInterfaces;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -19,6 +18,7 @@ using MediaPoint.VM;
 using MediaPoint.Controls;
 using MediaPoint.MVVM.Services;
 using Microsoft.WindowsAPICodePack.Taskbar;
+using NAudio.CoreAudioApi;
 using WPFSoundVisualizationLib;
 using MediaPoint.App.Audio;
 using MediaPoint.Common.Helpers;
@@ -34,23 +34,23 @@ namespace MediaPoint.App
     /// </summary>
     public partial class Window1 : IMainView, ISpectrumPlayer, ISpectrumVisualizer
     {
-        private WindowState m_storedWindowState = WindowState.Normal;
-        private double _skewX = 0;
-        private double _skewY = 0;
+        private double _skewX;
+        private double _skewY;
         private double _scaleX = 1;
         private double _scaleY = 1;
-        private double _rotation = 0;
-        private readonly System.Drawing.Icon _icon = new System.Drawing.Icon(Properties.Resources.app, new System.Drawing.Size(32, 32));
-        private SynchronizationContext _sync = SynchronizationContext.Current;
-
+        private double _rotation;
+        private readonly List<FrameworkElement> _elementsToRefresh = new List<FrameworkElement>();
         private string _startFile;
+        private DateTime _timeToDelayReShowing = DateTime.Now;
+        private Point _lastpoint;
+
         public string StartupFile
         {
             get { return _startFile; }
             set {
                 _startFile = value;
 
-                Action<string> load = ((s) =>
+                Action<string> load = (s =>
                 {
                     if (s != null)
                     {
@@ -73,8 +73,8 @@ namespace MediaPoint.App
         {
             InitializeComponent();
             Visibility = Visibility.Collapsed;
-            DispatcherTimer timer = new DispatcherTimer(DispatcherPriority.Background);
-            timer.Tick += new System.EventHandler(timer_Tick);
+            var timer = new DispatcherTimer(DispatcherPriority.Background);
+            timer.Tick += Timer_Tick;
             timer.Interval = new TimeSpan(0, 0, 3);
             timer.Start();
 
@@ -84,6 +84,14 @@ namespace MediaPoint.App
             Layout.PreviewDragLeave += Window1_PreviewDragLeave;
             Layout.PreviewDragOver += Layout_PreviewDragOver;
             Layout.PreviewDrop += Window1_PreviewDrop;
+
+            MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
+            
+            foreach (MMDevice device in enumerator.EnumerateAudioEndPoints(DataFlow.All, DeviceState.All))
+            {
+                Console.WriteLine("*** {0}, {1}, {2}", device.FriendlyName, device.DeviceFriendlyName, device.State);
+                if (device.State == DeviceState.Active) Console.WriteLine("   {0}", device.AudioEndpointVolume.Channels.Count);
+            }
         }
 
         void Layout_PreviewDragOver(object sender, DragEventArgs e)
@@ -98,28 +106,35 @@ namespace MediaPoint.App
 
             e.Handled = true;
             var data = e.Data.GetData("FileDrop") as string[];
-            foreach (var file in data)
+            if (data != null)
             {
-                var ext = Path.GetExtension(file).Substring(1).ToLowerInvariant();
-                if (!SupportedFiles.All.ContainsKey(ext))
+                foreach (var file in data)
                 {
-                    return;
+                    string extension = Path.GetExtension(file);
+                    if (extension != null)
+                    {
+                        var ext = extension.Substring(1).ToLowerInvariant();
+                        if (!SupportedFiles.All.ContainsKey(ext))
+                        {
+                            return;
+                        }
+                    }
                 }
-            }
 
-            foreach (var file in data)
-            {
-                dc.Playlist.AddTrackIfNotExisting(new Uri(file, UriKind.Absolute));
-            }
+                foreach (var file in data)
+                {
+                    dc.Playlist.AddTrackIfNotExisting(new Uri(file, UriKind.Absolute));
+                }
 
-            if (dc.Playlist.Tracks.Count > 1)
-            {
-                dc.ShowPlaylist = true;
-            }
+                if (dc.Playlist.Tracks.Count > 1)
+                {
+                    dc.ShowPlaylist = true;
+                }
 
-            if (data.Length > 0 && !dc.Player.IsPlaying && !dc.Player.IsPaused)
-            {
-                StartupFile = data[0];
+                if (data.Length > 0 && !dc.Player.IsPlaying && !dc.Player.IsPaused)
+                {
+                    StartupFile = data[0];
+                }
             }
         }
 
@@ -143,16 +158,21 @@ namespace MediaPoint.App
             else
             {
                 var data = e.Data.GetData("FileDrop") as string[];
-                foreach (var file in data)
-                {
-                    var ext = Path.GetExtension(file).Substring(1).ToLowerInvariant();
-                    if (!SupportedFiles.All.ContainsKey(ext))
+                if (data != null)
+                    foreach (var file in data)
                     {
-                        e.Effects = DragDropEffects.None;
-                        e.Handled = true;
-                        return;
+                        string extension = Path.GetExtension(file);
+                        if (extension != null)
+                        {
+                            var ext = extension.Substring(1).ToLowerInvariant();
+                            if (!SupportedFiles.All.ContainsKey(ext))
+                            {
+                                e.Effects = DragDropEffects.None;
+                                e.Handled = true;
+                                return;
+                            }
+                        }
                     }
-                }
                 e.Effects = DragDropEffects.Link;
             }
             e.Handled = true;
@@ -161,15 +181,6 @@ namespace MediaPoint.App
         void Window1_PreviewGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
             Debug.WriteLine("Focus " + e.NewFocus.GetType().Name + ": " + ((e.NewFocus is FrameworkElement) ? (e.NewFocus as FrameworkElement).Name : ""));
-        }
-
-        void m_notifyIcon_Click(object sender, EventArgs e)
-        {
-            this.ShowInTaskbar = true;
-            Show();
-            WindowState = m_storedWindowState;
-            Cursor = Cursors.Arrow;
-            ShowUI();
         }
 
         void OnStateChanged(object sender, EventArgs args)
@@ -181,8 +192,6 @@ namespace MediaPoint.App
                 if (trayIcon != null)
                     trayIcon.ShowBalloonTip("Bye", "MediaPoint is minimizing. Use the system tray to access it.", BalloonIcon.Info);
             }
-            else
-                m_storedWindowState = WindowState;
 
             if (WindowState != WindowState.Maximized)
             {
@@ -217,7 +226,6 @@ namespace MediaPoint.App
                 trayIcon.Visibility = show ? Visibility.Visible : Visibility.Hidden;
         }
 
-        private Point _restorePos;
         private Size _lastMinSize;
         public bool ExecuteCommand(MainViewCommand command, object parameter = null)
         {
@@ -232,23 +240,22 @@ namespace MediaPoint.App
                     break;
                 case MainViewCommand.Minimize:
                     didSomething = true;
-                    _restorePos = new Point(Left, Top);
                     _lastMinSize = new Size(MinWidth, MinHeight);
                     MinWidth = 0;
                     MinHeight = 0;
                     ShowWindow(winHelp.Handle, (uint)WindowShowStyle.Hide);
-                    this.ShowInTaskbar = false;
-                    this.WindowState = WindowState.Minimized;
-                    this.Visibility = Visibility.Collapsed;
+                    ShowInTaskbar = false;
+                    WindowState = WindowState.Minimized;
+                    Visibility = Visibility.Collapsed;
                     Hide();
                     break;
                 case MainViewCommand.Maximize:
                     didSomething = true;
-                    this.ShowInTaskbar = true;
-                    this.Visibility = Visibility.Visible;
+                    ShowInTaskbar = true;
+                    Visibility = Visibility.Visible;
                     MaxWidth = Int32.MaxValue;
                     MaxHeight = Int32.MaxValue;
-                    this.WindowState = System.Windows.WindowState.Maximized;
+                    WindowState = WindowState.Maximized;
                     SetForegroundWindow(winHelp.Handle);
                     break;
                 case MainViewCommand.Restore:
@@ -258,18 +265,15 @@ namespace MediaPoint.App
                     MinHeight = _lastMinSize.Height;
                     SetForegroundWindow(winHelp.Handle);
                     ShowWindow(winHelp.Handle, (uint)WindowShowStyle.Restore);
-                    this.WindowState = WindowState.Normal;
-                    this.ShowInTaskbar = true;
-                    this.Show();
+                    WindowState = WindowState.Normal;
+                    ShowInTaskbar = true;
+                    Show();
 
                     break;
             }
 
             return didSomething;
         }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
 
         /// <summary>Enumeration of the different ways of showing a window using
         /// ShowWindow</summary>
@@ -278,58 +282,12 @@ namespace MediaPoint.App
             /// <summary>Hides the window and activates another window.</summary>
             /// <remarks>See SW_HIDE</remarks>
             Hide = 0,
-            /// <summary>Activates and displays a window. If the window is minimized
-            /// or maximized, the system restores it to its original size and
-            /// position. An application should specify this flag when displaying
-            /// the window for the first time.</summary>
-            /// <remarks>See SW_SHOWNORMAL</remarks>
-            ShowNormal = 1,
-            /// <summary>Activates the window and displays it as a minimized window.</summary>
-            /// <remarks>See SW_SHOWMINIMIZED</remarks>
-            ShowMinimized = 2,
-            /// <summary>Activates the window and displays it as a maximized window.</summary>
-            /// <remarks>See SW_SHOWMAXIMIZED</remarks>
-            ShowMaximized = 3,
-            /// <summary>Maximizes the specified window.</summary>
-            /// <remarks>See SW_MAXIMIZE</remarks>
-            Maximize = 3,
-            /// <summary>Displays a window in its most recent size and position.
-            /// This value is similar to "ShowNormal", except the window is not
-            /// actived.</summary>
-            /// <remarks>See SW_SHOWNOACTIVATE</remarks>
-            ShowNormalNoActivate = 4,
-            /// <summary>Activates the window and displays it in its current size
-            /// and position.</summary>
-            /// <remarks>See SW_SHOW</remarks>
-            Show = 5,
-            /// <summary>Minimizes the specified window and activates the next
-            /// top-level window in the Z order.</summary>
-            /// <remarks>See SW_MINIMIZE</remarks>
-            Minimize = 6,
-            /// <summary>Displays the window as a minimized window. This value is
-            /// similar to "ShowMinimized", except the window is not activated.</summary>
-            /// <remarks>See SW_SHOWMINNOACTIVE</remarks>
-            ShowMinNoActivate = 7,
-            /// <summary>Displays the window in its current size and position. This
-            /// value is similar to "Show", except the window is not activated.</summary>
-            /// <remarks>See SW_SHOWNA</remarks>
-            ShowNoActivate = 8,
             /// <summary>Activates and displays the window. If the window is
             /// minimized or maximized, the system restores it to its original size
             /// and position. An application should specify this flag when restoring
             /// a minimized window.</summary>
             /// <remarks>See SW_RESTORE</remarks>
             Restore = 9,
-            /// <summary>Sets the show state based on the SW_ value specified in the
-            /// STARTUPINFO structure passed to the CreateProcess function by the
-            /// program that started the application.</summary>
-            /// <remarks>See SW_SHOWDEFAULT</remarks>
-            ShowDefault = 10,
-            /// <summary>Windows 2000/XP: Minimizes a window, even if the thread
-            /// that owns the window is hung. This flag should only be used when
-            /// minimizing windows from a different thread.</summary>
-            /// <remarks>See SW_FORCEMINIMIZE</remarks>
-            ForceMinimized = 11
         }
 
         [DllImport("user32.dll")]
@@ -340,138 +298,10 @@ namespace MediaPoint.App
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
-        static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
-        static readonly IntPtr HWND_TOP = new IntPtr(0);
-        static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
-
-        /// <summary>
-        /// Window handles (HWND) used for hWndInsertAfter
-        /// </summary>
-        public static class HWND
-        {
-            public static IntPtr
-            NoTopMost = new IntPtr(-2),
-            TopMost = new IntPtr(-1),
-            Top = new IntPtr(0),
-            Bottom = new IntPtr(1);
-        }
-
-        [Flags]
-        public enum SetWindowPosFlags : uint
-        {
-            // ReSharper disable InconsistentNaming
-
-            /// <summary>
-            ///     If the calling thread and the thread that owns the window are attached to different input queues, the system posts the request to the thread that owns the window. This prevents the calling thread from blocking its execution while other threads process the request.
-            /// </summary>
-            SWP_ASYNCWINDOWPOS = 0x4000,
-
-            /// <summary>
-            ///     Prevents generation of the WM_SYNCPAINT message.
-            /// </summary>
-            SWP_DEFERERASE = 0x2000,
-
-            /// <summary>
-            ///     Draws a frame (defined in the window's class description) around the window.
-            /// </summary>
-            SWP_DRAWFRAME = 0x0020,
-
-            /// <summary>
-            ///     Applies new frame styles set using the SetWindowLong function. Sends a WM_NCCALCSIZE message to the window, even if the window's size is not being changed. If this flag is not specified, WM_NCCALCSIZE is sent only when the window's size is being changed.
-            /// </summary>
-            SWP_FRAMECHANGED = 0x0020,
-
-            /// <summary>
-            ///     Hides the window.
-            /// </summary>
-            SWP_HIDEWINDOW = 0x0080,
-
-            /// <summary>
-            ///     Does not activate the window. If this flag is not set, the window is activated and moved to the top of either the topmost or non-topmost group (depending on the setting of the hWndInsertAfter parameter).
-            /// </summary>
-            SWP_NOACTIVATE = 0x0010,
-
-            /// <summary>
-            ///     Discards the entire contents of the client area. If this flag is not specified, the valid contents of the client area are saved and copied back into the client area after the window is sized or repositioned.
-            /// </summary>
-            SWP_NOCOPYBITS = 0x0100,
-
-            /// <summary>
-            ///     Retains the current position (ignores X and Y parameters).
-            /// </summary>
-            SWP_NOMOVE = 0x0002,
-
-            /// <summary>
-            ///     Does not change the owner window's position in the Z order.
-            /// </summary>
-            SWP_NOOWNERZORDER = 0x0200,
-
-            /// <summary>
-            ///     Does not redraw changes. If this flag is set, no repainting of any kind occurs. This applies to the client area, the nonclient area (including the title bar and scroll bars), and any part of the parent window uncovered as a result of the window being moved. When this flag is set, the application must explicitly invalidate or redraw any parts of the window and parent window that need redrawing.
-            /// </summary>
-            SWP_NOREDRAW = 0x0008,
-
-            /// <summary>
-            ///     Same as the SWP_NOOWNERZORDER flag.
-            /// </summary>
-            SWP_NOREPOSITION = 0x0200,
-
-            /// <summary>
-            ///     Prevents the window from receiving the WM_WINDOWPOSCHANGING message.
-            /// </summary>
-            SWP_NOSENDCHANGING = 0x0400,
-
-            /// <summary>
-            ///     Retains the current size (ignores the cx and cy parameters).
-            /// </summary>
-            SWP_NOSIZE = 0x0001,
-
-            /// <summary>
-            ///     Retains the current Z order (ignores the hWndInsertAfter parameter).
-            /// </summary>
-            SWP_NOZORDER = 0x0004,
-
-            /// <summary>
-            ///     Displays the window.
-            /// </summary>
-            SWP_SHOWWINDOW = 0x0040,
-
-            // ReSharper restore InconsistentNaming
-        }
-
-        /// <summary>
-        /// SetWindowPos Flags
-        /// </summary>
-        public static class SWP
-        {
-            public static readonly int
-            NOSIZE = 0x0001,
-            NOMOVE = 0x0002,
-            NOZORDER = 0x0004,
-            NOREDRAW = 0x0008,
-            NOACTIVATE = 0x0010,
-            DRAWFRAME = 0x0020,
-            FRAMECHANGED = 0x0020,
-            SHOWWINDOW = 0x0040,
-            HIDEWINDOW = 0x0080,
-            NOCOPYBITS = 0x0100,
-            NOOWNERZORDER = 0x0200,
-            NOREPOSITION = 0x0200,
-            NOSENDCHANGING = 0x0400,
-            DEFERERASE = 0x2000,
-            ASYNCWINDOWPOS = 0x4000;
-        }
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
-
-        void HideUI()
+        void HideUi()
         {
             bool hideControls = true;
             bool hideOverlay = true;
-            //var dc = DataContext as Main;
             if (WindowState == WindowState.Normal)
             {
                 hideControls = Autohide.GetNormalMode(mediaControls);
@@ -484,26 +314,15 @@ namespace MediaPoint.App
             }
 
             if (hideControls) FadeTo(mediaControls, 0);
-            //if (dc.ShowEqualizer) FadeTo(equalizer, 0);
-            //if (dc.Player.ShowIMdb) FadeTo(imdbOverlay, 0);
-            //if (dc.Player.ShowOnlineSubtitles) FadeTo(onlineSubs, 0);
-            //if (dc.IsOptionsVisible) FadeTo(options, 0);
             if (hideOverlay) FadeTo(windowControls, 0);
-            //if (dc.ShowPlaylist) FadeTo(playlist, 0);
-            IsUIVIsible = false;
+            IsUiVisible = false;
         }
 
-        void ShowUI()
+        void ShowUi()
         {
-            //var dc = DataContext as Main;
             FadeTo(mediaControls, 1);
             FadeTo(windowControls, 1);
-            //if (dc.ShowEqualizer) FadeTo(equalizer, 1);
-            //if (dc.Player.ShowIMdb) FadeTo(imdbOverlay, 1);
-            //if (dc.Player.ShowOnlineSubtitles) FadeTo(onlineSubs, 1);
-            //if (dc.IsOptionsVisible) FadeTo(options, 1);
-            //if (dc.ShowPlaylist) FadeTo(playlist, 1);
-            IsUIVIsible = true;
+            IsUiVisible = true;
         }
 
         public void UnregisterEventsOnControls()
@@ -522,9 +341,6 @@ namespace MediaPoint.App
 
             onlineSubs.MouseEnter -= MediaControlsOnMouseEnter;
             onlineSubs.MouseLeave -= MediaControlsOnMouseLeave;
-
-            //visualizations.MouseEnter -= MediaControlsOnMouseEnter;
-            //visualizations.MouseLeave -= MediaControlsOnMouseLeave;
 
             equalizer.MouseEnter -= MediaControlsOnMouseEnter;
             equalizer.MouseLeave -= MediaControlsOnMouseLeave;
@@ -549,9 +365,6 @@ namespace MediaPoint.App
 
             onlineSubs.MouseEnter += MediaControlsOnMouseEnter;
             onlineSubs.MouseLeave += MediaControlsOnMouseLeave;
-
-            //visualizations.MouseEnter += MediaControlsOnMouseEnter;
-            //visualizations.MouseLeave += MediaControlsOnMouseLeave;
 
             equalizer.MouseEnter += MediaControlsOnMouseEnter;
             equalizer.MouseLeave += MediaControlsOnMouseLeave;
@@ -582,7 +395,6 @@ namespace MediaPoint.App
             }
         }
 
-        private List<FrameworkElement> _elementsToRefresh = new List<FrameworkElement>();
         private void FindElementsToAutoRefresh()
         {
             var el = VisualHelper.FindChildren<ToggleButton>(this);
@@ -596,20 +408,20 @@ namespace MediaPoint.App
         private void MediaControlsOnMouseLeave(object sender, MouseEventArgs e)
         {
             _timeToDelayReShowing = DateTime.Now + TimeSpan.FromMilliseconds(800);
-            _isOverUIControl = false;
+            _isOverUiControl = false;
             if (DataContext == null) return;
             var dc = DataContext as Main;
-            if (dc.Player.HasVideo) HideUI();
+            if (dc != null && dc.Player.HasVideo) HideUi();
         }
 
         private void MediaControlsOnMouseEnter(object sender, MouseEventArgs mouseEventArgs)
         {
-            _isOverUIControl = true;
+            _isOverUiControl = true;
             if (Cursor == Cursors.None) Cursor = Cursors.Arrow;
-            ShowUI();
+            ShowUi();
         }
 
-        void timer_Tick(object sender, System.EventArgs e)
+        void Timer_Tick(object sender, EventArgs e)
         {
             var diff = DateTime.Now - LastMouseMove;
 
@@ -617,99 +429,50 @@ namespace MediaPoint.App
 
             var dc = DataContext as Main;
 
-            if (diff >= TimeoutToHide && (IsUIVIsible || Cursor != Cursors.None))
+            if (diff >= TimeoutToHide && (IsUiVisible || Cursor != Cursors.None))
             {
-                if (!_isOverUIControl && dc.Player.HasVideo)
+                if (dc != null && (!_isOverUiControl && dc.Player.HasVideo))
                 {
                     Cursor = Cursors.None;
-                    HideUI();
+                    HideUi();
                 }
             }
         }
 
-        bool _isOverUIControl;
+        bool _isOverUiControl;
 
         public DateTime LastMouseMove { get; set; }
 
-        public bool IsUIVIsible
+        public bool IsUiVisible
         {
-            get { return (bool)GetValue(IsUIVIsibleProperty); }
-            set { SetValue(IsUIVIsibleProperty, value); }
+            get { return (bool)GetValue(IsUiVisibleProperty); }
+            set { SetValue(IsUiVisibleProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for IsUIVIsible.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsUIVIsibleProperty =
-            DependencyProperty.Register("IsUIVIsible", typeof(bool), typeof(Window1), new PropertyMetadata(true));
+        public static readonly DependencyProperty IsUiVisibleProperty =
+            DependencyProperty.Register("IsUiVisible", typeof(bool), typeof(Window1), new PropertyMetadata(true));
 
-        
-        private DateTime _timeToDelayReShowing = DateTime.Now;
         private TimeSpan TimeoutToHide
         {
             get { return TimeSpan.FromSeconds(3); }
         }
-        Point lastpoint;
 
         private void FadeTo(UIElement element, double value)
         {
-            //if (element is FrameworkElement)
-            //{
-            //    var fadeIn = ((FrameworkElement)element).TryFindResource("FadeInSB") as Storyboard;
-            //    var fadeOut = ((FrameworkElement)element).TryFindResource("FadeOutSB") as Storyboard;
-            //    var fadeInVis = ((FrameworkElement)element).TryFindResource("FadeInVisibilitySB") as Storyboard;
-            //    var fadeOutVis = ((FrameworkElement)element).TryFindResource("FadeOutVisibilitySB") as Storyboard;
-
-            //    if (value == 0 && fadeOut != null && fadeOutVis != null)
-            //    {
-            //        fadeOut.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
-            //        fadeOut.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
-            //        return;
-            //    }
-
-            //    if (value == 1 && fadeOut != null && fadeOutVis != null)
-            //    {
-            //        fadeIn.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
-            //        fadeInVis.Begin(((FrameworkElement)element), HandoffBehavior.SnapshotAndReplace);
-            //        return;
-            //    }
-            //}
-
             if (value > 0)
             {
-                element.Visibility = System.Windows.Visibility.Visible;
+                element.Visibility = Visibility.Visible;
             }
 
-            DoubleAnimation da = new DoubleAnimation();
-            da.From = element.Opacity;
-            da.To = value;
-            da.Duration = new Duration(TimeSpan.FromSeconds(1));
-            da.AutoReverse = false;
-            
-            //System.EventHandler ev = null;
-            ////if (value == 0)
-            ////{
-            //    // attach autodetaching eventhandler
-            //    ev = (object o, EventArgs e) =>
-            //    {
-            //        //CopyAnimatedValuesToLocalValues(element);
-            //        if (element.Opacity == 0.0)
-            //        {
-            //            //element.BeginAnimation(OpacityProperty, null);
-            //            //element.Visibility = System.Windows.Visibility.Collapsed;
-            //            //element.Opacity = 0;
-            //        }
-            //        else if (element.Opacity == 1.0)
-            //        {
-            //            //element.BeginAnimation(OpacityProperty, null);
-            //            //element.Visibility = System.Windows.Visibility.Visible;
-            //            //element.Opacity = 1;
-            //        }
-            //        element.Opacity = element.Opacity;
-            //        //element.BeginAnimation(OpacityProperty, null);
-            //        da.Completed -= ev;
-            //    };
-            ////}
-            //da.Completed += ev;
-            da.FillBehavior = FillBehavior.HoldEnd;
+            var da = new DoubleAnimation
+                     {
+                         From = element.Opacity,
+                         To = value,
+                         Duration = new Duration(TimeSpan.FromSeconds(1)),
+                         AutoReverse = false,
+                         FillBehavior = FillBehavior.HoldEnd
+                     };
             element.BeginAnimation(OpacityProperty, da, HandoffBehavior.SnapshotAndReplace);
         }
 
@@ -717,8 +480,8 @@ namespace MediaPoint.App
         {
             var p = e.GetPosition(this);
 
-            var delta = Math.Sqrt(2) * (Math.Abs(lastpoint.X - p.X) + Math.Abs(lastpoint.Y - p.Y));
-            lastpoint = p;
+            var delta = Math.Sqrt(2) * (Math.Abs(_lastpoint.X - p.X) + Math.Abs(_lastpoint.Y - p.Y));
+            _lastpoint = p;
             
             if (DateTime.Now < _timeToDelayReShowing)
             {
@@ -728,15 +491,15 @@ namespace MediaPoint.App
             if (delta < 6 || DateTime.Now < LastMouseMove) return;
             CommandManager.InvalidateRequerySuggested();
             LastMouseMove = DateTime.Now;
-            if (!IsUIVIsible)
+            if (!IsUiVisible)
             {
                 Cursor = Cursors.Arrow;
-                ShowUI();
+                ShowUi();
             }
 
         }
 
-        private void mediaPlayer_MouseWheel(object sender, MouseWheelEventArgs e)
+        private void MediaPlayer_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (WindowState != WindowState.Maximized) return;
             var delta = (double)e.Delta / 1200;
@@ -746,21 +509,21 @@ namespace MediaPoint.App
                 (e.LeftButton != MouseButtonState.Pressed && e.RightButton == MouseButtonState.Pressed && Keyboard.GetKeyStates(Key.LeftShift) != KeyStates.Down && Keyboard.GetKeyStates(Key.RightShift) != KeyStates.Down))
             {
                 _rotation = rotation.Angle + delta * 30;
-                AnimationExtensions.AnimatePropertyTo(rotation, s => s.Angle, rotation.Angle + delta * 30, 0.3);
+                rotation.AnimatePropertyTo(s => s.Angle, rotation.Angle + delta * 30, 0.3);
             }
             else if ((Keyboard.GetKeyStates(Key.LeftShift) == KeyStates.Down ||
                             Keyboard.GetKeyStates(Key.RightShift) == KeyStates.Down) &&
                             (e.RightButton == MouseButtonState.Pressed))
             {
                 _skewX = skew.AngleX + delta * 30;
-                AnimationExtensions.AnimatePropertyTo(skew, s => s.AngleX, skew.AngleX + delta * 30, 0.3);
+                skew.AnimatePropertyTo(s => s.AngleX, skew.AngleX + delta * 30, 0.3);
             }
             else if ((Keyboard.GetKeyStates(Key.LeftShift) == KeyStates.Down ||
                             Keyboard.GetKeyStates(Key.RightShift) == KeyStates.Down) &&
                             (e.RightButton != MouseButtonState.Pressed))
             {
                 _skewY = skew.AngleY + delta * 30;
-                AnimationExtensions.AnimatePropertyTo(skew, s => s.AngleY, skew.AngleY + delta * 30, 0.3);
+                skew.AnimatePropertyTo(s => s.AngleY, skew.AngleY + delta * 30, 0.3);
             }
             else
             {
@@ -768,25 +531,25 @@ namespace MediaPoint.App
                 {
                     _scaleX = scale.ScaleX + delta;
                     _scaleY = scale.ScaleY + delta;
-                    AnimationExtensions.AnimatePropertyTo(scale, s => s.ScaleX, scale.ScaleX + delta, 0.3);
-                    AnimationExtensions.AnimatePropertyTo(scale, s => s.ScaleY, scale.ScaleY + delta, 0.3);
+                    scale.AnimatePropertyTo(s => s.ScaleX, scale.ScaleX + delta, 0.3);
+                    scale.AnimatePropertyTo(s => s.ScaleY, scale.ScaleY + delta, 0.3);
                 }
             }
         }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
             trayIcon.Dispose();
             base.OnClosing(e);
             Application.Current.Shutdown();
         }
 
-        private void mediaPlayer_MediaOpened(object sender, RoutedEventArgs e)
+        private void MediaPlayer_MediaOpened(object sender, RoutedEventArgs e)
         {
             OnPropertyChanged("IsPlaying");
         }
 
-        private void mediaPlayer_MediaClosed(object sender, RoutedEventArgs e)
+        private void MediaPlayer_MediaClosed(object sender, RoutedEventArgs e)
         {
             OnPropertyChanged("IsPlaying");
             if (DataContext is Main)
@@ -802,7 +565,7 @@ namespace MediaPoint.App
                 pc(this, new PropertyChangedEventArgs(p));
         }
 
-        private void mediaPlayer_MediaEnded(object sender, RoutedEventArgs e)
+        private void MediaPlayer_MediaEnded(object sender, RoutedEventArgs e)
         {
             OnPropertyChanged("IsPlaying");
             if (DataContext is Main)
@@ -811,7 +574,7 @@ namespace MediaPoint.App
             }
         }
 
-        private void mediaPlayer_MediaFailed(object sender, Common.DirectShow.MediaPlayers.MediaFailedEventArgs e)
+        private void MediaPlayer_MediaFailed(object sender, MediaFailedEventArgs e)
         {
             if (e.Exception is COMException)
             {
@@ -833,46 +596,50 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             var mc = FindName("mediaControls") as MediaControls;
-            if (!(mc.RenderTransform is MatrixTransform) && !(mc.RenderTransform is TranslateTransform)) return;
+            if (mc != null && (!(mc.RenderTransform is MatrixTransform) && !(mc.RenderTransform is TranslateTransform))) return;
             if (_animating) return;
             _animating = true;
-            Transform oTransform = mc.RenderTransform;
-            double X = 0;
-            double Y = 0;
-            if (oTransform is MatrixTransform)
+            if (mc != null)
             {
-                X = ((MatrixTransform)oTransform).Matrix.OffsetX;
-                Y = ((MatrixTransform)oTransform).Matrix.OffsetY;
+                Transform oTransform = mc.RenderTransform;
+                double x;
+                double y;
+                var transform = oTransform as MatrixTransform;
+                if (transform != null)
+                {
+                    x = transform.Matrix.OffsetX;
+                    y = transform.Matrix.OffsetY;
+                }
+                else
+                {
+                    x = ((TranslateTransform)oTransform).X;
+                    y = ((TranslateTransform)oTransform).Y;
+                }
+                var dbXZero = new DoubleAnimation(x, 0, new Duration(TimeSpan.FromMilliseconds(300)));
+                var dbYZero = new DoubleAnimation(y, 0, new Duration(TimeSpan.FromMilliseconds(300)));
+                mc.RenderTransform = new TranslateTransform(x, y);
+                var storyboard = new Storyboard();
+                storyboard.Children.Add(dbXZero);
+                storyboard.Children.Add(dbYZero);
+                Storyboard.SetTarget(dbXZero, mc);
+                Storyboard.SetTargetProperty(dbXZero, new PropertyPath("RenderTransform.X"));
+                Storyboard.SetTarget(dbYZero, mc);
+                Storyboard.SetTargetProperty(dbYZero, new PropertyPath("RenderTransform.Y"));
+                storyboard.FillBehavior = FillBehavior.Stop;
+                storyboard.AutoReverse = false;
+                storyboard.Completed += (o, args) =>
+                                        {
+                                            mc.RenderTransform = new MatrixTransform(Matrix.Identity);
+                                            _animating = false;
+                                        };
+                storyboard.Begin();
             }
-            else
-            {
-                X = ((TranslateTransform)oTransform).X;
-                Y = ((TranslateTransform)oTransform).Y;
-            }
-            DoubleAnimation dbXZero = new DoubleAnimation(X, 0, new Duration(TimeSpan.FromMilliseconds(300)));
-            DoubleAnimation dbYZero = new DoubleAnimation(Y, 0, new Duration(TimeSpan.FromMilliseconds(300)));
-            mc.RenderTransform = oTransform = new TranslateTransform(X, Y);
-            Storyboard storyboard = new Storyboard();
-            storyboard.Children.Add(dbXZero);
-            storyboard.Children.Add(dbYZero);
-            Storyboard.SetTarget(dbXZero, mc);
-            Storyboard.SetTargetProperty(dbXZero, new PropertyPath("RenderTransform.X"));
-            Storyboard.SetTarget(dbYZero, mc);
-            Storyboard.SetTargetProperty(dbYZero, new PropertyPath("RenderTransform.Y"));
-            storyboard.FillBehavior = FillBehavior.Stop;
-            storyboard.AutoReverse = false;
-            storyboard.Completed += (o, args) =>
-            {
-                mc.RenderTransform = new MatrixTransform(Matrix.Identity);
-                _animating = false;
-            };
-            storyboard.Begin();
         }
 
         private bool OneClick { get; set; }
         private bool TwoClick { get; set; }
 
-        private void mediaPlayer_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void MediaPlayer_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (OneClick)
             {
@@ -884,7 +651,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             OneClick = true;
             TwoClick = false;
 
-            Thread t = new Thread(() =>
+            var t = new Thread(() =>
             {
                 Thread.Sleep(200);
                 OneClick = false;
@@ -911,14 +678,14 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             t.Start();
         }
 
-        private void mediaPlayer_MouseLeave(object sender, MouseEventArgs e)
+        private void MediaPlayer_MouseLeave(object sender, MouseEventArgs e)
         {
             if (DataContext == null) return;
             var dc = DataContext as Main;
-            if (dc.Player.HasVideo) HideUI();
+            if (dc != null && dc.Player.HasVideo) HideUi();
         }
 
-        private void mediaPlayer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void MediaPlayer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (OneClick)
             {
@@ -943,7 +710,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         private ThumbnailToolBarButton[] _buttons;
         private bool _once;
         private bool _onceDone;
-        private void window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ServiceLocator.RegisterOverrideService(this as ISpectrumVisualizer);
 
@@ -960,7 +727,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                 }), DispatcherPriority.ApplicationIdle);
         }
 
-        private void window_Initialized(object sender, EventArgs e)
+        private void Window_Initialized(object sender, EventArgs e)
         {
             ServiceLocator.RegisterOverrideService(mediaPlayer as IPlayerView);
 
@@ -1049,17 +816,17 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             }
         }
 
-        void DoLogarithmic(float[] data, float minY, float maxY)
-        {
-            float range = maxY - minY;
+        //void DoLogarithmic(float[] data, float minY, float maxY)
+        //{
+        //    float range = maxY - minY;
 
-            for (int i = 1; i < data.Length; i++)
-            {
-                data[i] = (float)Math.Sqrt(data[i] * range);
-                data[i] = data[i] + minY;
-            }
+        //    for (int i = 1; i < data.Length; i++)
+        //    {
+        //        data[i] = (float)Math.Sqrt(data[i] * range);
+        //        data[i] = data[i] + minY;
+        //    }
 
-        }
+        //}
 
         public bool GetFFTData(float[] fftDataBuffer)
         {
@@ -1069,7 +836,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             return IsPlaying;
         }
 
-        SampleAggregator _sampleAggregator = new SampleAggregator((int)FFTDataSize.FFT2048);
+        readonly SampleAggregator _sampleAggregator = new SampleAggregator((int)FFTDataSize.FFT2048);
 
         public int GetFFTFrequencyIndex(int frequency)
         {

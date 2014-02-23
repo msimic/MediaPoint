@@ -1,4 +1,10 @@
 #pragma once
+#include "EVRPresenter.h"
+#include <d3dx9tex.h>
+#include <D3Dcompiler.h>
+#include <comutil.h>
+#include <string>
+#include <D3D9Types.h>
 
 //-----------------------------------------------------------------------------
 // D3DPresentEngine class
@@ -12,6 +18,13 @@
 // the details of Direct3D as much as possible.
 //-----------------------------------------------------------------------------
 
+typedef HRESULT(__stdcall* PTR_DXVA2CreateDirect3DDeviceManager9)(UINT* pResetToken, IDirect3DDeviceManager9** ppDeviceManager);
+
+// evr.dll
+typedef HRESULT(__stdcall* PTR_MFCreateDXSurfaceBuffer)(REFIID riid, IUnknown* punkSurface, BOOL fBottomUpWhenLinear, IMFMediaBuffer** ppBuffer);
+typedef HRESULT(__stdcall* PTR_MFCreateVideoSampleFromSurface)(IUnknown* pUnkSurface, IMFSample** ppSample);
+typedef HRESULT(__stdcall* PTR_MFCreateVideoMediaType)(const MFVIDEOFORMAT* pVideoFormat, IMFVideoMediaType** ppIVideoMediaType);
+
 class D3DPresentEngine : public SchedulerCallback
 {
 public:
@@ -24,7 +37,7 @@ public:
         DeviceRemoved,  // The device was removed.
     };
 
-    D3DPresentEngine(HRESULT& hr);
+    D3DPresentEngine(HRESULT& hr, IDeviceResetCallback *drC);
     virtual ~D3DPresentEngine();
 
     // GetService: Returns the IDirect3DDeviceManager9 interface.
@@ -49,7 +62,7 @@ public:
     void    ReleaseResources();
 
     HRESULT CheckDeviceState(DeviceState *pState);
-    HRESULT PresentSample(IMFSample* pSample, LONGLONG llTarget); 
+    HRESULT PresentSample(IMFSample* pSample, LONGLONG llTarget, LONGLONG timeDelta, LONGLONG remainingInQueue, LONGLONG frameDurationDiv4); 
 
     UINT    RefreshRate() const { return m_DisplayMode.RefreshRate; }
 
@@ -57,8 +70,12 @@ public:
 
 	HRESULT SetBufferCount(int bufferCount);
 	HRESULT GetDirect3DDevice(LPDIRECT3DDEVICE9 *device);
-	HRESULT SetPixelShader(BSTR code);
+	HRESULT SetPixelShader(BSTR code, std::wstring &errors);
+	HRESULT HookEVR(IBaseFilter *evr);
 	bool Setup(int w, int h);
+	HRESULT SetDeviceResetCallback(IDeviceResetCallback *pCallback);
+	IDirect3DDeviceManager9* GetManager();
+	HRESULT SetAdapter(POINT p);
 
 protected:
 	HRESULT InitializeD3D();
@@ -75,6 +92,7 @@ protected:
 
 protected:
 	IEVRPresenterCallback		*m_pCallback;
+	IDeviceResetCallback		*m_pDeviceResetCallback;
     UINT                        m_DeviceResetToken;     // Reset token for the D3D device manager.
 	int							m_bufferCount;
 	int							m_SampleWidth;
@@ -85,6 +103,8 @@ protected:
     D3DDISPLAYMODE              m_DisplayMode;          // Adapter's display mode.
 	LPCSTR						m_ShaderCode;
     CritSec                     m_ObjectLock;           // Thread lock for the D3D device.
+	LPD3DXEFFECT                m_pEffect;
+	POINT						m_AdapterPoint;
 
     // COM interfaces
     IDirect3D9Ex                *m_pD3D9;
@@ -93,31 +113,24 @@ protected:
     IDirect3DSurface9           *m_pSurfaceRepaint;       // Surface for repaint requests.
 	IDirect3DSurface9			*m_pRenderSurface;
 
+	int m_DroppedFrames;
+	int m_GoodFrames;
+	int m_FramesInQueue;
+	double m_AvgTimeDelta;
+
+	HMODULE m_hDXVA2Lib;
+    HMODULE m_hEVRLib;
+
+    PTR_DXVA2CreateDirect3DDeviceManager9 pfDXVA2CreateDirect3DDeviceManager9;
+    PTR_MFCreateDXSurfaceBuffer           pfMFCreateDXSurfaceBuffer;
+    PTR_MFCreateVideoSampleFromSurface    pfMFCreateVideoSampleFromSurface;
+    PTR_MFCreateVideoMediaType            pfMFCreateVideoMediaType;
+
 	IDirect3DPixelShader9* MultiTexPS;
 	IDirect3DVertexBuffer9* QuadVB;
 	IDirect3DTexture9* BaseTex;
 	IDirect3DTexture9* SpotLightTex;
 	IDirect3DTexture9* StringTex;
 
-	struct MultiTexVertex
-	{
-		 MultiTexVertex(float x, float y, float z,
-						float u0, float v0,
-						float u1, float v1,
-						float u2, float v2)
-		 {
-			  _x =  x;   _y =  y; _z = z;
-			  _u0 = u0;  _v0 = v0;
-			  _u1 = u1;  _v1 = v1;
-			  _u2 = u2,  _v2 = v2;
-		 }
-
-		 float _x,  _y,  _z;
-		 float _u0,  _v0;
-		 float _u1,  _v1;
-		 float _u2,  _v2;
-
-		 static const DWORD FVF = D3DFVF_XYZ | D3DFVF_TEX3;
-	};
-	
+	ID3DXFont* pFont;
 };

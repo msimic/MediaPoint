@@ -226,6 +226,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="IPinHook.cpp" />
     <ClCompile Include="PresentEngine.cpp" />
     <ClCompile Include="Presenter.cpp" />
     <ClCompile Include="scheduler.cpp" />
@@ -238,6 +239,7 @@
     <ClInclude Include="EVRPresenterUuid.h" />
     <ClInclude Include="EVRPresenter64.def" />
     <ClInclude Include="Helpers.h" />
+    <ClInclude Include="IPinHook.h" />
     <ClInclude Include="PresentEngine.h" />
     <ClInclude Include="Presenter.h" />
     <ClInclude Include="scheduler.h" />

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using DirectShowLib;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 		/// The name of the default audio render.  This is the
 		/// same on all versions of windows
 		/// </summary>
-		private const string DEFAULT_AUDIO_RENDERER_NAME = "Default DirectSound Device";
+        private static readonly string DEFAULT_AUDIO_RENDERER_NAME = SharpDX.DirectSound.DirectSound.GetDevices().Count == 0 ? "" : SharpDX.DirectSound.DirectSound.GetDevices()[0].Description;
 
 		/// <summary>
 		/// Set the default audio renderer property backing
@@ -692,47 +693,49 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                         hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_None);
 
                         // check for best acceleration available
-                        if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_CUDA) != 0)
-                        {
-                            hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_CUDA);
-                            hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
-                        }
-                        else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_QuickSync) != 0)
-                        {
-                            hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_QuickSync);
-                            hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
-                        }
-                        //else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2) != 0)
+                        //if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_CUDA) != 0)
                         //{
-                        //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2);
+                        //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_CUDA);
                         //    hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
                         //}
-                        else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2CopyBack) != 0)
+                        //else if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_QuickSync) != 0)
+                        //{
+                        //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_QuickSync);
+                        //    hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
+                        //}
+                        //else
+                        if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2Native) != 0)
                         {
-                            hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2CopyBack);
+                            hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2Native);
                             hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
                         }
+                        //else
+                        //if (lavVideoSettings.CheckHWAccelSupport(LAVHWAccel.HWAccel_DXVA2CopyBack) != 0)
+                        //{
+                        //    hr = lavVideoSettings.SetHWAccel(LAVHWAccel.HWAccel_DXVA2CopyBack);
+                        //    hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
+                        //}
 
-#if DEBUG
+//#if DEBUG
                         hr = lavVideoSettings.SetTrayIcon(true);
-#endif
+//#endif
                     }
 
                     hr = m_graph.AddFilter(_video, "LavVideo");
                     DsError.ThrowExceptionForHR(hr);
                 }
 
-                IBaseFilter vobSub = FilterProvider.GetVobSubFilter();
+                //IBaseFilter vobSub = FilterProvider.GetVobSubFilter();
 
-                if (vobSub != null)
-                {
-                    hr = m_graph.AddFilter(vobSub, "VobSub");
-                    DsError.ThrowExceptionForHR(hr);
-                    IDirectVobSub vss = vobSub as IDirectVobSub;
-                    if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
-                    _vobsub = vss;
-                    InitSubSettings();
-                }
+                //if (vobSub != null)
+                //{
+                //    hr = m_graph.AddFilter(vobSub, "VobSub");
+                //    DsError.ThrowExceptionForHR(hr);
+                //    IDirectVobSub vss = vobSub as IDirectVobSub;
+                //    if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
+                //    _vobsub = vss;
+                //    InitSubSettings();
+                //}
 
                 hr = m_graph.Connect(DsFindPin.ByName((IBaseFilter)splitter, "Audio"), DsFindPin.ByDirection(_audio, PinDirection.Input, 0));
                 if (hr == 0)
@@ -742,7 +745,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
 
                 IBaseFilter dcDsp = FilterProvider.GetDCDSPFilter();
-                if (dcDsp != null)
+                if (dcDsp != null && false)
                 {
                     if (_dspFilter != null) Marshal.ReleaseComObject(_dspFilter);
                     _dspFilter = (IDCDSPFilterInterface)dcDsp;
@@ -784,28 +787,31 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
                 if (HasVideo)
                 {
-                    hr = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)_video, PinDirection.Output, 0), DsFindPin.ByDirection(vobSub, PinDirection.Input, 0));
-                    DsError.ThrowExceptionForHR(hr);
-                    if (hr == 0)
-                    {
-                        int lc;
-                        ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
-                        subconnected = (lc != 0);
-                        IPin pn = DsFindPin.ByName((IBaseFilter)splitter, "Subtitle");
-                        if (pn != null)
-                        {
-                            hr = m_graph.Connect(pn, DsFindPin.ByDirection(vobSub, PinDirection.Input, 1));
-                            ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
-                            subconnected = (lc != 0);
-                        }
-                        hr = m_graph.Connect(DsFindPin.ByDirection(vobSub, PinDirection.Output, 0),
-                                              DsFindPin.ByDirection(_renderer, PinDirection.Input, 0));
-                    }
-                    else
-                    {
+                    //hr = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)_video, PinDirection.Output, 0), DsFindPin.ByDirection(vobSub, PinDirection.Input, 0));
+                    //DsError.ThrowExceptionForHR(hr);
+                    //if (hr == 0)
+                    //{
+                    //    int lc;
+                    //    ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
+                    //    subconnected = (lc != 0);
+                    //    IPin pn = DsFindPin.ByName((IBaseFilter)splitter, "Subtitle");
+                    //    if (pn != null)
+                    //    {
+                    //        hr = m_graph.Connect(pn, DsFindPin.ByDirection(vobSub, PinDirection.Input, 1));
+                    //        ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
+                    //        subconnected = (lc != 0);
+                    //    }
+                    //    hr = m_graph.Connect(DsFindPin.ByDirection(vobSub, PinDirection.Output, 0),
+                    //                          DsFindPin.ByDirection(_renderer, PinDirection.Input, 0));
+                    //}
+                    //else
+                    //{
+                        if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
+                        _vobsub = null; 
                         hr = m_graph.Connect(DsFindPin.ByDirection(_video, PinDirection.Output, 0),
                                           DsFindPin.ByDirection(_renderer, PinDirection.Input, 0));
-                    }
+
+                    //}
                 }
 
                 /* Loop over each pin of the source filter */
@@ -827,7 +833,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
                 Marshal.ReleaseComObject(pinEnum);
 
-                IAMStreamSelect selector = splitter as IAMStreamSelect;
+                var selector = splitter as IAMStreamSelect;
                 int numstreams;
                 selector.Count(out numstreams);
                 AMMediaType mt;
@@ -875,6 +881,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 SIZE a, b;
                 if (HasVideo && _displayControl != null && (_displayControl).GetNativeVideoSize(out a, out b) == 0)
                 {
+                    var sz = MediaPlayerBase.GetVideoSize(_renderer, PinDirection.Input, 0);
                     if (a.cx > 0 && a.cy > 0)
                     {
                         SetNativePixelSizes(a);
@@ -915,7 +922,14 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 			if (m_graph == null)
 				return null;
 
-			return AddFilterByName(m_graph, FilterCategory.AudioRendererCategory, audioDeviceName);
+            var dv = SharpDX.DirectSound.DirectSound.GetDevices().FirstOrDefault(d => d.Description == audioDeviceName);
+
+            if (dv != null)
+            {
+                return AddFilterByDsGuid(m_graph, FilterCategory.AudioRendererCategory, dv.DriverGuid);
+            }
+
+            return null;
 		}
 
 		/// <summary>

@@ -1,7 +1,14 @@
+#include "atlbase.h"
 #include "EVRPresenter.h"
 #include <d3dx9tex.h>
 #include <D3Dcompiler.h>
 #include <comutil.h>
+#include <fstream>
+#include <string>
+#include "PresentEngine.h"
+#include <chrono>
+#include <sstream>
+#include "IPinHook.h"
 
 HRESULT FindAdapter(IDirect3D9 *pD3D9, HMONITOR hMonitor, UINT *puAdapterID);
 BOOL IsVistaOrLater();
@@ -10,7 +17,7 @@ BOOL IsVistaOrLater();
 // Constructor
 //-----------------------------------------------------------------------------
 
-D3DPresentEngine::D3DPresentEngine(HRESULT& hr) : 
+D3DPresentEngine::D3DPresentEngine(HRESULT& hr, IDeviceResetCallback *drC) : 
     m_hwnd(NULL),
     m_DeviceResetToken(0),
     m_pD3D9(NULL),
@@ -27,6 +34,15 @@ D3DPresentEngine::D3DPresentEngine(HRESULT& hr) :
 	m_ShaderCode = NULL;
 	m_SampleWidth = -1;
 	m_SampleHeight = -1;
+	m_pEffect = NULL;
+	
+	m_DroppedFrames = 0;
+	m_GoodFrames = 0;
+	m_FramesInQueue = 0;
+	m_AvgTimeDelta = 0;
+	
+	pFont = NULL;
+	m_pDeviceResetCallback = drC;
 
     hr = InitializeD3D();
 
@@ -49,6 +65,13 @@ D3DPresentEngine::~D3DPresentEngine()
     SAFE_RELEASE(m_pD3D9);
 	SAFE_RELEASE(m_pCallback);
 	SAFE_RELEASE(m_pRenderSurface);
+	SAFE_RELEASE(pFont);
+	if (m_hDXVA2Lib) {
+        FreeLibrary(m_hDXVA2Lib);
+    }
+    if (m_hEVRLib) {
+        FreeLibrary(m_hEVRLib);
+    }
 }
 
 
@@ -70,7 +93,19 @@ HRESULT D3DPresentEngine::GetService(REFGUID guidService, REFIID riid, void** pp
 
     HRESULT hr = S_OK;
 
-    if (riid == __uuidof(IDirect3DDeviceManager9))
+	if (MR_VIDEO_ACCELERATION_SERVICE == guidService || MR_VIDEO_RENDER_SERVICE == guidService)
+	{
+		if (riid == __uuidof(IDirect3DDeviceManager9) && NULL != m_pDeviceManager)
+		{
+			*ppv = m_pDeviceManager;
+			m_pDeviceManager->AddRef();
+		}
+		/*else
+		{
+			hr = NonDelegatingQueryInterface(riid, ppvObject);
+		}*/
+	}
+	else if (riid == __uuidof(IDirect3DDeviceManager9))
     {
         if (m_pDeviceManager == NULL)
         {
@@ -350,16 +385,38 @@ HRESULT D3DPresentEngine::CheckDeviceState(DeviceState *pState)
 //
 // This method is called by the scheduler and/or the presenter.
 //-----------------------------------------------------------------------------
-
-HRESULT D3DPresentEngine::PresentSample(IMFSample* pSample, LONGLONG llTarget)
+HRESULT D3DPresentEngine::PresentSample(IMFSample* pSample, LONGLONG llTarget, LONGLONG timeDelta, LONGLONG remainingInQueue, LONGLONG frameDurationDiv4)
 {
     HRESULT hr = S_OK;
 
     IMFMediaBuffer* pBuffer = NULL;
     IDirect3DSurface9* pSurface = NULL;
     IDirect3DSwapChain9* pSwapChain = NULL;
+	BOOL currentSampleIsTooLate = FALSE;
 
-    if (pSample)
+	m_FramesInQueue = remainingInQueue;
+
+	double lastDelta = m_AvgTimeDelta;
+	if (m_AvgTimeDelta == 0)
+	{
+		m_AvgTimeDelta = timeDelta;
+	}
+	else
+	{
+		m_AvgTimeDelta = (m_AvgTimeDelta + timeDelta) / 2;
+	}
+
+	if (pSample != NULL && lastDelta > m_AvgTimeDelta && (lastDelta - m_AvgTimeDelta)>frameDurationDiv4)
+	{
+		m_DroppedFrames++;
+		currentSampleIsTooLate = TRUE;
+	}
+	else
+	{
+		m_GoodFrames++;
+	}
+
+	if (pSample && (!currentSampleIsTooLate || !m_pSurfaceRepaint))
     {
         // Get the buffer from the sample.
         CHECK_HR(hr = pSample->GetBufferByIndex(0, &pBuffer));
@@ -367,7 +424,7 @@ HRESULT D3DPresentEngine::PresentSample(IMFSample* pSample, LONGLONG llTarget)
         // Get the surface from the buffer.
         CHECK_HR(hr = MFGetService(pBuffer, MR_BUFFER_SERVICE, __uuidof(IDirect3DSurface9), (void**)&pSurface));
     }
-    else if (m_pSurfaceRepaint)
+    else if (m_pSurfaceRepaint && !currentSampleIsTooLate)
     {
         // Redraw from the last surface.
         pSurface = m_pSurfaceRepaint;
@@ -389,7 +446,7 @@ HRESULT D3DPresentEngine::PresentSample(IMFSample* pSample, LONGLONG llTarget)
         CHECK_HR(hr = PresentSwapChain(pSwapChain, pSurface));
 
         // Store this pointer in case we need to repaint the surface.
-        CopyComPointer(m_pSurfaceRepaint, pSurface);
+        CopyComPointer(m_pSurfaceRepaint, m_pRenderSurface);
     }
 
 done:
@@ -442,6 +499,59 @@ done:
     return hr;
 }
 
+#define BeginEnumPins(pBaseFilter, pEnumPins, pPin)                                     \
+{                                                                                       \
+    CComPtr<IEnumPins> pEnumPins;                                                       \
+    if (pBaseFilter && SUCCEEDED(pBaseFilter->EnumPins(&pEnumPins))) {                  \
+        for (CComPtr<IPin> pPin; S_OK == pEnumPins->Next(1, &pPin, 0); pPin = nullptr) {
+
+#define EndEnumPins }}}
+
+IPin* GetFirstPin(IBaseFilter* pBF, PIN_DIRECTION dir)
+{
+    if (pBF) {
+        BeginEnumPins(pBF, pEP, pPin) {
+            PIN_DIRECTION dir2;
+            if (SUCCEEDED(pPin->QueryDirection(&dir2)) && dir == dir2) {
+                IPin* pRet = pPin.Detach();
+                pRet->Release();
+                return pRet;
+            }
+        }
+        EndEnumPins;
+    }
+
+    return nullptr;
+}
+
+HRESULT D3DPresentEngine::HookEVR(IBaseFilter *evr)
+{
+	CComPtr<IPin> pPin = GetFirstPin(evr, PINDIR_INPUT);
+    CComQIPtr<IMemInputPin> pMemInputPin = pPin;
+
+    // No NewSegment : no chocolate :o)
+    bool m_fUseInternalTimer = HookNewSegmentAndReceive((IPinC*)(IPin*)pPin, (IMemInputPinC*)(IMemInputPin*)pMemInputPin);
+	return S_OK;
+}
+
+IDirect3DDeviceManager9* D3DPresentEngine::GetManager()
+{
+	return m_pDeviceManager;
+}
+
+HRESULT D3DPresentEngine::SetAdapter(POINT p)
+{
+	AutoLock lock(m_ObjectLock);
+
+	m_AdapterPoint = p;
+	HRESULT hr = S_OK;
+    
+    // Recreate the device.
+    hr = CreateD3DDevice();
+
+	return hr;
+}
+
 //-----------------------------------------------------------------------------
 // CreateD3DDevice
 // 
@@ -451,6 +561,162 @@ done:
 HRESULT D3DPresentEngine::CreateD3DDevice()
 {
     HRESULT     hr = S_OK;
+	//HWND        hwnd = NULL;
+ //   HMONITOR    hMonitor = NULL;
+ //   UINT        uAdapterID = D3DADAPTER_DEFAULT;
+ //   DWORD       vp = 0;
+
+	//MultiTexPS = 0;
+	//QuadVB = 0;
+	//BaseTex      = 0;
+	//SpotLightTex = 0;
+	//StringTex    = 0;
+
+ //   D3DCAPS9    ddCaps;
+ //   ZeroMemory(&ddCaps, sizeof(ddCaps));
+
+ //   IDirect3DDevice9* pDevice = NULL;
+
+ //   // Hold the lock because we might be discarding an exisiting device.
+ //   AutoLock lock(m_ObjectLock);    
+
+ //   if (!m_pD3D9 || !m_pDeviceManager)
+ //   {
+ //       return MF_E_NOT_INITIALIZED;
+ //   }
+
+ //   hwnd = GetDesktopWindow();
+
+ //   // Note: The presenter creates additional swap chains to present the
+ //   // video frames. Therefore, it does not use the device's implicit 
+ //   // swap chain, so the size of the back buffer here is 1 x 1.
+
+	//D3DPRESENT_PARAMETERS pp;
+	//ZeroMemory(&pp, sizeof(pp));
+
+ //   pp.BackBufferWidth = 1;
+ //   pp.BackBufferHeight = 1;
+ //   pp.Windowed = TRUE;
+ //   pp.SwapEffect = D3DSWAPEFFECT_FLIP;
+ //   pp.BackBufferFormat = D3DFMT_UNKNOWN;
+ //   pp.hDeviceWindow = hwnd;
+ //   pp.Flags = D3DPRESENTFLAG_VIDEO;
+ //   pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+
+ //   // Find the monitor for this window.
+ //   if (m_hwnd)
+ //   {
+ //       hMonitor = MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONEAREST);
+
+ //       // Find the corresponding adapter.
+ //   	CHECK_HR(hr = FindAdapter(m_pD3D9, hMonitor, &uAdapterID));
+ //   }
+
+ //   // Get the device caps for this adapter.
+ //   CHECK_HR(hr = m_pD3D9->GetDeviceCaps(uAdapterID, D3DDEVTYPE_HAL, &ddCaps));
+
+ //   if(ddCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)
+ //   {
+ //       vp = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+ //   }
+ //   else
+ //   {
+ //       vp = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+ //   }
+
+	//if(IsVistaOrLater())
+	//{
+	//	IDirect3DDevice9Ex * pDeviceEx;
+
+	//	// Create the device.
+	//	CHECK_HR(hr = m_pD3D9->CreateDeviceEx(uAdapterID,
+	//										  D3DDEVTYPE_HAL,
+	//										  pp.hDeviceWindow,
+	//										  vp | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED | D3DCREATE_ENABLE_PRESENTSTATS | D3DCREATE_NOWINDOWCHANGES,
+	//									      &pp, 
+	//									  	  NULL,
+	//										  &pDeviceEx));
+	//	pDevice = pDeviceEx;
+	//}
+	//else
+	//{
+	//	CHECK_HR(hr = m_pD3D9->CreateDevice(uAdapterID,
+	//										  D3DDEVTYPE_HAL,
+	//										  pp.hDeviceWindow,
+	//										  vp | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED | D3DCREATE_ENABLE_PRESENTSTATS | D3DCREATE_NOWINDOWCHANGES,
+	//									      &pp, 
+	//										  &pDevice));
+	//}
+
+ //   // Get the adapter display mode.
+ //   CHECK_HR(hr = m_pD3D9->GetAdapterDisplayMode(uAdapterID, &m_DisplayMode));
+
+ //   // Reset the D3DDeviceManager with the new device 
+ //   CHECK_HR(hr = m_pDeviceManager->ResetDevice(pDevice, m_DeviceResetToken));
+
+ //   SAFE_RELEASE(m_pDevice);
+
+ //   m_pDevice = pDevice;
+ //   m_pDevice->AddRef();
+
+	//// Load EVR specific DLLs
+ //   m_hDXVA2Lib = LoadLibrary(L"dxva2.dll");
+ //   if (m_hDXVA2Lib) {
+ //       pfDXVA2CreateDirect3DDeviceManager9 = (PTR_DXVA2CreateDirect3DDeviceManager9) GetProcAddress(m_hDXVA2Lib, "DXVA2CreateDirect3DDeviceManager9");
+ //   }
+
+ //   // Load EVR functions
+ //   m_hEVRLib = LoadLibrary(L"evr.dll");
+ //   if (m_hEVRLib) {
+ //       pfMFCreateDXSurfaceBuffer = (PTR_MFCreateDXSurfaceBuffer) GetProcAddress(m_hEVRLib, "MFCreateDXSurfaceBuffer");
+ //       pfMFCreateVideoSampleFromSurface = (PTR_MFCreateVideoSampleFromSurface) GetProcAddress(m_hEVRLib, "MFCreateVideoSampleFromSurface");
+ //       pfMFCreateVideoMediaType = (PTR_MFCreateVideoMediaType) GetProcAddress(m_hEVRLib, "MFCreateVideoMediaType");
+ //   }
+
+ //   if (!pfDXVA2CreateDirect3DDeviceManager9 || !pfMFCreateDXSurfaceBuffer || !pfMFCreateVideoSampleFromSurface || !pfMFCreateVideoMediaType) {
+ //       if (!pfDXVA2CreateDirect3DDeviceManager9) {
+ //           //_Error += L"Could not find DXVA2CreateDirect3DDeviceManager9 (dxva2.dll)\n";
+ //       }
+ //       if (!pfMFCreateDXSurfaceBuffer) {
+ //           //_Error += L"Could not find MFCreateDXSurfaceBuffer (evr.dll)\n";
+ //       }
+ //       if (!pfMFCreateVideoSampleFromSurface) {
+ //           //_Error += L"Could not find MFCreateVideoSampleFromSurface (evr.dll)\n";
+ //       }
+ //       if (!pfMFCreateVideoMediaType) {
+ //           //_Error += L"Could not find MFCreateVideoMediaType (evr.dll)\n";
+ //       }
+ //       hr = E_FAIL;
+ //       return hr;
+ //   }
+
+	//// Init DXVA manager
+ //   hr = pfDXVA2CreateDirect3DDeviceManager9(&m_DeviceResetToken, &m_pDeviceManager);
+ //   if (SUCCEEDED(hr) && m_pDeviceManager) {
+ //       hr = m_pDeviceManager->ResetDevice(m_pDevice, m_DeviceResetToken);
+ //       if (FAILED(hr)) {
+ //           //_Error += L"m_pD3DManager->ResetDevice failed\n";
+ //       }
+
+ //       CComPtr<IDirectXVideoDecoderService> pDecoderService;
+ //       HANDLE hDevice;
+ //       if (SUCCEEDED(m_pDeviceManager->OpenDeviceHandle(&hDevice)) &&
+ //               SUCCEEDED(m_pDeviceManager->GetVideoService(hDevice, IID_PPV_ARGS(&pDecoderService)))) {
+ //           //TRACE_EVR("EVR: DXVA2 : device handle = 0x%08x", hDevice);
+ //           HookDirectXVideoDecoderService(pDecoderService);
+
+ //           m_pDeviceManager->CloseDeviceHandle(hDevice);
+ //       }
+ //   } else {
+ //       //_Error += L"DXVA2CreateDirect3DDeviceManager9 failed\n";
+ //   }
+
+	//hr = D3DXCreateFont( m_pDevice, 25, 0, FW_BOLD, 1, FALSE, DEFAULT_CHARSET,
+	//						OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+	//						L"Arial", &pFont );
+
+	////return hr;
+
     HWND        hwnd = NULL;
     HMONITOR    hMonitor = NULL;
     UINT        uAdapterID = D3DADAPTER_DEFAULT;
@@ -522,7 +788,7 @@ HRESULT D3DPresentEngine::CreateD3DDevice()
 		CHECK_HR(hr = m_pD3D9->CreateDeviceEx(uAdapterID,
 											  D3DDEVTYPE_HAL,
 											  pp.hDeviceWindow,
-											  vp | D3DCREATE_NOWINDOWCHANGES | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
+											  vp | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED | D3DCREATE_ENABLE_PRESENTSTATS | D3DCREATE_NOWINDOWCHANGES,
 										      &pp, 
 										  	  NULL,
 											  &pDeviceEx));
@@ -533,7 +799,7 @@ HRESULT D3DPresentEngine::CreateD3DDevice()
 		CHECK_HR(hr = m_pD3D9->CreateDevice(uAdapterID,
 											  D3DDEVTYPE_HAL,
 											  pp.hDeviceWindow,
-											  vp | D3DCREATE_NOWINDOWCHANGES | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
+											  vp | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED | D3DCREATE_ENABLE_PRESENTSTATS | D3DCREATE_NOWINDOWCHANGES,
 										      &pp, 
 											  &pDevice));
 	}
@@ -549,114 +815,25 @@ HRESULT D3DPresentEngine::CreateD3DDevice()
     m_pDevice = pDevice;
     m_pDevice->AddRef();
 
+	if (pFont != NULL)
+	{
+		SAFE_RELEASE(pFont);
+	}
+
+	hr = D3DXCreateFont( m_pDevice, 25, 0, FW_BOLD, 1, FALSE, DEFAULT_CHARSET,
+							OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+							L"Arial", &pFont );
+
 done:
 	SAFE_RELEASE(pDevice);
+
+	if (m_pDeviceResetCallback != NULL)
+	{
+		m_pDeviceResetCallback->DeviceReset();
+	}
+
 	return hr;
 }
-
-//bool D3DPresentEngine::Setup(int width, int height) {
-//
-//HRESULT hr = 0;
-//
-////
-//// Create quad geometry.
-////
-//
-// hr = m_pDevice->CreateVertexBuffer(
-//     6 * sizeof(MultiTexVertex),
-//     D3DUSAGE_WRITEONLY,
-//     MultiTexVertex::FVF,
-//     D3DPOOL_MANAGED,
-//     &QuadVB,
-//     0);
-//
-//MultiTexVertex*v =0;
-//QuadVB->Lock(0, 0, (void**)&v, 0);
-//
-//v[0] = MultiTexVertex(-10.0f, -10.0f, 5.0f,
-//                       0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-//v[1] = MultiTexVertex(-10.0f, 10.0f, 5.0f,
-//                       0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-//v[2] = MultiTexVertex( 10.0f, 10.0f, 5.0f,
-//                       1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f);
-//
-//v[3] = MultiTexVertex(-10.0f, -10.0f, 5.0f,
-//                       0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-//v[4] = MultiTexVertex( 10.0f, 10.0f, 5.0f,
-//                       1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f);
-//v[5] = MultiTexVertex( 10.0f, -10.0f, 5.0f,
-//                       1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-//
-//QuadVB->Unlock();
-//
-////
-//// Compile shader
-////
-//
-//		ID3DBlob *blob;
-//		ID3DBlob *err;
-//		hr = D3DCompile(m_ShaderCode, strnlen(m_ShaderCode, 32000), "Toon", NULL, (ID3DInclude*)(UINT_PTR)1, NULL, "fx_2_0", NULL, NULL, &blob, &err);
-//		if (err != NULL) {
-//			int len = err->GetBufferSize();
-//			char* shaderErr = (char*)malloc(len);
-//			strncpy(shaderErr, (char *)err->GetBufferPointer(), len);
-//			len = 0;
-//		}
-//		hr = m_pDevice->SetPixelShader((IDirect3DPixelShader9*)blob->GetBufferPointer());
-//
-//
-//// output any error messages
-//if( err )
-//{
-//   ::MessageBox(0, (wchar_t*)err->GetBufferPointer(), 0, 0);
-//   delete err;
-//}
-//
-//if(FAILED(hr))
-//{
-//   ::MessageBox(0, L"D3DXCompileShaderFromFile() - FAILED", 0, 0);
-//   return false;
-//}
-//
-////
-//// Load textures.
-////
-//
-////D3DXCreateTextureFromFile(Device, "crate.bmp", &BaseTex);
-////D3DXCreateTextureFromFile(Device, "spotlight.bmp", &SpotLightTex);
-////D3DXCreateTextureFromFile(Device, "text.bmp", &StringTex);
-//
-////
-//// Set projection matrix
-////
-//
-//D3DXMATRIX P;
-//D3DXMatrixPerspectiveFovLH(
-//           &P, D3DX_PI * 0.25f,
-//           (float)width / (float)height, 1.0f, 1000.0f);
-//
-//m_pDevice->SetTransform(D3DTS_PROJECTION, &P);
-//
-////
-//// Disable lighting.
-////
-//
-//m_pDevice->SetRenderState(D3DRS_LIGHTING, false);
-//
-////
-//// Get handles
-////
-//
-//
-////
-//// Set constant descriptions:
-////
-//
-//UINT count;
-//
-//return true;
-//
-//}
 
 //-----------------------------------------------------------------------------
 // CreateD3DSample
@@ -693,17 +870,67 @@ done:
 	return hr;
 }
 
-HRESULT D3DPresentEngine::SetPixelShader(BSTR code) {
+HRESULT D3DPresentEngine::SetPixelShader(BSTR code, std::wstring &ErrorString) {
 
-	/*if (m_ShaderCode != NULL) free((char*)m_ShaderCode);
-	_bstr_t bb(code);
-	int len = strnlen(bb, 32000);
-	char* shader = (char*)calloc(len+1, sizeof(char));
-	strncpy(shader, bb, len);
-	m_ShaderCode = (LPCSTR)shader;*/
- 
-	return S_OK;
+	_bstr_t bs(code);
+	char * shader = bs;
+	LPD3DXEFFECT effect;
+	LPD3DXBUFFER pErrors;
+	HRESULT hr = D3DXCreateEffect(m_pDevice, (LPCVOID)shader, bs.length(), NULL, NULL, 0, NULL, &effect, &pErrors);
+	if (hr == 0)
+	{
+		m_pEffect = effect;
+	}
+	else
+	{
+		if(pErrors)
+		{
+			char *ErrorMessage = (char *)pErrors->GetBufferPointer();
+			DWORD ErrorLength = pErrors->GetBufferSize();
+
+#if _DEBUG
+			std::ofstream file("ShaderDebug.txt");
+#endif
+			for(UINT i = 0; i < ErrorLength; i++)
+			{
+#if _DEBUG
+				file << ErrorMessage[i];
+#endif
+				ErrorString.append(std::wstring(1, ErrorMessage[i]));
+			}
+#if _DEBUG
+			file.close();
+#endif
+		}
+		m_pEffect = NULL;
+	}
+	return hr;
 }
+
+
+struct PPVERT
+{
+	float x, y, z, rhw;
+	float tu, tv;       // Texcoord for post-process source
+	float tu2, tv2;     // Texcoord for the original scene
+
+	const static D3DVERTEXELEMENT9 Decl[4];
+};
+
+// Vertex declaration for post-processing
+const D3DVERTEXELEMENT9 PPVERT::Decl[4] =
+{
+    { 0, 0,  D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITIONT, 0 },
+    { 0, 16, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,  0 },
+    { 0, 24, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,  1 },
+    D3DDECL_END()
+};
+
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::milliseconds milliseconds;
+Clock::time_point lastFPSCheck;
+long framesRendered = 0;
+LPCWSTR _lastFPSString = NULL;
 
 //-----------------------------------------------------------------------------
 // PresentSwapChain
@@ -717,6 +944,9 @@ HRESULT D3DPresentEngine::SetPixelShader(BSTR code) {
 HRESULT D3DPresentEngine::PresentSwapChain(IDirect3DSwapChain9* pSwapChain, IDirect3DSurface9* pSurface)
 {
     HRESULT hr = S_OK;
+
+	Clock::time_point tNow = Clock::now();
+	milliseconds ms = std::chrono::duration_cast<milliseconds>(tNow - lastFPSCheck);
 
     if (m_hwnd == NULL)
     {
@@ -778,28 +1008,196 @@ HRESULT D3DPresentEngine::PresentSwapChain(IDirect3DSwapChain9* pSwapChain, IDir
 
 	if(m_pRenderSurface)
 	{	
-		// Copy the passed surface to our rendered surface
-		hr = D3DXLoadSurfaceFromSurface(m_pRenderSurface,
-										NULL,
-										NULL,
-										pSurface,
-										NULL,
-										NULL,
-										D3DX_DEFAULT,
-										0);
+		//if (m_pEffect == NULL) 
+		//{
+		//	// Copy the passed surface to our rendered surface
+		//	hr = D3DXLoadSurfaceFromSurface(m_pRenderSurface,
+		//									NULL,
+		//									NULL,
+		//									pSurface,
+		//									NULL,
+		//									NULL,
+		//									D3DX_DEFAULT,
+		//									0);
+		//}
+		//else
+		//{
+			D3DSURFACE_DESC renderDesc;
+			// Get the surface description of the render surface
+			m_pRenderSurface->GetDesc(&renderDesc);
+			PPVERT Quad[4] =
+			{
+				{ -0.5f,                        -0.5f,                         1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f },
+				{ renderDesc.Width - 0.5f, -0.5,                          1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f },
+				{ -0.5,                         renderDesc.Height - 0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f },
+				{ renderDesc.Width - 0.5f, renderDesc.Height - 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }
+			};
+			IDirect3DVertexBuffer9* pVB;
+			hr = m_pDevice->CreateVertexBuffer( sizeof( PPVERT ) * 4,
+												 D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
+												 0,
+												 D3DPOOL_DEFAULT,
+												 &pVB,
+												 NULL );
+			LPVOID pVBData;
+			if( SUCCEEDED( pVB->Lock( 0, 0, &pVBData, D3DLOCK_DISCARD ) ) )
+			{
+				CopyMemory( pVBData, Quad, sizeof( Quad ) );
+				pVB->Unlock();
+			}
+			if( SUCCEEDED( m_pDevice->BeginScene() ) )
+			{
+				D3DXMATRIX Identity;
+				D3DXMatrixIdentity(&Identity);
+				hr = m_pDevice->SetTransform(D3DTS_WORLD, &Identity);
+				hr = m_pDevice->SetTransform(D3DTS_PROJECTION, &Identity);
+				hr = m_pDevice->SetTransform(D3DTS_VIEW, &Identity);
+				D3DVIEWPORT9 view;
+				view.X = 0;
+                view.Y = 0;
+                view.Width = renderDesc.Width;
+                view.Height = renderDesc.Height;
+                view.MinZ = 0;
+                view.MaxZ = 1;
+				hr = m_pDevice->SetViewport(&view);
+
+				IDirect3DVertexDeclaration9* vDecl;
+				if( FAILED( hr = m_pDevice->CreateVertexDeclaration( (D3DVERTEXELEMENT9*)PPVERT::Decl, &vDecl ) ) )
+				{
+					return hr;
+				}
+				// Set the vertex declaration
+				hr = m_pDevice->SetVertexDeclaration( vDecl );
+				SAFE_RELEASE( vDecl );
+
+				RECT r;
+				r.top = 0; r.left = 0;
+				r.bottom = renderDesc.Height;
+				r.right = renderDesc.Width;
+
+				if (m_pEffect != NULL) 
+				{
+					hr = m_pEffect->SetTechnique( "PostProcess" );
+					UINT cPasses, p;
+					hr = m_pEffect->Begin( &cPasses, 0 );
+					IDirect3DTexture9* pTexture;
+					IDirect3DTexture9* pTexture2;
+					hr = m_pDevice->CreateTexture(renderDesc.Width, renderDesc.Height, 1, D3DUSAGE_RENDERTARGET, renderDesc.Format, D3DPOOL_DEFAULT, &pTexture, NULL);
+					hr = m_pDevice->CreateTexture(renderDesc.Width, renderDesc.Height, 1, D3DUSAGE_RENDERTARGET, renderDesc.Format, D3DPOOL_DEFAULT, &pTexture2, NULL);
+					LPDIRECT3DSURFACE9 tempSurf;
+					LPDIRECT3DSURFACE9 tempSurf2;
+					hr = pTexture->GetSurfaceLevel(0,&tempSurf);
+					hr = pTexture2->GetSurfaceLevel(0,&tempSurf2);
+					//hr = D3DXLoadSurfaceFromSurface(tempSurf,NULL,NULL,pSurface,NULL,NULL,D3DX_FILTER_NONE,0);
+
+					//hr = m_pDevice->Clear( 0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 1.0f, 0L );
+					//hr = m_pDevice->StretchRect(pSurface, &r, m_pRenderSurface, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+					hr = m_pDevice->StretchRect(pSurface, &r, tempSurf, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+					//hr = m_pDevice->StretchRect(m_pRenderSurface, &r, tempSurf, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+					//D3DXLoadSurfaceFromSurface(m_pRenderSurface,NULL,NULL,pSurface,NULL,NULL,D3DX_FILTER_NONE,0);
+					D3DXHANDLE hTxt = m_pEffect->GetParameterElement( NULL, 0);
+					hr = m_pDevice->SetRenderTarget( 0, tempSurf2 );
+					hr = m_pDevice->SetTexture(0, pTexture);
+					//hr = m_pDevice->SetRenderTarget( 0, tempSurf );
+					//hr = m_pEffect->SetTexture(hTxt, pTexture );
+
+					for( p = 0; p < cPasses; ++p )
+					{
+						hr = m_pEffect->BeginPass( p );
+						hr = m_pDevice->SetStreamSource( 0, pVB, 0, sizeof( PPVERT ) );
+						hr = m_pDevice->DrawPrimitive( D3DPT_TRIANGLESTRIP, 0, 2 );
+						hr = m_pEffect->EndPass();
+						hr = m_pDevice->StretchRect(tempSurf2, &r, tempSurf, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+					}
+					hr = m_pEffect->End();
+					hr = m_pDevice->SetTexture(0, NULL);
+					hr = m_pDevice->StretchRect(tempSurf2, &r, m_pRenderSurface, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+
+					SAFE_RELEASE( tempSurf );
+					SAFE_RELEASE( tempSurf2 );
+					SAFE_RELEASE( pTexture );
+					SAFE_RELEASE( pTexture2 );
+				}
+				else
+				{
+					//hr = m_pDevice->StretchRect(pSurface, &r, m_pRenderSurface, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+					hr = D3DXLoadSurfaceFromSurface(m_pRenderSurface,
+													NULL,
+													NULL,
+													pSurface,
+													NULL,
+													NULL,
+													D3DX_DEFAULT,
+													0);
+				}
+
+				hr = m_pDevice->SetRenderTarget( 0, m_pRenderSurface );
+				framesRendered++;
+		
+				/*if (framesRendered > 2) {
+					_lastFPSString = L"";
+				}*/
+
+				//if (m_pSurfaceRepaint != pSurface) {
+				AutoLock lock(m_ObjectLock);
+				if (pFont)
+				{
+					RECT rc;
+					SetRect( &rc, 100, 100, 220, 220 );
+					std::wstringstream stringStream;
+					stringStream << "\n";
+					stringStream << " 1 Sec AVG FPS: ";
+					stringStream << ((float)(framesRendered * 1000000 / ms.count()))/1000;
+					stringStream << "\n";
+					stringStream << " Bad frames (>1/4 frame late): ";
+					stringStream << m_DroppedFrames;
+					stringStream << "\n";
+					stringStream << " Good frames: ";
+					stringStream << m_GoodFrames;
+					stringStream << "\n";
+					stringStream << " Cumulative frame time delta: ";
+					stringStream << m_AvgTimeDelta / 10000000;
+					stringStream << "\n";
+					stringStream << " Samples in queue: ";
+					stringStream << m_FramesInQueue;
+
+					//LPCWSTR text = stringStream.str().c_str();
+
+					hr = pFont->DrawText( NULL, stringStream.str().c_str(), -1, &rc, DT_NOCLIP, D3DCOLOR_ARGB(255, 255, 255, 255) );
+					
+				}
+				lock.Unlock();
+				//}
+				hr = m_pDevice->EndScene();
+
+				//hr = m_pDevice->StretchRect(m_pRenderSurface, &r, pSurface, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
+
+			/*}*/
+			hr = S_OK;
+		}
+
+	}
+	else
+	{
+		hr = S_FALSE;
 	}
 
-	if(hr != S_OK)
-			goto bottom;
+	if(hr == S_OK)
+	{
+		// Do the callback, passing the rendered surface
+		if(m_pCallback)
+			hr = m_pCallback->PresentSurfaceCB(m_pRenderSurface);
 
-	// Do the callback, passing the rendered surface
-	if(m_pCallback)
-		hr = m_pCallback->PresentSurfaceCB(m_pRenderSurface);
+		if (ms.count() > 1000) 
+		{
+			framesRendered = 0;
+			lastFPSCheck = tNow;
+		}
 
-    LOG_MSG_IF_FAILED(L"D3DPresentEngine::PresentSwapChain failed.", hr);
+		LOG_MSG_IF_FAILED(L"D3DPresentEngine::PresentSwapChain failed.", hr);
+	}
 
 bottom:
-
     return hr;
 }
 
@@ -862,6 +1260,21 @@ done:
 HRESULT D3DPresentEngine::GetDirect3DDevice(LPDIRECT3DDEVICE9 *device)
 {
 	*device = m_pDevice;
+	return S_OK;
+}
+
+HRESULT D3DPresentEngine::SetDeviceResetCallback(IDeviceResetCallback *pCallback)
+{
+	if(m_pDeviceResetCallback)
+	{
+		SAFE_RELEASE(m_pDeviceResetCallback);
+	}
+
+	m_pDeviceResetCallback = pCallback;
+
+	if(m_pDeviceResetCallback)
+		m_pDeviceResetCallback->AddRef();
+
 	return S_OK;
 }
 

@@ -489,7 +489,6 @@
                 <DataTrigger.Binding>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="ShowVisualizations"/>
-                        <!--<Binding Path="IsUIVIsible" RelativeSource="{RelativeSource AncestorType=Window}" />-->
                     </MultiBinding>
                 </DataTrigger.Binding>
                 <DataTrigger.EnterActions>
@@ -1179,7 +1178,7 @@
                 <DataTrigger.Binding>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="Player.ShowOnlineSubtitles"/>
-                        <Binding Path="IsUIVIsible" RelativeSource="{RelativeSource AncestorType=Window}" />
+                        <Binding Path="IsUiVisible" RelativeSource="{RelativeSource AncestorType=Window}" />
                     </MultiBinding>
                 </DataTrigger.Binding>
                 <DataTrigger.EnterActions>
@@ -1353,7 +1352,7 @@
                 <DataTrigger.Binding>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="ShowPlaylist"/>
-                        <Binding Path="IsUIVIsible" RelativeSource="{RelativeSource AncestorType=Window}" />
+                        <Binding Path="IsUiVisible" RelativeSource="{RelativeSource AncestorType=Window}" />
                     </MultiBinding>
                 </DataTrigger.Binding>
                 <DataTrigger.EnterActions>
@@ -1476,7 +1475,7 @@
                 <DataTrigger.Binding>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="ShowEqualizer"/>
-                        <Binding Path="IsUIVIsible" RelativeSource="{RelativeSource AncestorType=Window}" />
+                        <Binding Path="IsUiVisible" RelativeSource="{RelativeSource AncestorType=Window}" />
                     </MultiBinding>
                 </DataTrigger.Binding>
                 <DataTrigger.EnterActions>
@@ -1728,7 +1727,7 @@
                 <DataTrigger.Binding>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="Player.ShowIMdb"/>
-                        <Binding Path="IsUIVIsible" RelativeSource="{RelativeSource AncestorType=Window}" />
+                        <Binding Path="IsUiVisible" RelativeSource="{RelativeSource AncestorType=Window}" />
                     </MultiBinding>
                 </DataTrigger.Binding>
                 <DataTrigger.EnterActions>
@@ -2042,7 +2041,7 @@
                 <DataTrigger.Binding>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="IsOptionsVisible"/>
-                        <Binding Path="IsUIVIsible" RelativeSource="{RelativeSource AncestorType=Window}" />
+                        <Binding Path="IsUiVisible" RelativeSource="{RelativeSource AncestorType=Window}" />
                     </MultiBinding>
                 </DataTrigger.Binding>
                 <DataTrigger.EnterActions>

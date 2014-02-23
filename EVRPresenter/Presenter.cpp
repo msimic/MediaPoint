@@ -1,4 +1,6 @@
 #include "EVRPresenter.h"
+#include <amvideo.h>
+#include <string>
 
 #pragma warning( push )
 #pragma warning( disable : 4355 )  // 'this' used in base member initializer list
@@ -14,6 +16,15 @@ HRESULT SetDesiredSampleTime(IMFSample *pSample, const LONGLONG& hnsSampleTime, 
 HRESULT ClearDesiredSampleTime(IMFSample *pSample);
 BOOL    IsSampleTimePassed(IMFClock *pClock, IMFSample *pSample);
 HRESULT SetMixerSourceRect(IMFTransform *pMixer, const MFVideoNormalizedRect& nrcSource);
+
+#ifndef OUR_GUID_ENTRY
+    #define OUR_GUID_ENTRY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8);
+#endif
+OUR_GUID_ENTRY(FORMAT_VideoInfo2,
+0xf72a76A0, 0xeb0a, 0x11d0, 0xac, 0xe4, 0x00, 0x00, 0xc0, 0xcc, 0x16, 0xba)
+OUR_GUID_ENTRY(IID_IQualProp,
+0x1bd0ecb0, 0xf8e2, 0x11ce, 0xaa, 0xc6, 0x00, 0x20, 0xaf, 0x0b, 0x99, 0xa3)
 
 
 //-----------------------------------------------------------------------------
@@ -104,7 +115,19 @@ HRESULT EVRCustomPresenter::QueryInterface(REFIID riid, void ** ppv)
     {
         *ppv = static_cast<IEVRTrustedVideoPlugin*>(this);
     }
-    else
+	else if (riid == __uuidof(IDirect3DDeviceManager9))
+    {
+        *ppv = static_cast<IDirect3DDeviceManager9*>(this);
+    }
+	else if (riid == IID_IQualProp)
+    {
+        *ppv = static_cast<IQualProp*>(this);
+    }
+	else if (riid == __uuidof(IMFAsyncCallback))
+    {
+        *ppv = static_cast<IMFAsyncCallback*>(this);
+    }
+	else
     {
         *ppv = NULL;
         return E_NOINTERFACE;
@@ -137,7 +160,7 @@ HRESULT EVRCustomPresenter::GetService(REFGUID guidService, REFIID riid, LPVOID 
     CheckPointer(ppvObject, E_POINTER);
 
     // The only service GUID that we support is MR_VIDEO_RENDER_SERVICE.
-    if (guidService != MR_VIDEO_RENDER_SERVICE)
+    if (guidService != MR_VIDEO_RENDER_SERVICE && guidService != MR_VIDEO_ACCELERATION_SERVICE)
     {
         return MF_E_UNSUPPORTED_SERVICE;
     }
@@ -940,7 +963,8 @@ EVRCustomPresenter::EVRCustomPresenter(HRESULT& hr) :
     m_nrcSource.bottom = 1;
     m_nrcSource.right = 1;
 
-    m_pD3DPresentEngine = new D3DPresentEngine(hr);
+    m_pD3DPresentEngine = new D3DPresentEngine(hr, this);
+
     if (m_pD3DPresentEngine == NULL)
     {
         hr = E_OUTOFMEMORY;
@@ -1003,7 +1027,150 @@ done:
     return hr;
 }
 
+HRESULT GetMediaTypeFourCC(IMFMediaType* pType, DWORD* pFourCC)
+{
+    if (pFourCC == nullptr) {
+        return E_POINTER;
+    }
 
+    HRESULT hr = S_OK;
+    GUID guidSubType = GUID_NULL;
+
+    if (SUCCEEDED(hr)) {
+        hr = pType->GetGUID(MF_MT_SUBTYPE, &guidSubType);
+    }
+
+    if (SUCCEEDED(hr)) {
+        *pFourCC = guidSubType.Data1;
+    }
+
+    return hr;
+}
+
+HRESULT GetMediaTypeMerit(IMFMediaType* pType, int* pMerit)
+{
+    DWORD Format;
+    HRESULT hr = GetMediaTypeFourCC(pType, &Format);
+
+    if (SUCCEEDED(hr)) {
+        switch (Format) {
+            case FCC('AI44'):   // Palettized, 4:4:4
+                *pMerit = 31;
+                break;
+            case FCC('YVU9'):   // 8-bit, 16:1:1
+                *pMerit = 30;
+                break;
+            case FCC('NV11'):   // 8-bit, 4:1:1
+                *pMerit = 29;
+                break;
+            case FCC('Y41P'):
+                *pMerit = 28;
+                break;
+            case FCC('Y41T'):
+                *pMerit = 27;
+                break;
+            case FCC('P016'):   // 4:2:0
+                *pMerit = 26;
+                break;
+            case FCC('P010'):
+                *pMerit = 25;
+                break;
+            case FCC('IMC1'):
+                *pMerit = 24;
+                break;
+            case FCC('IMC3'):
+                *pMerit = 23;
+                break;
+            case FCC('IMC2'):
+                *pMerit = 22;
+                break;
+            case FCC('IMC4'):
+                *pMerit = 21;
+                break;
+            case FCC('YV12'):
+                *pMerit = 20;
+                break;
+            case FCC('NV12'):
+                *pMerit = 19;
+                break;
+            case FCC('I420'):
+                *pMerit = 18;
+                break;
+            case FCC('IYUV'):
+                *pMerit = 17;
+                break;
+            case FCC('Y216'):   // 4:2:2
+                *pMerit = 16;
+                break;
+            case FCC('v216'):
+                *pMerit = 15;
+                break;
+            case FCC('P216'):
+                *pMerit = 14;
+                break;
+            case FCC('Y210'):
+                *pMerit = 13;
+                break;
+            case FCC('v210'):
+                *pMerit = 12;
+                break;
+            case FCC('P210'):
+                *pMerit = 11;
+                break;
+            case FCC('YUY2'):
+                *pMerit = 10;
+                break;
+            case FCC('UYVY'):
+                *pMerit = 9;
+                break;
+            case FCC('Y42T'):
+                *pMerit = 8;
+                break;
+            case FCC('YVYU'):
+                *pMerit = 7;
+                break;
+            case FCC('Y416'):   // 4:4:4
+                *pMerit = 6;
+                break;
+            case FCC('Y410'):
+                *pMerit = 5;
+                break;
+            case FCC('v410'):
+                *pMerit = 4;
+                break;
+            case FCC('AYUV'):
+                *pMerit = 3;
+                break;
+            case D3DFMT_X8R8G8B8:
+                //if (m_bForceInputHighColorResolution) {
+                    *pMerit = 63;
+                //} else {
+                //    *pMerit = 1;
+                //}
+                break;
+            case D3DFMT_A8R8G8B8:   // an accepted format, but fails on most surface types
+            case D3DFMT_A8B8G8R8:
+            case D3DFMT_X8B8G8R8:
+            case D3DFMT_R8G8B8:
+            case D3DFMT_R5G6B5:
+            case D3DFMT_X1R5G5B5:
+            case D3DFMT_A1R5G5B5:
+            case D3DFMT_A4R4G4B4:
+            case D3DFMT_R3G3B2:
+            case D3DFMT_A8R3G3B2:
+            case D3DFMT_X4R4G4B4:
+            case D3DFMT_A8P8:
+            case D3DFMT_P8:
+                *pMerit = 0;
+                break;
+            default:
+                *pMerit = 2;
+                break;
+        }
+    }
+
+    return hr;
+}
 
 //-----------------------------------------------------------------------------
 // RenegotiateMediaType
@@ -1013,88 +1180,196 @@ done:
 
 HRESULT EVRCustomPresenter::RenegotiateMediaType()
 {
-    TRACE((L"RenegotiateMediaType"));
+	    HRESULT hr = S_OK;
 
-    HRESULT hr = S_OK;
-    BOOL bFoundMediaType = FALSE;
+    IMFMediaType *pMixerType;
+    IMFMediaType *pType;
 
-    IMFMediaType *pMixerType = NULL;
-    IMFMediaType *pOptimalType = NULL;
-    IMFVideoMediaType *pVideoType = NULL;
-
-    if (!m_pMixer)
-    {
+    if (!m_pMixer) {
         return MF_E_INVALIDREQUEST;
+    }
+
+    List<IMFMediaType*> ValidMixerTypes;
+
+    // Get the mixer's input type
+    hr = m_pMixer->GetInputCurrentType(0, &pType);
+    if (SUCCEEDED(hr)) {
+        AM_MEDIA_TYPE* pMT;
+        hr = pType->GetRepresentation(FORMAT_VideoInfo2, (void**)&pMT);
+        if (SUCCEEDED(hr)) {
+            //m_InputMediaType = *pMT;
+            pType->FreeRepresentation(FORMAT_VideoInfo2, pMT);
+        }
     }
 
     // Loop through all of the mixer's proposed output types.
     DWORD iTypeIndex = 0;
-    while (!bFoundMediaType && (hr != MF_E_NO_MORE_TYPES))
-    {
-        SAFE_RELEASE(pMixerType);
-        SAFE_RELEASE(pOptimalType);
+    while ((hr != MF_E_NO_MORE_TYPES)) {
+        pMixerType   = nullptr;
+        pType        = nullptr;
 
         // Step 1. Get the next media type supported by mixer.
         hr = m_pMixer->GetOutputAvailableType(0, iTypeIndex++, &pMixerType);
-        if (FAILED(hr))
-        {
+        if (FAILED(hr)) {
             break;
         }
 
-        // From now on, if anything in this loop fails, try the next type,
-        // until we succeed or the mixer runs out of types.
-
-        // Step 2. Check if we support this media type. 
-        if (SUCCEEDED(hr))
-        {
-            // Note: None of the modifications that we make later in CreateOptimalVideoType
-            // will affect the suitability of the type, at least for us. (Possibly for the mixer.)
+        // Step 2. Check if we support this media type.
+        if (SUCCEEDED(hr)) {
             hr = IsMediaTypeSupported(pMixerType);
         }
 
-        // Step 3. Adjust the mixer's type to match our requirements.
-        if (SUCCEEDED(hr))
-        {
-            hr = CreateOptimalVideoType(pMixerType, &pOptimalType);
+        if (SUCCEEDED(hr)) {
+            hr = CreateOptimalVideoType(pMixerType, &pType); //CreateProposedOutputType(pMixerType, &pType);
         }
-
+		
         // Step 4. Check if the mixer will accept this media type.
-        if (SUCCEEDED(hr))
-        {
-            hr = m_pMixer->SetOutputType(0, pOptimalType, MFT_SET_TYPE_TEST_ONLY);
+        if (SUCCEEDED(hr)) {
+            hr = m_pMixer->SetOutputType(0, pType, MFT_SET_TYPE_TEST_ONLY);
         }
 
-        // Step 5. Try to set the media type on ourselves.
-        if (SUCCEEDED(hr))
-        {
-            hr = SetMediaType(pOptimalType);
+        int Merit = 0;
+        if (SUCCEEDED(hr)) {
+            hr = GetMediaTypeMerit(pType, &Merit);
         }
 
-        // Step 6. Set output media type on mixer.
-        if (SUCCEEDED(hr))
-        {
-            hr = m_pMixer->SetOutputType(0, pOptimalType, 0);
+        if (SUCCEEDED(hr)) {
+            size_t nTypes = ValidMixerTypes.GetCount();
+            size_t iInsertPos = 0;
+            for (size_t i = 0; i < nTypes; ++i) {
+                int ThisMerit;
+                GetMediaTypeMerit(ValidMixerTypes.ItemAt(i), &ThisMerit);
 
-            assert(SUCCEEDED(hr)); // This should succeed unless the MFT lied in the previous call.
-
-            // If something went wrong, clear the media type.
-            if (FAILED(hr))
-            {
-                SetMediaType(NULL);
+                if (Merit > ThisMerit) {
+                    iInsertPos = i;
+                    break;
+                } else {
+                    iInsertPos = i + 1;
+                }
             }
-        }
 
-        if (SUCCEEDED(hr))
-        {
-            bFoundMediaType = TRUE;
+            ValidMixerTypes.InsertAt(iInsertPos, pType);
         }
     }
 
-    SAFE_RELEASE(pMixerType);
-    SAFE_RELEASE(pOptimalType);
-    SAFE_RELEASE(pVideoType);
 
+    size_t nValidTypes = ValidMixerTypes.GetCount();
+//#ifdef _DEBUG
+//    for (size_t i = 0; i < nValidTypes; ++i) {
+//        // Step 3. Adjust the mixer's type to match our requirements.
+//        pType = ValidMixerTypes[i];
+//        TRACE_EVR("EVR: Valid mixer output type: %ws\n", GetMediaTypeFormatDesc(pType));
+//    }
+//#endif
+    for (size_t i = 0; i < nValidTypes; ++i) {
+        // Step 3. Adjust the mixer's type to match our requirements.
+        pType = ValidMixerTypes.ItemAt(i);
+
+
+        //TRACE_EVR("EVR: Trying mixer output type: %ws\n", GetMediaTypeFormatDesc(pType));
+
+        // Step 5. Try to set the media type on ourselves.
+        hr = SetMediaType(pType);
+
+        // Step 6. Set output media type on mixer.
+        if (SUCCEEDED(hr)) {
+            hr = m_pMixer->SetOutputType(0, pType, 0);
+
+            // If something went wrong, clear the media type.
+            if (FAILED(hr)) {
+                SetMediaType(nullptr);
+            } else {
+                break;
+            }
+        }
+    }
+
+    pMixerType = nullptr;
+    pType = nullptr;
     return hr;
+
+    //TRACE((L"RenegotiateMediaType"));
+
+    //HRESULT hr = S_OK;
+    //BOOL bFoundMediaType = FALSE;
+
+    //IMFMediaType *pMixerType = NULL;
+    //IMFMediaType *pOptimalType = NULL;
+    //IMFVideoMediaType *pVideoType = NULL;
+
+    //if (!m_pMixer)
+    //{
+    //    return MF_E_INVALIDREQUEST;
+    //}
+
+    //// Loop through all of the mixer's proposed output types.
+    //DWORD iTypeIndex = 0;
+    //while (!bFoundMediaType && (hr != MF_E_NO_MORE_TYPES))
+    //{
+    //    SAFE_RELEASE(pMixerType);
+    //    SAFE_RELEASE(pOptimalType);
+
+    //    // Step 1. Get the next media type supported by mixer.
+    //    hr = m_pMixer->GetOutputAvailableType(0, iTypeIndex++, &pMixerType);
+    //    if (FAILED(hr))
+    //    {
+    //        break;
+    //    }
+
+    //    // From now on, if anything in this loop fails, try the next type,
+    //    // until we succeed or the mixer runs out of types.
+
+    //    // Step 2. Check if we support this media type. 
+    //    if (SUCCEEDED(hr))
+    //    {
+    //        // Note: None of the modifications that we make later in CreateOptimalVideoType
+    //        // will affect the suitability of the type, at least for us. (Possibly for the mixer.)
+    //        hr = IsMediaTypeSupported(pMixerType);
+    //    }
+
+    //    // Step 3. Adjust the mixer's type to match our requirements.
+    //    if (SUCCEEDED(hr))
+    //    {
+    //        hr = CreateOptimalVideoType(pMixerType, &pOptimalType);
+    //    }
+
+    //    // Step 4. Check if the mixer will accept this media type.
+    //    if (SUCCEEDED(hr))
+    //    {
+    //        hr = m_pMixer->SetOutputType(0, pOptimalType, MFT_SET_TYPE_TEST_ONLY);
+    //    }
+
+    //    // Step 5. Try to set the media type on ourselves.
+    //    if (SUCCEEDED(hr))
+    //    {
+    //        hr = SetMediaType(pOptimalType);
+    //    }
+
+    //    // Step 6. Set output media type on mixer.
+    //    if (SUCCEEDED(hr))
+    //    {
+    //        hr = m_pMixer->SetOutputType(0, pOptimalType, 0);
+
+    //        assert(SUCCEEDED(hr)); // This should succeed unless the MFT lied in the previous call.
+
+    //        // If something went wrong, clear the media type.
+    //        if (FAILED(hr))
+    //        {
+    //            SetMediaType(NULL);
+    //        }
+    //    }
+
+    //    if (SUCCEEDED(hr))
+    //    {
+    //        bFoundMediaType = TRUE;
+    //    }
+    //}
+
+    //SAFE_RELEASE(pMixerType);
+    //SAFE_RELEASE(pOptimalType);
+    //SAFE_RELEASE(pVideoType);
+
+    //return hr;
 }
 
 
@@ -1120,7 +1395,7 @@ HRESULT EVRCustomPresenter::Flush()
     if (m_RenderState == RENDER_STATE_STOPPED)
     {
         // Repaint with black.
-        (void)m_pD3DPresentEngine->PresentSample(NULL, 0);
+        (void)m_pD3DPresentEngine->PresentSample(NULL, 0, 0, 1, 10000000);
     }
 
     return S_OK; 
@@ -1403,6 +1678,13 @@ HRESULT EVRCustomPresenter::CreateOptimalVideoType(IMFMediaType* pProposedType, 
     // Clone the proposed type.
     CHECK_HR(hr = pmtOptimal->CopyFrom(pProposedType));
 
+	MFVIDEOFORMAT* VideoFormat;
+	AM_MEDIA_TYPE* pAMMedia = nullptr;
+    pProposedType->GetRepresentation(FORMAT_MFVideoFormat, (void**)&pAMMedia);
+
+    VideoFormat = (MFVIDEOFORMAT*)pAMMedia->pbFormat;
+
+
     // Modify the new type.
 
     // For purposes of this SDK sample, we assume 
@@ -1410,7 +1692,9 @@ HRESULT EVRCustomPresenter::CreateOptimalVideoType(IMFMediaType* pProposedType, 
     // 2) The presenter always preserves the pixel aspect ratio.
 
     // Set the pixel aspect ratio (PAR) to 1:1 (see assumption #1, above)
-    CHECK_HR(hr = pmtOptimal->SetPixelAspectRatio(1, 1));
+    CHECK_HR(hr = pmtOptimal->SetPixelAspectRatio(VideoFormat->videoInfo.PixelAspectRatio.Numerator, VideoFormat->videoInfo.PixelAspectRatio.Denominator));
+
+	pProposedType->FreeRepresentation(FORMAT_MFVideoFormat, (void*)pAMMedia);
 
     // Get the output rectangle.
     rcOutput = m_pD3DPresentEngine->GetDestinationRect();
@@ -1448,6 +1732,11 @@ HRESULT EVRCustomPresenter::CreateOptimalVideoType(IMFMediaType* pProposedType, 
 
     *ppOptimalType = pOptimalType;
     (*ppOptimalType)->AddRef();
+
+	if (m_SampleHeight != displayArea.Area.cy || m_SampleWidth != displayArea.Area.cx) 
+	{
+		NotifyEvent(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(displayArea.Area.cx, displayArea.Area.cy), 0);
+	}
 
 done:
     SAFE_RELEASE(pOptimalType);
@@ -2049,6 +2338,19 @@ void EVRCustomPresenter::ReleaseResources()
     m_pD3DPresentEngine->ReleaseResources();
 }
 
+HRESULT EVRCustomPresenter::HookEVR(IBaseFilter *evr)
+{
+	m_pD3DPresentEngine->HookEVR(evr);
+	return S_OK;
+}
+
+
+HRESULT EVRCustomPresenter::SetAdapter(POINT p)
+{
+	m_pD3DPresentEngine->SetAdapter(p);
+	return S_OK;
+}
+
 //-----------------------------------------------------------------------------
 // OnSampleFree
 //
@@ -2143,6 +2445,12 @@ float EVRCustomPresenter::GetMaxRate(BOOL bThin)
     return fMaxRate;
 }
 
+HRESULT EVRCustomPresenter::DeviceReset() 
+{ 
+	NotifyEvent(EC_DISPLAY_CHANGED, 0, 0); 
+	return S_OK; 
+}
+
 HRESULT EVRCustomPresenter::RegisterCallback(IEVRPresenterCallback *pCallback) 
 { 
 	this->m_pD3DPresentEngine->RegisterCallback(pCallback);
@@ -2162,9 +2470,12 @@ HRESULT EVRCustomPresenter::GetDirect3DDevice(LPDIRECT3DDEVICE9 *device)
 	return S_OK;
 }
 
-HRESULT EVRCustomPresenter::SetPixelShader(BSTR code) {
-	m_pD3DPresentEngine->SetPixelShader(code);
-	return S_OK;
+HRESULT EVRCustomPresenter::SetPixelShader(BSTR code, BSTR* errors) {
+	std::wstring ErrorString;
+	HRESULT hr = m_pD3DPresentEngine->SetPixelShader(code, ErrorString);
+	BSTR bs = SysAllocStringLen(ErrorString.c_str(), ErrorString.size());
+	*errors = bs;
+	return hr;
 }
 
 HRESULT EVRCustomPresenter::IsInTrustedVideoMode(BOOL *pYes)
@@ -2189,6 +2500,106 @@ HRESULT EVRCustomPresenter::DisableImageExport(BOOL bDisable)
 	return S_OK;
 }
 
+STDMETHODIMP EVRCustomPresenter::ResetDevice(IDirect3DDevice9* pDevice, UINT resetToken)
+{
+    HRESULT hr = m_pD3DPresentEngine->GetManager()->ResetDevice(pDevice, resetToken);
+    return hr;
+}
+
+STDMETHODIMP EVRCustomPresenter::OpenDeviceHandle(HANDLE* phDevice)
+{
+    HRESULT hr = m_pD3DPresentEngine->GetManager()->OpenDeviceHandle(phDevice);
+    return hr;
+}
+
+STDMETHODIMP EVRCustomPresenter::CloseDeviceHandle(HANDLE hDevice)
+{
+    HRESULT hr = m_pD3DPresentEngine->GetManager()->CloseDeviceHandle(hDevice);
+    return hr;
+}
+
+STDMETHODIMP EVRCustomPresenter::TestDevice(HANDLE hDevice)
+{
+    HRESULT hr = m_pD3DPresentEngine->GetManager()->TestDevice(hDevice);
+    return hr;
+}
+
+STDMETHODIMP EVRCustomPresenter::LockDevice(HANDLE hDevice, IDirect3DDevice9** ppDevice, BOOL fBlock)
+{
+    HRESULT hr = m_pD3DPresentEngine->GetManager()->LockDevice(hDevice, ppDevice, fBlock);
+    return hr;
+}
+
+STDMETHODIMP EVRCustomPresenter::UnlockDevice(HANDLE hDevice, BOOL fSaveState)
+{
+    HRESULT hr = m_pD3DPresentEngine->GetManager()->UnlockDevice(hDevice, fSaveState);
+    return hr;
+}
+
+STDMETHODIMP EVRCustomPresenter::GetVideoService(HANDLE hDevice, REFIID riid, void** ppService)
+{
+    HRESULT hr = m_pD3DPresentEngine->GetManager()->GetVideoService(hDevice, riid, ppService);
+
+    if (riid == __uuidof(IDirectXVideoDecoderService)) {
+        UINT  nNbDecoder = 5;
+        GUID* pDecoderGuid;
+        IDirectXVideoDecoderService* pDXVAVideoDecoder = (IDirectXVideoDecoderService*) *ppService;
+        pDXVAVideoDecoder->GetDecoderDeviceGuids(&nNbDecoder, &pDecoderGuid);
+    } else if (riid == __uuidof(IDirectXVideoProcessorService)) {
+        IDirectXVideoProcessorService* pDXVAProcessor = (IDirectXVideoProcessorService*) *ppService;
+        UNREFERENCED_PARAMETER(pDXVAProcessor);
+    }
+
+    return hr;
+}
+
+// IQualProp
+STDMETHODIMP EVRCustomPresenter::get_FramesDroppedInRenderer(int* pcFrames)
+{
+    *pcFrames = 0;
+    return S_OK;
+}
+
+STDMETHODIMP EVRCustomPresenter::get_FramesDrawn(int* pcFramesDrawn)
+{
+    *pcFramesDrawn = 1;
+    return S_OK;
+}
+
+STDMETHODIMP EVRCustomPresenter::get_AvgFrameRate(int* piAvgFrameRate)
+{
+    *piAvgFrameRate = (int)(0 * 100);
+    return S_OK;
+}
+
+STDMETHODIMP EVRCustomPresenter::get_Jitter(int* iJitter)
+{
+    *iJitter = (int)((/*m_fJitterStdDev*/ 0 / 10000.0) + 0.5);
+    return S_OK;
+}
+
+STDMETHODIMP EVRCustomPresenter::get_AvgSyncOffset(int* piAvg)
+{
+    *piAvg = (int)((/*m_fSyncOffsetAvr*/ 0 / 10000.0) + 0.5);
+    return S_OK;
+}
+
+STDMETHODIMP EVRCustomPresenter::get_DevSyncOffset(int* piDev)
+{
+    *piDev = (int)((/*m_fSyncOffsetStdDev*/ 0 / 10000.0) + 0.5);
+    return S_OK;
+}
+
+// IMFAsyncCallback
+STDMETHODIMP EVRCustomPresenter::GetParameters(/* [out] */ __RPC__out DWORD* pdwFlags, /* [out] */ __RPC__out DWORD* pdwQueue)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP EVRCustomPresenter::Invoke(/* [in] */ __RPC__in_opt IMFAsyncResult* pAsyncResult)
+{
+    return E_NOTIMPL;
+}
 
 //-----------------------------------------------------------------------------
 // Static functions

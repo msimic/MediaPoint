@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -16,6 +17,7 @@ using MediaPoint.VM;
 using MediaPoint.VM.ViewInterfaces;
 using MediaPoint.Controls.Extensions;
 using MediaPoint.MVVM.Services;
+using Application = System.Windows.Application;
 
 namespace MediaPoint.Controls
 {
@@ -26,8 +28,12 @@ namespace MediaPoint.Controls
 	/// </summary>
 	public abstract class MediaElementBase : D3DRenderer, INotifyPropertyChanged, IPlayerView, IEqualizer
 	{
-		private Window m_currentWindow;
-		private bool m_windowHooked;
+		private Window _currentWindow;
+		private bool _windowHooked;
+	    private DispatcherTimer _adapterTimer;
+	    private Point _lastScreenPoint;
+	    private IntPtr _hwnd = IntPtr.Zero;
+	    private System.Windows.Forms.Screen _lastScreen = null;
 
 		#region Routed Events
 		#region MediaOpened
@@ -375,7 +381,7 @@ namespace MediaPoint.Controls
 
 		public static readonly DependencyProperty AudioRendererProperty =
 			DependencyProperty.Register("AudioRenderer", typeof(string), typeof(MediaElementBase),
-				new FrameworkPropertyMetadata("Default DirectSound Device",
+                new FrameworkPropertyMetadata(SharpDX.DirectSound.DirectSound.GetDevices().Count == 0 ? "" : SharpDX.DirectSound.DirectSound.GetDevices()[0].Description,
 					new PropertyChangedCallback(OnAudioRendererChanged)));
 
 		/// <summary>
@@ -674,7 +680,37 @@ namespace MediaPoint.Controls
 												   OnCanExecuteStopCommand));
 
             NaturalSizeChanged += OnNaturalSizeChanged;
+
+            _adapterTimer = new DispatcherTimer();
+            _adapterTimer.Tick += AdapterTimer_Tick;
+            _adapterTimer.Interval = new TimeSpan(0, 0, 0, 0, 1500);
+            _adapterTimer.Start();
 		}
+
+        void AdapterTimer_Tick(object sender, EventArgs e)
+        {
+            if (!IsLoaded) return;
+
+            Point p = _currentWindow.PointToScreen(new Point(_currentWindow.ActualWidth / 2, _currentWindow.ActualHeight / 2));
+
+            if (p != _lastScreenPoint && _hwnd != IntPtr.Zero)
+            {
+                _lastScreenPoint = p;
+
+                var screen = System.Windows.Forms.Screen.FromHandle(_hwnd);
+
+                if (!screen.Equals(_lastScreen))
+                {
+                    _lastScreen = screen;
+                    if (!MediaPlayerBase.Dispatcher.Shutdown && !MediaPlayerBase.Dispatcher.ShuttingDown)
+                        MediaPlayerBase.Dispatcher.BeginInvoke((Action) (delegate
+                                                                         {
+                                                                             MediaPlayerBase.SetAdapter(p, _hwnd);
+                                                                         }));
+
+                }
+            }
+        }
 
 	    private void OnNaturalSizeChanged(object sender, EventArgs eventArgs)
 	    {
@@ -946,21 +982,21 @@ namespace MediaPoint.Controls
 	    {
 	        Dispatcher.BeginInvoke((Action) (() =>
 	        {
-	            if (AutoSize && m_currentWindow != null)
+	            if (AutoSize && _currentWindow != null)
 	            {
 	                InvalidateMeasure();
 	                InvalidateArrange();
 	                InvalidateVisual();
 
-                    if (m_currentWindow.WindowState == WindowState.Normal &&
+                    if (_currentWindow.WindowState == WindowState.Normal &&
                         MediaPlayerBase.NaturalVideoWidth > 0 &&
                         MediaPlayerBase.NaturalVideoHeight > 0 &&
                         MediaPlayerBase.HasVideo)
 	                {
-	                    var source = PresentationSource.FromVisual(m_currentWindow);
+	                    var source = PresentationSource.FromVisual(_currentWindow);
 	                    Matrix transformFromDevice =
 	                        source.CompositionTarget.TransformFromDevice;
-	                    var ms = WindowExtensions.MonitorSize(ref m_currentWindow,
+	                    var ms = WindowExtensions.MonitorSize(ref _currentWindow,
 	                                                        transformFromDevice);
 
 	                    float dpiX, dpiY;
@@ -972,14 +1008,14 @@ namespace MediaPoint.Controls
 	                    double h = MediaPlayerBase.NaturalVideoHeight;
 	                    double r = w/h;
 
-	                    if (w < m_currentWindow.MinWidth)
+	                    if (w < _currentWindow.MinWidth)
 	                    {
-	                        w = m_currentWindow.MinWidth;
+	                        w = _currentWindow.MinWidth;
 	                        h = w/r;
 	                    }
-	                    if (h < m_currentWindow.MinHeight)
+	                    if (h < _currentWindow.MinHeight)
 	                    {
-	                        h = m_currentWindow.MinHeight;
+	                        h = _currentWindow.MinHeight;
 	                        w = h*r;
 	                    }
 
@@ -994,22 +1030,22 @@ namespace MediaPoint.Controls
 	                        w = h*r;
 	                    }
 
-	                    var wih = new WindowInteropHelper(m_currentWindow);
+	                    var wih = new WindowInteropHelper(_currentWindow);
 	                    IntPtr hWnd = wih.Handle;
 
-	                    double minW = m_currentWindow.MinWidth;
-	                    double minH = m_currentWindow.MinHeight;
-	                    m_currentWindow.MinWidth = 0;
-	                    m_currentWindow.MinHeight = 0;
-	                    m_currentWindow.Left = (int) ((ms.Width - w)/2);
-	                    m_currentWindow.Top = (int) ((ms.Height - h)/2);
-	                    Size wpfSize = GetWPFSize(m_currentWindow, new Size(w, h));
-	                    m_currentWindow.Width = wpfSize.Width;
-	                    m_currentWindow.Height = wpfSize.Height;
-	                    SetWindowPos(hWnd, IntPtr.Zero, (int) m_currentWindow.Left,
-	                                (int) m_currentWindow.Top, (int) w, (int) h, 0);
-	                    m_currentWindow.MinWidth = minW;
-	                    m_currentWindow.MinHeight = minH;
+	                    double minW = _currentWindow.MinWidth;
+	                    double minH = _currentWindow.MinHeight;
+	                    _currentWindow.MinWidth = 0;
+	                    _currentWindow.MinHeight = 0;
+	                    _currentWindow.Left = (int) ((ms.Width - w)/2);
+	                    _currentWindow.Top = (int) ((ms.Height - h)/2);
+	                    Size wpfSize = GetWPFSize(_currentWindow, new Size(w, h));
+	                    _currentWindow.Width = wpfSize.Width;
+	                    _currentWindow.Height = wpfSize.Height;
+	                    SetWindowPos(hWnd, IntPtr.Zero, (int) _currentWindow.Left,
+	                                (int) _currentWindow.Top, (int) w, (int) h, 0);
+	                    _currentWindow.MinWidth = minW;
+	                    _currentWindow.MinHeight = minH;
 	                }
 	            }
 	        }), DispatcherPriority.ContextIdle);
@@ -1062,13 +1098,13 @@ namespace MediaPoint.Controls
 			if (Application.Current == null)
 				return;
 
-			m_windowHooked = false;
+			_windowHooked = false;
 
-			if (m_currentWindow == null)
+			if (_currentWindow == null)
 				return;
 
-			m_currentWindow.Closed -= WindowOwnerClosed;
-			m_currentWindow = null;
+			_currentWindow.Closed -= WindowOwnerClosed;
+			_currentWindow = null;
 		}
 
 		protected override Size MeasureOverride(Size availableSize)
@@ -1076,7 +1112,7 @@ namespace MediaPoint.Controls
 			if (MediaPlayerBase != null && MediaPlayerBase.HasVideo && MediaPlayerBase.NaturalVideoWidth != 0 && MediaPlayerBase.NaturalVideoHeight != 0)
 			{
 				var newSize = availableSize;
-				var wnd = m_currentWindow;
+				var wnd = _currentWindow;
 				if (wnd != null && wnd.WindowState == WindowState.Normal && wnd.SizeToContent == SizeToContent.WidthAndHeight)
 				{
 					var vw = MediaPlayerBase.NaturalVideoWidth;
@@ -1125,12 +1161,14 @@ namespace MediaPoint.Controls
 		/// </summary>
 		private void MediaElementBaseLoaded(object sender, RoutedEventArgs e)
 		{
-			m_currentWindow = Window.GetWindow(this);
+			_currentWindow = Window.GetWindow(this);
 
-			if (m_currentWindow != null && !m_windowHooked)
+			if (_currentWindow != null && !_windowHooked)
 			{
-				m_currentWindow.Closed += WindowOwnerClosed;
-				m_windowHooked = true;
+                var wih = new WindowInteropHelper(_currentWindow);
+                _hwnd = wih.Handle;
+				_currentWindow.Closed += WindowOwnerClosed;
+				_windowHooked = true;
 			}
 
 			OnLoadedOverride();
@@ -1194,14 +1232,14 @@ namespace MediaPoint.Controls
 			DependencyProperty.Register("VideoStreams", typeof(ObservableCollection<string>), typeof(MediaElementBase), new UIPropertyMetadata(null));
 
 
-        public new bool HasVideo
+        public bool HasVideo
         {
             get { return (bool)GetValue(HasVideoProperty); }
             set { SetValue(HasVideoProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for VideoStreams.  This enables animation, styling, binding, etc...
-        public static readonly new DependencyProperty HasVideoProperty =
+        public static readonly DependencyProperty HasVideoProperty =
             DependencyProperty.Register("HasVideo", typeof(bool), typeof(MediaElementBase), new UIPropertyMetadata(false));
 
 

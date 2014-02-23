@@ -64,6 +64,11 @@ public:
 		return m_list.RemoveFront(pp);
 	}
 
+	DWORD Count()
+	{
+		return m_list.Count();
+	}
+
     HRESULT PutBack(T *p)
     {
         AutoLock lock(m_lock);

@@ -1,4 +1,5 @@
 #include "EVRPresenter.h"
+#include <amvideo.h>  // API Media Foundation
 
 #pragma once
 
@@ -39,7 +40,11 @@ class EVRCustomPresenter :
     public IMFVideoDisplayControl,
 	public IEVRPresenterRegisterCallback,
 	public IEVRPresenterSettings,
-	public IEVRTrustedVideoPlugin
+	public IEVRTrustedVideoPlugin,
+	public IDeviceResetCallback
+	,public IDirect3DDeviceManager9
+	,public IQualProp
+	,public IMFAsyncCallback
 {
 public:
     static HRESULT CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv);
@@ -106,7 +111,9 @@ public:
 
 	// IEVRPresenterSettings methods
 	STDMETHOD(SetBufferCount)(int bufferCount);
-	STDMETHOD(SetPixelShader)(BSTR code);
+	STDMETHOD(SetPixelShader)(BSTR code, BSTR* errors);
+	STDMETHOD(HookEVR)(IBaseFilter *evr);
+	STDMETHOD(SetAdapter)(POINT p);
 
 	// IEVRTrustedVideoPlugin methods
 	STDMETHOD(IsInTrustedVideoMode)(BOOL *pYes);
@@ -116,6 +123,27 @@ public:
     STDMETHOD(SetConstriction)(DWORD dwKPix);
         
     STDMETHOD(DisableImageExport)(BOOL bDisable);
+
+	STDMETHOD(DeviceReset)();
+
+	STDMETHOD(ResetDevice)(IDirect3DDevice9* pDevice, UINT resetToken);
+    STDMETHOD(OpenDeviceHandle)(HANDLE* phDevice);
+    STDMETHOD(CloseDeviceHandle)(HANDLE hDevice);
+    STDMETHOD(TestDevice)(HANDLE hDevice);
+    STDMETHOD(LockDevice)(HANDLE hDevice, IDirect3DDevice9** ppDevice, BOOL fBlock);
+    STDMETHOD(UnlockDevice)(HANDLE hDevice, BOOL fSaveState);
+    STDMETHOD(GetVideoService)(HANDLE hDevice, REFIID riid, void** ppService);
+
+	STDMETHODIMP get_FramesDroppedInRenderer(int* pcFrames);
+    STDMETHODIMP get_FramesDrawn(int* pcFramesDrawn);
+    STDMETHODIMP get_AvgFrameRate(int* piAvgFrameRate);
+    STDMETHODIMP get_Jitter(int* iJitter);
+    STDMETHODIMP get_AvgSyncOffset(int* piAvg);
+    STDMETHODIMP get_DevSyncOffset(int* piDev);
+
+	STDMETHODIMP GetParameters(/* [out] */ __RPC__out DWORD* pdwFlags, /* [out] */ __RPC__out DWORD* pdwQueue);
+    STDMETHODIMP Invoke(/* [in] */ __RPC__in_opt IMFAsyncResult* pAsyncResult);
+
 protected:
     EVRCustomPresenter(HRESULT& hr);
     virtual ~EVRCustomPresenter();
