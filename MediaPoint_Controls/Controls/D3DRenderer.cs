@@ -353,42 +353,42 @@ namespace MediaPoint.Controls
         /// <summary>
         /// Cleans up any dead references we may have to any cloned renderers
         /// </summary>
-        private void CleanZombieRenderers()
-        {
-            lock (m_clonedD3Drenderers)
-            {
-                var deadObjects = new List<WeakReference>();
+        //private void CleanZombieRenderers()
+        //{
+        //    lock (m_clonedD3Drenderers)
+        //    {
+        //        var deadObjects = new List<WeakReference>();
 
-                for (int i = 0; i < m_clonedD3Drenderers.Count; i++)
-                {
-                    if (!m_clonedD3Drenderers[i].IsAlive)
-                        deadObjects.Add(m_clonedD3Drenderers[i]);
-                }
+        //        for (int i = 0; i < m_clonedD3Drenderers.Count; i++)
+        //        {
+        //            if (!m_clonedD3Drenderers[i].IsAlive)
+        //                deadObjects.Add(m_clonedD3Drenderers[i]);
+        //        }
 
-                foreach (var deadGuy in deadObjects)
-                {
-                    m_clonedD3Drenderers.Remove(deadGuy);
-                }
-            }
-        }
+        //        foreach (var deadGuy in deadObjects)
+        //        {
+        //            m_clonedD3Drenderers.Remove(deadGuy);
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Sets the backbuffer for any cloned D3DRenderers
         /// </summary>
-        private void SetBackBufferForClones()
-        {
-            lock (m_clonedD3Drenderers)
-            {
-                CleanZombieRenderers();
+        //private void SetBackBufferForClones()
+        //{
+        //    lock (m_clonedD3Drenderers)
+        //    {
+        //        CleanZombieRenderers();
 
-                foreach (var rendererRef in m_clonedD3Drenderers)
-                {
-                    var renderer = rendererRef.Target as D3DRenderer;
-                    if (renderer != null)
-                        renderer.SetBackBuffer(m_pBackBuffer);
-                }
-            }
-        }
+        //        foreach (var rendererRef in m_clonedD3Drenderers)
+        //        {
+        //            var renderer = rendererRef.Target as D3DRenderer;
+        //            if (renderer != null)
+        //                renderer.SetBackBuffer(m_pBackBuffer);
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Configures D3DImage with a new surface.  This happens immediately
@@ -441,26 +441,26 @@ namespace MediaPoint.Controls
         /// <summary>
         /// Invalidates any possible cloned renderer we may have
         /// </summary>
-        private void InvalidateClonedVideoImages()
-        {
-            lock (m_clonedD3Drenderers)
-            {
-                CleanZombieRenderers();
+        //private void InvalidateClonedVideoImages()
+        //{
+        //    lock (m_clonedD3Drenderers)
+        //    {
+        //        CleanZombieRenderers();
 
-                foreach (var rendererRef in m_clonedD3Drenderers)
-                {
-                    var renderer = rendererRef.Target as D3DRenderer;
-                    if (renderer != null)
-                        renderer.InvalidateVideoImage();
-                }
-            }
-        }
+        //        foreach (var rendererRef in m_clonedD3Drenderers)
+        //        {
+        //            var renderer = rendererRef.Target as D3DRenderer;
+        //            if (renderer != null)
+        //                renderer.InvalidateVideoImage();
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Used as a clone for a D3DRenderer
         /// </summary>
-        private class ClonedD3DRenderer : D3DRenderer
-        { }
+        //private class ClonedD3DRenderer : D3DRenderer
+        //{ }
         #endregion
 
         #region Protected Methods
@@ -562,7 +562,7 @@ namespace MediaPoint.Controls
                 SetBackBufferInternal(m_pBackBuffer);
             }
 
-            SetBackBufferForClones();
+            //SetBackBufferForClones();
         }
 
         public void InvalidateVideoImage()
@@ -606,7 +606,7 @@ namespace MediaPoint.Controls
 			}
 
 			/* Invalidate all of our cloned D3DRenderers */
-			InvalidateClonedVideoImages();
+			//InvalidateClonedVideoImages();
         }
         #endregion
 
@@ -624,17 +624,17 @@ namespace MediaPoint.Controls
         /// brush not working cross-threaded
         /// </summary>
         /// <returns></returns>
-        public D3DRenderer CloneD3DRenderer()
-        {
-            var renderer = new ClonedD3DRenderer();
+        //public D3DRenderer CloneD3DRenderer()
+        //{
+        //    var renderer = new ClonedD3DRenderer();
 
-            lock (m_clonedD3Drenderers)
-            {
-                m_clonedD3Drenderers.Add(new WeakReference(renderer));
-            }
+        //    lock (m_clonedD3Drenderers)
+        //    {
+        //        m_clonedD3Drenderers.Add(new WeakReference(renderer));
+        //    }
 
-            renderer.SetBackBuffer(m_pBackBuffer);
-            return renderer;
-        }
+        //    renderer.SetBackBuffer(m_pBackBuffer);
+        //    return renderer;
+        //}
     }
 }

@@ -1310,7 +1310,7 @@ namespace MediaPoint.Controls
 		/// </summary>
 		public virtual void Play()
 		{
-			if (_lastBuffer != IntPtr.Zero) SetBackBuffer(_lastBuffer);
+			//if (_lastBuffer != IntPtr.Zero) SetBackBuffer(_lastBuffer);
 			MediaPlayerBase.EnsureThread(DefaultApartmentState);
 			MediaPlayerBase.Dispatcher.BeginInvoke((Action)(delegate
 			{

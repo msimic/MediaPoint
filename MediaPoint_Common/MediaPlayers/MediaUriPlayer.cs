@@ -615,13 +615,12 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                     (System.Environment.OSVersion.Version.Major == 5)))
                     VideoRenderer = VideoRendererType.VideoMixingRenderer9;
 
-                IBaseFilter renderer = InsertVideoRenderer(VideoRenderer, m_graph, 1);
-                if (renderer != null)
-                {
-                    if (_renderer != null) Marshal.ReleaseComObject(_renderer);
-                    _renderer = renderer;
-                }
+                if (_presenterSettings != null) Marshal.ReleaseComObject(_presenterSettings);
+                if (_renderer != null) Marshal.ReleaseComObject(_renderer);
 
+                IBaseFilter renderer = InsertVideoRenderer(VideoRenderer, m_graph, 1);
+                _renderer = renderer;
+                
                 ILAVAudioSettings lavAudioSettings;
                 ILAVAudioStatus lavStatus;
                 IBaseFilter audioDecoder = FilterProvider.GetAudioFilter(out lavAudioSettings, out lavStatus);

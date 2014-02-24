@@ -1148,10 +1148,10 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             if (m_customAllocator == null)
                 return;
 
-            m_customAllocator.Dispose();
-
             m_customAllocator.NewAllocatorFrame -= CustomAllocatorNewAllocatorFrame;
             m_customAllocator.NewAllocatorSurface -= CustomAllocatorNewAllocatorSurface;
+
+            m_customAllocator.Dispose();
 
             if(Marshal.IsComObject(m_customAllocator))
                 Marshal.ReleaseComObject(m_customAllocator);
@@ -1328,6 +1328,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
                 presenterSettings.SetBufferCount(3);
                 presenterSettings.HookEVR(filter);
+                if (_presenterSettings != null) Marshal.ReleaseComObject(_presenterSettings);
                 _presenterSettings = presenterSettings;
 
                 /* Use our interop hWnd */

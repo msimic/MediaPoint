@@ -128,28 +128,31 @@ namespace MediaPoint.MVVM
             string key = nameExpression.ToString();
 
             PropertyItem p;
-            if (_properties.TryGetValue(key, out p))
+            lock (_properties)
             {
-                // Make sure the property value has changed
-                if ((p.Value == null && value == null) || (p.Value != null && p.Value.Equals(value)))
+                if (_properties.TryGetValue(key, out p))
                 {
-                    return false;
+                    // Make sure the property value has changed
+                    if ((p.Value == null && value == null) || (p.Value != null && p.Value.Equals(value)))
+                    {
+                        return false;
+                    }
+
+                    // Set the new value
+                    p.Value = value;
                 }
-
-                // Set the new value
-                p.Value = value;
-            }
-            else
-            {
-                // Create the new property item
-                p = new PropertyItem
+                else
                 {
-                    Name = nameExpression.GetName(),
-                    Value = value
-                };
+                    // Create the new property item
+                    p = new PropertyItem
+                        {
+                            Name = nameExpression.GetName(),
+                            Value = value
+                        };
 
-                // Add the new propery item
-                _properties.Add(key, p);
+                    // Add the new propery item
+                    _properties.Add(key, p);
+                }
             }
 
             // Raise property changed event
