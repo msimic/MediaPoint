@@ -1,7 +1,10 @@
+#pragma managed(push, off)
+
 #include "EVRPresenter.h"
 
 #include <initguid.h>
 #include "EVRPresenterUuid.h"
+#include "WindowShadowerUuid.h"
 
 HMODULE g_hModule;                  // DLL module handle
 
@@ -15,7 +18,8 @@ WCHAR* g_sFriendlyName =  L"EVR Custom Presenter";
 
 ClassFactoryData g_ClassFactories[] =
 {
-    {   &CLSID_CustomEVRPresenter, EVRCustomPresenter::CreateInstance }
+    {   &CLSID_CustomEVRPresenter, EVRCustomPresenter::CreateInstance },
+	{   &CLSID_WindowShadower, CWndShadow::CreateInstance }
 };
       
 const DWORD g_numClassFactories = ARRAY_SIZE(g_ClassFactories);
@@ -111,3 +115,4 @@ STDAPI DllGetClassObject(REFCLSID clsid, REFIID riid, void** ppv)
 }
 
 
+#pragma managed(pop)

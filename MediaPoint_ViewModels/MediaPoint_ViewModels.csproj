@@ -135,18 +135,27 @@
     <Compile Include="Equalizer.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Model\FontObject.cs" />
+    <Compile Include="Model\KeyboardShortcut.cs" />
+    <Compile Include="Model\PlayerAction.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Playlist.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Track.cs" />
     <Compile Include="ViewInterfaces\IDialogService.cs" />
     <Compile Include="ViewInterfaces\IEqualizer.cs" />
+    <Compile Include="ViewInterfaces\IFramePictureProvider.cs" />
+    <Compile Include="ViewInterfaces\IKeyboardHandler.cs" />
     <Compile Include="ViewInterfaces\IMainView.cs" />
+    <Compile Include="ViewInterfaces\IPlateProcessor.cs" />
     <Compile Include="ViewInterfaces\ISpectrumVisualizer.cs" />
     <Compile Include="ViewInterfaces\IStyleLoader.cs" />
     <Compile Include="ViewInterfaces\IViewToViewModelMapping.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\HashMatcher\HashMatcher.csproj">
+      <Project>{7cd46084-0448-4b5d-bcae-abe027389dc7}</Project>
+      <Name>HashMatcher</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MediaPoint_Common\MediaPoint_Common.csproj">
       <Project>{B7DE0555-40BE-4BCA-A8E6-D8A4126E30FF}</Project>
       <Name>MediaPoint_Common</Name>

@@ -227,7 +227,7 @@ namespace MediaPoint.VM
                 return Tracks.Last().Uri;
             }
 
-            if (CurrentTrack != Tracks.First())
+            if (CurrentTrack != Tracks.First() && Tracks.IndexOf(CurrentTrack) > -1)
             {
                 return Tracks[Tracks.IndexOf(CurrentTrack) - 1].Uri;
             }

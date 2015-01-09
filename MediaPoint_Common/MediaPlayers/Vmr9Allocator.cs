@@ -583,5 +583,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 DxSurfaces = null;
             }
         }
+
+
+        public event PlateFoundDelegate PlateFound;
     }
 }

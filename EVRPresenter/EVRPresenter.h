@@ -45,6 +45,7 @@ IEVRPresenterCallback : public IUnknown
 {
 public:
     virtual HRESULT STDMETHODCALLTYPE PresentSurfaceCB(IDirect3DSurface9 *pSurface) = 0;
+	virtual HRESULT STDMETHODCALLTYPE FoundPlate(const wchar_t* text, int left, int top, int right, int bottom, float angle, int confidence) = 0;
 };
 
 MIDL_INTERFACE("9019EA9C-F1B4-44b5-ADD5-D25704313E48")
@@ -72,11 +73,21 @@ public:
     virtual HRESULT STDMETHODCALLTYPE DeviceReset() = 0;
 };
 
+MIDL_INTERFACE("452782E7-49BE-4EA1-A19D-456466D93A99")
+IWindowShadow : public IUnknown
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE CreateForWindow(HWND hParentWnd) = 0;
+	virtual HRESULT STDMETHODCALLTYPE Init(HINSTANCE hInstance) = 0;
+	virtual HRESULT STDMETHODCALLTYPE UpdateWindow(HWND hParentWnd) = 0;
+	virtual HRESULT STDMETHODCALLTYPE SetShadowSize(int size) = 0;
+};
+
 // Project headers.
 #include "Helpers.h"
 #include "Scheduler.h"
 #include "PresentEngine.h"
 #include "Presenter.h"
-
+#include "WindowShadow.h"
 
 

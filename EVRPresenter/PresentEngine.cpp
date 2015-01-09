@@ -9,6 +9,7 @@
 #include <chrono>
 #include <sstream>
 #include "IPinHook.h"
+#include <iostream>
 
 HRESULT FindAdapter(IDirect3D9 *pD3D9, HMONITOR hMonitor, UINT *puAdapterID);
 BOOL IsVistaOrLater();
@@ -28,6 +29,7 @@ D3DPresentEngine::D3DPresentEngine(HRESULT& hr, IDeviceResetCallback *drC) :
 	m_pRenderSurface(NULL),
 	m_bufferCount(4)
 {
+	res = NULL;
 	SetRectEmpty(&m_rcDestRect);
 
     ZeroMemory(&m_DisplayMode, sizeof(m_DisplayMode));
@@ -42,7 +44,15 @@ D3DPresentEngine::D3DPresentEngine(HRESULT& hr, IDeviceResetCallback *drC) :
 	m_AvgTimeDelta = 0;
 	
 	pFont = NULL;
+	pFontBig = NULL;
 	m_pDeviceResetCallback = drC;
+	vertexBuffer = NULL;
+	tex = NULL;
+	/*transparentYellow = new unsigned char[4];
+	transparentYellow[0] = 127;
+	transparentYellow[1] = 255;
+	transparentYellow[2] = 255;
+	transparentYellow[3] = 0;*/
 
     hr = InitializeD3D();
 
@@ -52,6 +62,104 @@ D3DPresentEngine::D3DPresentEngine(HRESULT& hr, IDeviceResetCallback *drC) :
     }
 }
 
+void D3DPresentEngine::BlitD3D (RECT *rDest, D3DCOLOR vertexColour, float rotate)
+{
+	TLVERTEX* vertices;
+
+	//Lock the vertex buffer
+	vertexBuffer->Lock(0, 0, (void **)&vertices, NULL);
+
+	//Setup vertices
+	//A -0.5f modifier is applied to vertex coordinates to match texture and screen coords
+	//Some drivers may compensate for this automatically, but on others texture alignment errors are introduced
+	//More information on this can be found in the Direct3D 9 documentation
+	vertices[0].colour = vertexColour;
+	vertices[0].x = (float) rDest->left - 0.5f;
+	vertices[0].y = (float) rDest->top - 0.5f;
+	vertices[0].z = 0.0f;
+	vertices[0].rhw = 1.0f;
+	vertices[0].u = 0.0f;
+	vertices[0].v = 0.0f;
+
+	vertices[1].colour = vertexColour;
+	vertices[1].x = (float) rDest->right - 0.5f;
+	vertices[1].y = (float) rDest->top - 0.5f;
+	vertices[1].z = 0.0f;
+	vertices[1].rhw = 1.0f;
+	vertices[1].u = 1.0f;
+	vertices[1].v = 0.0f;
+
+	vertices[2].colour = vertexColour;
+	vertices[2].x = (float) rDest->right - 0.5f;
+	vertices[2].y = (float) rDest->bottom - 0.5f;
+	vertices[2].z = 0.0f;
+	vertices[2].rhw = 1.0f;
+	vertices[2].u = 1.0f;
+	vertices[2].v = 1.0f;
+
+	vertices[3].colour = vertexColour;
+	vertices[3].x = (float) rDest->left - 0.5f;
+	vertices[3].y = (float) rDest->bottom - 0.5f;
+	vertices[3].z = 0.0f;
+	vertices[3].rhw = 1.0f;
+	vertices[3].u = 0.0f;
+	vertices[3].v = 1.0f;
+
+  //Handle rotation
+  if (rotate != 0)
+  {
+      RECT rOrigin;
+      float centerX, centerY;
+
+      //Find center of destination rectangle
+      centerX = (float)(rDest->left + rDest->right) / 2;
+      centerY = (float)(rDest->top + rDest->bottom) / 2;
+
+      //Translate destination rect to be centered on the origin
+      rOrigin.top = rDest->top - (int)(centerY);
+      rOrigin.bottom = rDest->bottom - (int)(centerY);
+      rOrigin.left = rDest->left - (int)(centerX);
+      rOrigin.right = rDest->right - (int)(centerX);
+
+	  int index = 0;
+      //Rotate vertices about the origin
+      vertices[index].x = rOrigin.left * cosf(rotate) -
+                                rOrigin.top * sinf(rotate);
+      vertices[index].y = rOrigin.left * sinf(rotate) +
+                                rOrigin.top * cosf(rotate);
+
+      vertices[index + 1].x = rOrigin.right * cosf(rotate) -
+                                    rOrigin.top * sinf(rotate);
+      vertices[index + 1].y = rOrigin.right * sinf(rotate) +
+                                    rOrigin.top * cosf(rotate);
+
+      vertices[index + 2].x = rOrigin.right * cosf(rotate) -
+                                    rOrigin.bottom * sinf(rotate);
+      vertices[index + 2].y = rOrigin.right * sinf(rotate) +
+                                    rOrigin.bottom * cosf(rotate);
+
+      vertices[index + 3].x = rOrigin.left * cosf(rotate) -
+                                    rOrigin.bottom * sinf(rotate);
+      vertices[index + 3].y = rOrigin.left * sinf(rotate) +
+                                    rOrigin.bottom * cosf(rotate);
+
+      //Translate vertices to proper position
+      vertices[index].x += centerX;
+      vertices[index].y += centerY;
+      vertices[index + 1].x += centerX;
+      vertices[index + 1].y += centerY;
+      vertices[index + 2].x += centerX;
+      vertices[index + 2].y += centerY;
+      vertices[index + 3].x += centerX;
+      vertices[index + 3].y += centerY;
+  }
+
+	//Unlock the vertex buffer
+	vertexBuffer->Unlock();
+	//m_pDevice->SetTexture (0, tex);
+	//Draw image
+	m_pDevice->DrawPrimitive (D3DPT_TRIANGLEFAN, 0, 2);
+}
 
 //-----------------------------------------------------------------------------
 // Destructor
@@ -59,6 +167,7 @@ D3DPresentEngine::D3DPresentEngine(HRESULT& hr, IDeviceResetCallback *drC) :
 
 D3DPresentEngine::~D3DPresentEngine()
 {
+	SAFE_RELEASE(vertexBuffer);
     SAFE_RELEASE(m_pDevice);
     SAFE_RELEASE(m_pSurfaceRepaint);
     SAFE_RELEASE(m_pDeviceManager);
@@ -66,6 +175,7 @@ D3DPresentEngine::~D3DPresentEngine()
 	SAFE_RELEASE(m_pCallback);
 	SAFE_RELEASE(m_pRenderSurface);
 	SAFE_RELEASE(pFont);
+	SAFE_RELEASE(pFontBig);
 	if (m_hDXVA2Lib) {
         FreeLibrary(m_hDXVA2Lib);
     }
@@ -753,8 +863,10 @@ HRESULT D3DPresentEngine::CreateD3DDevice()
     pp.BackBufferWidth = 1;
     pp.BackBufferHeight = 1;
     pp.Windowed = TRUE;
-    pp.SwapEffect = D3DSWAPEFFECT_FLIP;
-    pp.BackBufferFormat = D3DFMT_UNKNOWN;
+    pp.SwapEffect = /*D3DSWAPEFFECT_DISCARD; */ D3DSWAPEFFECT_FLIP;
+    pp.BackBufferFormat = D3DFMT_A8R8G8B8; // D3DFMT_UNKNOWN;
+	pp.MultiSampleQuality = 0;
+	pp.MultiSampleType = D3DMULTISAMPLE_NONE;
     pp.hDeviceWindow = hwnd;
     pp.Flags = D3DPRESENTFLAG_VIDEO;
     pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
@@ -768,6 +880,10 @@ HRESULT D3DPresentEngine::CreateD3DDevice()
     	CHECK_HR(hr = FindAdapter(m_pD3D9, hMonitor, &uAdapterID));
     }
 
+	/*DWORD ql;
+	hr = m_pD3D9->CheckDeviceMultiSampleType(uAdapterID, D3DDEVTYPE_HAL, D3DFMT_A8R8G8B8, true, D3DMULTISAMPLE_4_SAMPLES, &ql);
+	pp.MultiSampleQuality = 4;
+*/
     // Get the device caps for this adapter.
     CHECK_HR(hr = m_pD3D9->GetDeviceCaps(uAdapterID, D3DDEVTYPE_HAL, &ddCaps));
 
@@ -804,6 +920,15 @@ HRESULT D3DPresentEngine::CreateD3DDevice()
 											  &pDevice));
 	}
 
+	SAFE_RELEASE(vertexBuffer);
+	CHECK_HR(pDevice->SetVertexShader(NULL));
+    CHECK_HR(pDevice->SetFVF (D3DFVF_TLVERTEX));
+
+    //Create vertex buffer and set as stream source
+    CHECK_HR(pDevice->CreateVertexBuffer(sizeof(TLVERTEX) * 4, NULL, D3DFVF_TLVERTEX, D3DPOOL_DEFAULT, &vertexBuffer, NULL));
+    CHECK_HR(pDevice->SetStreamSource (0, vertexBuffer, 0, sizeof(TLVERTEX)));
+
+
     // Get the adapter display mode.
     CHECK_HR(hr = m_pD3D9->GetAdapterDisplayMode(uAdapterID, &m_DisplayMode));
 
@@ -820,10 +945,21 @@ HRESULT D3DPresentEngine::CreateD3DDevice()
 		SAFE_RELEASE(pFont);
 	}
 
-	hr = D3DXCreateFont( m_pDevice, 25, 0, FW_BOLD, 1, FALSE, DEFAULT_CHARSET,
+	if (pFontBig != NULL)
+	{
+		SAFE_RELEASE(pFontBig);
+	}
+
+	hr = D3DXCreateFont( m_pDevice, 12, 0, FW_NORMAL, 1, FALSE, DEFAULT_CHARSET,
 							OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
 							L"Arial", &pFont );
 
+	hr = D3DXCreateFont( m_pDevice, 20, 0, FW_NORMAL, 1, FALSE, DEFAULT_CHARSET,
+						OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+						L"Impact", &pFontBig );
+
+	//hr = m_pDevice->CreateTexture(1,1,1,0,D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &tex, (HANDLE*)&transparentYellow);
+	
 done:
 	SAFE_RELEASE(pDevice);
 
@@ -932,6 +1068,259 @@ Clock::time_point lastFPSCheck;
 long framesRendered = 0;
 LPCWSTR _lastFPSString = NULL;
 
+void SaveBitmapToFile( BYTE* pBitmapBits, LONG lWidth, LONG lHeight,WORD wBitsPerPixel, LPCTSTR lpszFileName )
+{
+    RGBQUAD palette[256];
+    for(int i = 0; i < 256; ++i)
+    {
+        palette[i].rgbBlue = (byte)i;
+        palette[i].rgbGreen = (byte)i;
+        palette[i].rgbRed = (byte)i;
+    }
+
+    BITMAPINFOHEADER bmpInfoHeader = {0};
+    // Set the size
+    bmpInfoHeader.biSize = sizeof(BITMAPINFOHEADER);
+    // Bit count
+    bmpInfoHeader.biBitCount = wBitsPerPixel;
+    // Use all colors
+    bmpInfoHeader.biClrImportant = 0;
+    // Use as many colors according to bits per pixel
+    bmpInfoHeader.biClrUsed = 0;
+    // Store as un Compressed
+    bmpInfoHeader.biCompression = BI_RGB;
+    // Set the height in pixels
+    bmpInfoHeader.biHeight = lHeight;
+    // Width of the Image in pixels
+    bmpInfoHeader.biWidth = lWidth;
+    // Default number of planes
+    bmpInfoHeader.biPlanes = 1;
+    // Calculate the image size in bytes
+    bmpInfoHeader.biSizeImage = lWidth* lHeight * (wBitsPerPixel/8);
+
+    BITMAPFILEHEADER bfh = {0};
+    // This value should be values of BM letters i.e 0x4D42
+    // 0x4D = M 0×42 = B storing in reverse order to match with endian
+
+    bfh.bfType = 'B'+('M' << 8);
+    // <<8 used to shift ‘M’ to end
+
+    // Offset to the RGBQUAD
+    bfh.bfOffBits = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER) + sizeof(RGBQUAD) * 256;
+    // Total size of image including size of headers
+    bfh.bfSize = bfh.bfOffBits + bmpInfoHeader.biSizeImage;
+    // Create the file in disk to write
+    HANDLE hFile = CreateFile( lpszFileName,GENERIC_WRITE, 0,NULL,
+        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,NULL);
+
+    if( !hFile ) // return if error opening file
+    {
+        return;
+    }
+
+    DWORD dwWritten = 0;
+    // Write the File header
+    WriteFile( hFile, &bfh, sizeof(bfh), &dwWritten , NULL );
+    // Write the bitmap info header
+    WriteFile( hFile, &bmpInfoHeader, sizeof(bmpInfoHeader), &dwWritten, NULL );
+    // Write the palette
+    WriteFile( hFile, &palette[0], sizeof(RGBQUAD) * 256, &dwWritten, NULL );
+    // Write the RGB Data
+    if(lWidth%4 == 0)
+    {
+        WriteFile( hFile, pBitmapBits, bmpInfoHeader.biSizeImage, &dwWritten, NULL );
+    }
+    else
+    {
+        char* empty = new char[ 4 - lWidth % 4];
+        for(int i = 0; i < lHeight; ++i)
+        {
+            WriteFile( hFile, &pBitmapBits[i * lWidth], lWidth, &dwWritten, NULL );
+            WriteFile( hFile, empty,  4 - lWidth % 4, &dwWritten, NULL );
+        }
+    }
+    // Close the file handle
+    CloseHandle( hFile );
+}
+
+void D3DPresentEngine::GetBytesFromSurface(IDirect3DSurface9* pD3DSurface)
+{
+	if (framesRendered % 3 != 0) return;
+
+	D3DSURFACE_DESC surfaceDesc;
+	pD3DSurface->GetDesc(&surfaceDesc);
+	D3DLOCKED_RECT d3dlr;
+	BYTE  *pSurfaceBuffer;
+	HRESULT hr;
+
+	IDirect3DSurface9* offscreenSurface;
+
+    hr = m_pDevice->CreateOffscreenPlainSurface( surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurface, NULL );
+    if( FAILED(hr) )
+        return;
+		
+    hr = m_pDevice->GetRenderTargetData( pD3DSurface, offscreenSurface );
+	
+	if( FAILED(hr) )
+	{
+		offscreenSurface->Release();
+	}
+
+	hr = offscreenSurface->LockRect(&d3dlr, 0, D3DLOCK_DONOTWAIT);
+
+	if (hr == D3DERR_INVALIDCALL || hr == D3DERR_WASSTILLDRAWING)
+	{
+		offscreenSurface->Release();
+		return;
+	}
+
+	BYTE* pData = new BYTE[surfaceDesc.Width*surfaceDesc.Height];
+	BYTE* pOriginal = pData;
+
+                //avoiding vertical fli
+	pSurfaceBuffer = (BYTE *) d3dlr.pBits; // + d3dlr.Pitch*(surfaceDesc.Height - 1);
+
+                //forcing ARGB3
+	int m_lVidPitch  = (surfaceDesc.Width * 4 + 4) & ~(4);
+
+	for (int i=0;i<(int)surfaceDesc.Height;i++) 
+	{
+	
+		BYTE *pDataOld = pData;
+		BYTE *pSurfaceBufferOld = pSurfaceBuffer;
+
+		for (int j=0;j<	(int)surfaceDesc.Width;j++)
+		{
+		
+			pData[0] = (pSurfaceBuffer[0] + pSurfaceBuffer[1] + pSurfaceBuffer[2]) / 3;
+			//pData[1] = pSurfaceBuffer[1];
+			//pData[2] = pSurfaceBuffer[2];
+			//pData[3] = pSurfaceBuffer[3];
+
+                                                //Trying to set green color transparen
+			//if ((pData[0]==0x00) && (pData[1]==0xFF) && (pData[2]==0x00)) pData[3] = 0x00
+
+			pData+=1; pSurfaceBuffer+=4;
+		}
+                                //next video sample ro
+		pData = pDataOld + surfaceDesc.Width /**3*/;
+                                //previous surface ro
+		pSurfaceBuffer = pSurfaceBufferOld + d3dlr.Pitch;
+	}
+	
+	offscreenSurface->UnlockRect();
+
+	//if (m_frame % 100 == 0)
+	/*{
+		SaveBitmapToFile(pOriginal, surfaceDesc.Width, surfaceDesc.Height, 24, (std::wstring(L"d:\\test") + std::to_wstring(m_frame) + L".bmp").c_str());
+	}*/
+
+	//hr = offscreenSurface->LockRect(&d3dlr, 0, D3DLOCK_DONOTWAIT);
+
+	//pData = pOriginal;
+	//pSurfaceBuffer = (BYTE *) d3dlr.pBits + d3dlr.Pitch*(surfaceDesc.Height - 1);
+
+	//for (int i=0;i<(int)surfaceDesc.Height;i++) 
+	//{
+	//
+	//	BYTE *pDataOld = pData;
+	//	BYTE *pSurfaceBufferOld = pSurfaceBuffer;
+
+	//	for (int j=0;j<	(int)surfaceDesc.Width;j++)
+	//	{
+	//	
+	//		int c = 0;
+	//		c += pData[0];
+	//		c += pData[1];
+	//		c += pData[2];
+	//		c += pData[3];
+	//		c /= 4;
+
+	//		pSurfaceBuffer[0] = (BYTE)c;
+	//		pSurfaceBuffer[2] = (BYTE)c;
+	//		pSurfaceBuffer[1] = (BYTE)c;
+	//		pSurfaceBuffer[3] = (BYTE)c;
+
+	//		pData+=3; pSurfaceBuffer+=4;
+	//	}
+ //                               //next video sample ro
+	//	pData = pDataOld + surfaceDesc.Width*3;
+ //                               //previous surface ro
+	//	pSurfaceBuffer = pSurfaceBufferOld - d3dlr.Pitch;
+	//}
+	//
+	//offscreenSurface->UnlockRect();
+
+	/*RECT r;
+	r.top = 0;
+	r.left = 0;
+	r.bottom = surfaceDesc.Height;
+	r.right = surfaceDesc.Width;
+	POINT p;
+	p.x = 0;
+	p.y = 0;
+	hr = m_pDevice->UpdateSurface(offscreenSurface, &r, pD3DSurface, &p);
+	*/
+	offscreenSurface->Release();
+
+	ProcessorHandle pProcessor = CreateProcessor(L"Otto Milvang", L"Axicon", L"2015-02-15", L"tmetmdbaaeeerkvauitwqmrjamsbhxnfqcwzmhdp", L"9700dbb263c32dac9248bfa769275da0a8623d4a", Nationality_Sweden);
+	ImageHandle img = CreateImage();
+	img->Initialize(pOriginal, surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Width);
+
+	AutoLock lock(m_ObjectLock);
+	if (true /*framesRendered % 2 == 0*/) 
+	{
+		if (res != NULL)
+		{
+			res->Release();
+			res = NULL;
+		}
+
+		bool failed = false;
+		try
+		{
+			auto dp = CreateLicencePlateDetectionParameters();
+			auto rp = CreateLicencePlateRecognitionParameters();
+			dp->Initialize(0, 10, 35,300, 50, 50, false, false);
+			auto r = pProcessor->DetectAndRecognizePlate(img, dp, rp);
+
+			if (r != NULL && r->GetConfidence() > 200 && (std::wstring(r->GetText()).size() >= 7 && std::wstring(r->GetText()).size() <= 8 ))
+			{
+				res = r;
+				Shape s = r->GetPlatePosition().Shape;
+				const wchar_t* txt = r->GetText();
+				int l = s.Left;
+				int t = s.Top;
+				int r = s.Right;
+				int b = s.Bottom;
+				int c = res->GetConfidence();
+				float a = s.AngleDetectedVertical;
+				if (m_pCallback != NULL) m_pCallback->FoundPlate(txt, l, t, r, b, a, c); 
+			}
+			else
+			{
+				r->Release();
+			}
+			dp->Release();
+			rp->Release();
+		}
+		catch (std::exception& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (...)
+		{
+			res = NULL;
+		}
+	}
+	lock.Unlock();
+		
+	img->Release();
+	pProcessor->Release();
+
+	delete[] pOriginal;
+}
+
 //-----------------------------------------------------------------------------
 // PresentSwapChain
 //
@@ -952,7 +1341,7 @@ HRESULT D3DPresentEngine::PresentSwapChain(IDirect3DSwapChain9* pSwapChain, IDir
     {
         return MF_E_INVALIDREQUEST;
     }
-	
+
 	if(!m_pRenderSurface)
 	{
 		D3DSURFACE_DESC desc;
@@ -1120,6 +1509,9 @@ HRESULT D3DPresentEngine::PresentSwapChain(IDirect3DSwapChain9* pSwapChain, IDir
 				}
 				else
 				{
+		
+					//GetBytesFromSurface(pSurface);
+
 					//hr = m_pDevice->StretchRect(pSurface, &r, m_pRenderSurface, &r, D3DTEXTUREFILTERTYPE::D3DTEXF_LINEAR);
 					hr = D3DXLoadSurfaceFromSurface(m_pRenderSurface,
 													NULL,
@@ -1133,21 +1525,20 @@ HRESULT D3DPresentEngine::PresentSwapChain(IDirect3DSwapChain9* pSwapChain, IDir
 
 				hr = m_pDevice->SetRenderTarget( 0, m_pRenderSurface );
 				framesRendered++;
-		
+
 				/*if (framesRendered > 2) {
 					_lastFPSString = L"";
 				}*/
 
 				//if (m_pSurfaceRepaint != pSurface) {
 				AutoLock lock(m_ObjectLock);
-				if (pFont)
+				if (false && pFont)
 				{
 					RECT rc;
-					SetRect( &rc, 100, 100, 220, 220 );
+					SetRect( &rc, 50, 50, 228, 112 );
 					std::wstringstream stringStream;
-					stringStream << "\n";
 					stringStream << " 1 Sec AVG FPS: ";
-					stringStream << ((float)(framesRendered * 1000000 / ms.count()))/1000;
+					stringStream << ((float)(framesRendered * 1000000 / max(0.00001, ms.count())))/1000;
 					stringStream << "\n";
 					stringStream << " Bad frames (>1/4 frame late): ";
 					stringStream << m_DroppedFrames;
@@ -1162,10 +1553,49 @@ HRESULT D3DPresentEngine::PresentSwapChain(IDirect3DSwapChain9* pSwapChain, IDir
 					stringStream << m_FramesInQueue;
 
 					//LPCWSTR text = stringStream.str().c_str();
+					m_pDevice->ColorFill(m_pRenderSurface, &rc, D3DCOLOR_ARGB(255, 30, 30, 30));
 
 					hr = pFont->DrawText( NULL, stringStream.str().c_str(), -1, &rc, DT_NOCLIP, D3DCOLOR_ARGB(255, 255, 255, 255) );
 					
 				}
+
+				//if (res != NULL) 
+				//{
+				//	if (pFontBig && res->GetConfidence() > 200)
+				//	{
+				//		RECT rcL;
+				//		RECT rcT;
+				//		RECT rcR;
+				//		RECT rcB;
+				//		Shape shp = res->GetPlatePosition().Shape;
+				//		SetRect( &rcL, shp.Left-5, shp.Top-5, shp.Left, shp.Bottom+5);
+				//		SetRect( &rcR, shp.Right, shp.Top-5, shp.Right+5, shp.Bottom+5);
+				//		SetRect( &rcT, shp.Left-5, shp.Top-5, shp.Right+5, shp.Top);
+				//		SetRect( &rcB, shp.Left-5, shp.Bottom, shp.Right+5, shp.Bottom+5);
+				//		m_pDevice->ColorFill(m_pRenderSurface, &rcL, D3DCOLOR_ARGB(127, 255,255,0));
+				//		m_pDevice->ColorFill(m_pRenderSurface, &rcR, D3DCOLOR_ARGB(127, 255,255,0));
+				//		m_pDevice->ColorFill(m_pRenderSurface, &rcT, D3DCOLOR_ARGB(127, 255,255,0));
+				//		m_pDevice->ColorFill(m_pRenderSurface, &rcB, D3DCOLOR_ARGB(127, 255,255,0));
+				//		//Draw texture
+				//		
+				//		//BlitD3D (&rc, 0xFFFF00FF, D3DXToRadian(res->GetPlatePosition().Shape.AngleDetectedVertical));
+				//		//std::wstringstream stringStream;
+				//		//stringStream << L"" << res->GetText() << L"";
+				//		//hr = pFontBig->DrawText( NULL, stringStream.str().c_str(), -1, &rc, DT_NOCLIP, D3DCOLOR_ARGB(255, 0, 0, 0) );
+				//	}
+				//}
+				//else
+				//{
+				//	if (pFont)
+				//	{
+				//		RECT rc;
+				//		SetRect( &rc, renderDesc.Width - 100, 10, renderDesc.Width - 10, 30 );
+				//		std::wstringstream stringStream;
+				//		stringStream << " NO ALPR RESULT! ";
+				//		hr = pFont->DrawText( NULL, stringStream.str().c_str(), -1, &rc, DT_NOCLIP, D3DCOLOR_ARGB(255, 255, 255, 255) );
+				//	}
+				//}
+
 				lock.Unlock();
 				//}
 				hr = m_pDevice->EndScene();
@@ -1201,6 +1631,135 @@ bottom:
     return hr;
 }
 
+HRESULT GetD3DSurfaceFromSample(IMFSample *pSample, IDirect3DSurface9 **ppSurface)
+{
+    *ppSurface = NULL;
+
+    IMFMediaBuffer *pBuffer = NULL;
+
+    HRESULT hr = pSample->GetBufferByIndex(0, &pBuffer);
+    if (SUCCEEDED(hr))
+    {
+        hr = MFGetService(pBuffer, MR_BUFFER_SERVICE, IID_PPV_ARGS(ppSurface));
+        pBuffer->Release();
+    }
+
+    return hr;
+}
+
+void D3DPresentEngine::AlprProcess(IMFSample *pSample)
+{
+	IDirect3DSurface9* pSurface;
+	GetD3DSurfaceFromSample(pSample, &pSurface);
+	ALPR(pSurface);
+}
+
+void D3DPresentEngine::ALPR(IDirect3DSurface9* pD3DSurface)
+{
+	return; 
+
+	D3DSURFACE_DESC surfaceDesc;
+	pD3DSurface->GetDesc(&surfaceDesc);
+	D3DLOCKED_RECT d3dlr;
+	BYTE  *pSurfaceBuffer;
+	HRESULT hr;
+
+	IDirect3DSurface9* offscreenSurface;
+
+    hr = m_pDevice->CreateOffscreenPlainSurface( surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurface, NULL );
+    if( FAILED(hr) )
+        return;
+		
+    hr = m_pDevice->GetRenderTargetData( pD3DSurface, offscreenSurface );
+	
+	if( FAILED(hr) )
+	{
+		offscreenSurface->Release();
+	}
+
+	hr = offscreenSurface->LockRect(&d3dlr, 0, D3DLOCK_DONOTWAIT);
+
+	if (hr == D3DERR_INVALIDCALL || hr == D3DERR_WASSTILLDRAWING)
+	{
+		offscreenSurface->Release();
+		return;
+	}
+
+	BYTE* pData = new BYTE[surfaceDesc.Width*surfaceDesc.Height];
+	BYTE* pOriginal = pData;
+
+	pSurfaceBuffer = (BYTE *) d3dlr.pBits;
+	int m_lVidPitch  = (surfaceDesc.Width * 4 + 4) & ~(4);
+
+	for (int i=0;i<(int)surfaceDesc.Height;i++) 
+	{
+	
+		BYTE *pDataOld = pData;
+		BYTE *pSurfaceBufferOld = pSurfaceBuffer;
+
+		for (int j=0;j<	(int)surfaceDesc.Width;j++)
+		{
+		
+			pData[0] = (pSurfaceBuffer[0] + pSurfaceBuffer[1] + pSurfaceBuffer[2]) / 3;
+
+			pData+=1; pSurfaceBuffer+=4;
+		}
+		pData = pDataOld + surfaceDesc.Width /**3*/;
+		pSurfaceBuffer = pSurfaceBufferOld + d3dlr.Pitch;
+	}
+	
+	offscreenSurface->UnlockRect();
+	offscreenSurface->Release();
+
+	ProcessorHandle pProcessor = CreateProcessor(L"Otto Milvang", L"Axicon", L"2015-02-15", L"tmetmdbaaeeerkvauitwqmrjamsbhxnfqcwzmhdp", L"9700dbb263c32dac9248bfa769275da0a8623d4a", Nationality_Sweden);
+	ImageHandle img = CreateImage();
+	img->Initialize(pOriginal, surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Width);
+
+	AutoLock lock(m_ObjectLock);
+
+		bool failed = false;
+		try
+		{
+			auto dp = CreateLicencePlateDetectionParameters();
+			auto rp = CreateLicencePlateRecognitionParameters();
+			dp->Initialize(0, 10, 30, 500, 50, 50, false, false);
+			auto r = pProcessor->DetectAndRecognizePlate(img, dp, rp);
+
+			if (r != NULL && r->GetConfidence() > 500 && (std::wstring(r->GetText()).size() >= 7 && std::wstring(r->GetText()).size() <= 8 ))
+			{
+				Shape s = r->GetPlatePosition().Shape;
+				const wchar_t* txt = r->GetText();
+				int l = s.Left;
+				int t = s.Top;
+				int rr = s.Right;
+				int b = s.Bottom;
+				int c = r->GetConfidence();
+				float a = s.AngleDetectedVertical;
+				if (m_pCallback != NULL) m_pCallback->FoundPlate(txt, l, t, rr, b, a, c); 
+			}
+			else
+			{
+				r->Release();
+			}
+			dp->Release();
+			rp->Release();
+		}
+		catch (std::exception& e)
+		{
+			
+		}
+		catch (...)
+		{
+			
+		}
+
+	lock.Unlock();
+		
+	img->Release();
+	pProcessor->Release();
+
+	delete[] pOriginal;
+}
 
 //-----------------------------------------------------------------------------
 // GetSwapChainPresentParameters

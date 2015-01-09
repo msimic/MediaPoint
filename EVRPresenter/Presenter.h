@@ -203,7 +203,7 @@ protected:
     // Managing samples
     void    ProcessOutputLoop();   
 	HRESULT ProcessOutput();
-    HRESULT DeliverSample(IMFSample *pSample, BOOL bRepaint);
+	HRESULT DeliverSample(IMFSample *pSample, BOOL bRepaint);
     HRESULT TrackSample(IMFSample *pSample);
     void    ReleaseResources();
 
@@ -238,6 +238,8 @@ protected:
 
 
 protected:
+
+
 
     RENDER_STATE                m_RenderState;          // Rendering state.
     FrameStep                   m_FrameStep;            // Frame-stepping information.

@@ -1760,10 +1760,37 @@ STDMETHODIMP CDirectVobSubFilter::OpenSubtitle(WCHAR* fn)
 		}
 	}
 
+	for(size_t i = 0; i < m_pTextInput.GetCount(); i++)
+	{
+		if(m_pTextInput[i]->IsConnected())
+        {
+			m_pSubStreams.AddTail(m_pTextInput[i]->GetSubStream());
+            m_fIsSubStreamEmbeded.AddTail(true);
+        }
+	}
+
+	if (*fn == '!')
+	{
+		for (size_t i = 0; i < m_pSubStreams.GetCount(); i++)
+		{
+			POSITION p1 = m_fIsSubStreamEmbeded.FindIndex(i);
+			if (m_fIsSubStreamEmbeded.GetAt(p1) == true)
+			{
+				POSITION p2 = m_pSubStreams.FindIndex(i);
+				pSubStream = m_pSubStreams.GetAt(p2);
+				break;
+			}
+		}
+	}
+
 	if(pSubStream)
 	{
 		//MessageBox(0, L"Ok", L"", 0);
 		SetSubtitle(pSubStream, false);
+	}
+	else
+	{
+		SetSubtitle(NULL, false);
 	}
 
 	//UpdateSubtitle(true);

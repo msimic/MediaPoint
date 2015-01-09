@@ -36,6 +36,8 @@ namespace MediaPoint.Common.MediaFoundation
     {
         [PreserveSig]
         int PresentSurfaceCB(IntPtr pSurface);
+        [PreserveSig]
+        int FoundPlate([MarshalAs(UnmanagedType.LPWStr)] string text, int left, int top, int right, int bottom, float angle, int confidence);
     }
 
     [ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,
@@ -143,6 +145,7 @@ namespace MediaPoint.Common.MediaFoundation
         /// Invokes when a new surface has been allocated
         /// </summary>
         public event NewAllocatorSurfaceDelegate NewAllocatorSurface;
+        public event PlateFoundDelegate PlateFound;
 
         public void Dispose()
         {
@@ -171,6 +174,13 @@ namespace MediaPoint.Common.MediaFoundation
             m_lastSurface = pSurface;
 
             InvokeNewAllocatorFrame();
+            return 0;
+        }
+
+        public int FoundPlate(string text, int left, int top, int right, int bottom, float angle, int confidence)
+        {
+            var del = PlateFound;
+            if (del != null) del(this, text, left, top, right, bottom, angle, confidence);
             return 0;
         }
 

@@ -55,7 +55,7 @@
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PlatformToolset>v100</PlatformToolset>
@@ -201,7 +201,7 @@
       <ModuleDefinitionFile>$(SolutionDir)\src\filters\transform\vsfilter\VSFilter.def</ModuleDefinitionFile>
       <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies Condition="'$(Configuration)'=='Release log'">delayimp.lib;strmbaseR.lib;dsutil_2012R.lib;subtitles_2012RL.lib;subpic_2012RL.lib;basevideofilter_2012RL.lib;libssf_2012R.lib;log4cplus_static_2012R.lib;Kasumi_2012R.lib;system_2012R.lib;winmm.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutil_2012D.lib;subtitles_2012D.lib;subpic_2012D.lib;basevideofilter_2012D.lib;libssf_2012D.lib;Kasumi_2012D.lib;system_2012D.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">delayimp.lib;strmbaseD.lib;dsutil_2012D.lib;subtitles_2012D.lib;subpic_2012D.lib;basevideofilter_2012D.lib;libssf_2012D.lib;Kasumi_2012D.lib;system_2012D.lib;winmm.lib</AdditionalDependencies>
       <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutil_2012R.lib;subtitles_2012R.lib;subpic_2012R.lib;basevideofilter_2012R.lib;libssf_2012R.lib;Kasumi_2012R.lib;system_2012R.lib;winmm.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

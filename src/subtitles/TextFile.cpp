@@ -409,7 +409,11 @@ BOOL CTextFile::ReadString(CStringW& str)
 
 	str.Empty();
 
-	if(m_encoding == ASCII)
+	if (m_pStream == NULL)
+	{
+		return false;
+	}
+	else if(m_encoding == ASCII)
 	{
 		CString s;
 		fEOF = !__super::ReadString(s);

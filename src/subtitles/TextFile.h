@@ -56,7 +56,7 @@ public:
 	void WriteString(LPCWSTR lpsz/*CStringW str*/);
 	BOOL ReadString(CStringA& str);
 	BOOL ReadString(CStringW& str);
-
+	void Close() { __super::Close();};
 protected:
     virtual bool ReopenAsText();
 };

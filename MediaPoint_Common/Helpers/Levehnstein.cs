@@ -9,7 +9,7 @@ namespace MediaPoint.Helpers
 	/// Contains approximate string matching.
 	/// Based on http://dotnetperls.com/levenshtein
 	/// </summary>
-	static class Levenshtein
+	public static class Levenshtein
 	{
 		/// <summary>Compute the distance between two strings.</summary>
 		/// <param name="s">The first string to compare.</param>

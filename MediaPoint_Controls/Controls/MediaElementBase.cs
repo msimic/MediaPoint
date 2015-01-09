@@ -18,6 +18,7 @@ using MediaPoint.VM.ViewInterfaces;
 using MediaPoint.Controls.Extensions;
 using MediaPoint.MVVM.Services;
 using Application = System.Windows.Application;
+using System.Windows.Media.Imaging;
 
 namespace MediaPoint.Controls
 {
@@ -253,6 +254,8 @@ namespace MediaPoint.Controls
             if (GetBindingExpression(SubtitleSizeProperty) != null) GetBindingExpression(SubtitleSizeProperty).UpdateTarget();
             if (GetBindingExpression(SubtitleColorProperty) != null) GetBindingExpression(SubtitleColorProperty).UpdateTarget();
             if (GetBindingExpression(SubtitleProperty) != null) GetBindingExpression(SubtitleProperty).UpdateTarget();
+            if (GetBindingExpression(SubtitleDelayProperty) != null) GetBindingExpression(SubtitleDelayProperty).UpdateTarget();
+            
             string sf = null;
             FontCharSet sc = FontCharSet.Default;
             int ss = 0;
@@ -273,6 +276,7 @@ namespace MediaPoint.Controls
             sc = SubtitleCharset;
             ss = SubtitleSize;
 		    sco = SubtitleColor;
+            int delay = SubtitleDelay;
 
 			MediaPlayerBase.Dispatcher.BeginInvoke((Action)delegate
 			{
@@ -281,8 +285,9 @@ namespace MediaPoint.Controls
                 if (ss != 0) mp.SubtitleSettings.Size = ss;
                 mp.SubtitleSettings.Subtitle = sub;
                 mp.SubtitleSettings.Color = sco;
-			    (MediaPlayerBase as MediaUriPlayer).Source = src;
-				Dispatcher.BeginInvoke((Action)delegate
+                (MediaPlayerBase as MediaUriPlayer).Source = src;
+                mp.SubtitleSettings.Delay = delay;
+                Dispatcher.BeginInvoke((Action)delegate
 				{
 					if (IsLoaded)
 						ExecuteMediaState(LoadedBehavior);
@@ -329,6 +334,24 @@ namespace MediaPoint.Controls
 			});
 			return didSomething;
 		}
+
+        public RenderTargetBitmap GetBitmapOfVideoElement()
+        {
+            DrawingVisual visual = new DrawingVisual();
+            DrawingContext context = visual.RenderOpen();
+            int w = D3DImage.PixelWidth;
+            int h = D3DImage.PixelHeight;
+
+            if (w == 0 || h == 0) return null;
+
+            context.DrawImage(D3DImage, new Rect(0, 0, w, h));
+            context.Close();
+
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Default);
+            bitmap.Render(visual);
+
+            return bitmap;
+        }
 
 		public static readonly DependencyProperty VideoRendererProperty =
 			DependencyProperty.Register("VideoRenderer", typeof(VideoRendererType), typeof(MediaElementBase),
@@ -475,6 +498,33 @@ namespace MediaPoint.Controls
                 MediaPlayerBase.Dispatcher.BeginInvoke((Action)delegate
                 {
                     MediaPlayerBase.SubtitleSettings.Size = ((int)e.NewValue);
+                });
+            }
+        }
+
+        public static readonly DependencyProperty SubtitleDelayProperty =
+            DependencyProperty.Register("SubtitleDelay", typeof(int), typeof(MediaElementBase),
+                new FrameworkPropertyMetadata(0,
+                    new PropertyChangedCallback(OnSubtitleDelayChanged)));
+
+        public int SubtitleDelay
+        {
+            get { return (int)GetValue(SubtitleDelayProperty); }
+            set { SetValue(SubtitleDelayProperty, value); }
+        }
+
+        private static void OnSubtitleDelayChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MediaUriElement)d).OnSubtitleDelayChanged(e);
+        }
+
+        protected virtual void OnSubtitleDelayChanged(DependencyPropertyChangedEventArgs e)
+        {
+            if (HasInitialized && e.NewValue != null && MediaPlayerBase.SubtitleSettings.Delay != ((int)e.NewValue))
+            {
+                MediaPlayerBase.Dispatcher.BeginInvoke((Action)delegate
+                {
+                    MediaPlayerBase.SubtitleSettings.Delay = ((int)e.NewValue);
                 });
             }
         }
@@ -786,8 +836,21 @@ namespace MediaPoint.Controls
 			/* These events fire when we get new D3Dsurfaces or frames */
 			MediaPlayerBase.NewAllocatorFrame += OnMediaPlayerNewAllocatorFramePrivate;
 			MediaPlayerBase.NewAllocatorSurface += OnMediaPlayerNewAllocatorSurfacePrivate;
+            MediaPlayerBase.PlateFound += MediaPlayerBase_PlateFound;
 			AudioRenderers = new ObservableCollection<string>(MediaPlayerBase.AudioRenderers);
 		}
+
+        void MediaPlayerBase_PlateFound(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence)
+        {
+            var pp = ServiceLocator.GetService<MediaPoint.Interfaces.IPlateProcessor>();
+            if (pp != null)
+            {
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    pp.ProcessPlate(text, left, top, right, bottom, angle, confidence);
+                }));
+            }
+        }
 
         void OnMediaPlayerBaseNewAudioStream()
         {

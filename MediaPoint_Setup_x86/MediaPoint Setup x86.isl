@@ -398,7 +398,6 @@
 		<row><td>avformat_lav_55.dll</td><td>{776A4DE6-13E5-47A2-9709-3CA3C94A7442}</td><td>CODECS</td><td>2</td><td/><td>avformat_lav_55.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>avresample_lav_1.dll</td><td>{073314E0-833B-423B-AD30-FE6D113BF399}</td><td>CODECS</td><td>2</td><td/><td>avresample_lav_1.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>avutil_lav_52.dll</td><td>{462977EB-09E9-48BA-A331-09DBEF240132}</td><td>CODECS</td><td>2</td><td/><td>avutil_lav_52.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>d3d9.dll</td><td>{5BD11B3F-6374-4CA4-85B3-1F00E6F64B92}</td><td>INSTALLDIR</td><td>2</td><td/><td>d3d9.dll</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>dcdspfilter.ax</td><td>{ACBF05A8-083E-4711-AFEE-21AA597DB4E2}</td><td>CODECS</td><td>2</td><td/><td>dcdspfilter.ax</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>fxc32.exe</td><td>{B145CD90-D0BE-4E1C-B282-1B1280E9F0E3}</td><td>INSTALLDIR</td><td>2</td><td/><td>fxc32.exe</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>libbluray.dll</td><td>{9B563CE3-4C08-4C15-85A8-7ABE29371D16}</td><td>CODECS</td><td>2</td><td/><td>libbluray.dll</td><td>1</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
@@ -2003,7 +2002,6 @@
 		<row><td>AlwaysInstall</td><td>avformat_lav_55.dll</td></row>
 		<row><td>AlwaysInstall</td><td>avresample_lav_1.dll</td></row>
 		<row><td>AlwaysInstall</td><td>avutil_lav_52.dll</td></row>
-		<row><td>AlwaysInstall</td><td>d3d9.dll</td></row>
 		<row><td>AlwaysInstall</td><td>dcdspfilter.ax</td></row>
 		<row><td>AlwaysInstall</td><td>fxc32.exe</td></row>
 		<row><td>AlwaysInstall</td><td>libbluray.dll</td></row>
@@ -2034,7 +2032,6 @@
 		<row><td>close.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>close.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close.png</td><td>1</td><td/></row>
 		<row><td>close_hover.png</td><td>ISX_DEFAULTCOMPONENT7</td><td>CLOSE_~1.PNG|close_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close_hover.png</td><td>1</td><td/></row>
 		<row><td>close_hover.png1</td><td>ISX_DEFAULTCOMPONENT8</td><td>CLOSE_~1.PNG|close_hover.png</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\Themes\default\Images\close_hover.png</td><td>1</td><td/></row>
-		<row><td>d3d9.dll</td><td>d3d9.dll</td><td>d3d9.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\..\Libs\x86\d3d9.dll</td><td>1</td><td/></row>
 		<row><td>d3dcompiler_43.dll</td><td>D3DCompiler_43.dll</td><td>D3DCOM~1.DLL|D3DCompiler_43.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\D3DCompiler_43.dll</td><td>1</td><td/></row>
 		<row><td>d3dx9_43.dll</td><td>D3DX9_43.dll</td><td>D3DX9_43.dll</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\D3DX9_43.dll</td><td>1</td><td/></row>
 		<row><td>dcdspfilter.ax</td><td>dcdspfilter.ax</td><td>DCDSPF~1.AX|dcdspfilter.ax</td><td>0</td><td/><td/><td>0</td><td>1</td><td>&lt;ISProjectFolder&gt;\..\output\bin\x86\codecs\dcdspfilter.ax</td><td>1</td><td/></row>
@@ -2294,7 +2291,6 @@
 		<row><td>avformat_lav_55.dll</td><td/><td/><td>_74E21804_0099_4807_A6ED_C0972A71DA49_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>avresample_lav_1.dll</td><td/><td/><td>_6421A374_5560_415C_A2E7_8EEFE730A4FA_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>avutil_lav_52.dll</td><td/><td/><td>_2AEFA45F_E6A4_4729_8C50_9B1820751FD2_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>d3d9.dll</td><td/><td/><td>_3589DDE1_D6F5_4F19_B29D_6C68EC72A72D_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>dcdspfilter.ax</td><td/><td/><td>_4862573F_A18F_4F6B_A6A9_2C5CD3B12111_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>fxc32.exe</td><td/><td/><td>_DCF69B19_6D07_4CFD_86C5_5FC0C273B622_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>libbluray.dll</td><td/><td/><td>_0250A4E8_6705_481B_8AC3_DCA63646F15F_FILTER</td><td/><td/><td/><td/></row>
@@ -2724,7 +2720,7 @@
 		<row><td>DVD-18</td><td>Express</td><td>0</td><td>http://</td><td>0</td><td>install</td><td>install</td><td>[LocalAppDataFolder]Downloaded Installations</td><td>0</td><td>http://www.installengine.com/Msiengine20</td><td>http://www.installengine.com/Msiengine20</td><td>0</td><td>http://www.installengine.com/cert05/isengine</td><td>0</td><td/><td/><td/><td>3</td><td>http://www.installengine.com/cert05/dotnetfx</td><td>0</td><td>1033</td><td/><td/><td/><td/><td/><td>3</td><td/><td>http://www.installengine.com/Msiengine30</td><td/></row>
 		<row><td>DVD-5</td><td>Express</td><td>0</td><td>http://</td><td>0</td><td>install</td><td>install</td><td>[LocalAppDataFolder]Downloaded Installations</td><td>0</td><td>http://www.installengine.com/Msiengine20</td><td>http://www.installengine.com/Msiengine20</td><td>0</td><td>http://www.installengine.com/cert05/isengine</td><td>0</td><td/><td/><td/><td>3</td><td>http://www.installengine.com/cert05/dotnetfx</td><td>0</td><td>1033</td><td/><td/><td/><td/><td/><td>3</td><td/><td>http://www.installengine.com/Msiengine30</td><td/></row>
 		<row><td>DVD-9</td><td>Express</td><td>0</td><td>http://</td><td>0</td><td>install</td><td>install</td><td>[LocalAppDataFolder]Downloaded Installations</td><td>0</td><td>http://www.installengine.com/Msiengine20</td><td>http://www.installengine.com/Msiengine20</td><td>0</td><td>http://www.installengine.com/cert05/isengine</td><td>0</td><td/><td/><td/><td>3</td><td>http://www.installengine.com/cert05/dotnetfx</td><td>0</td><td>1033</td><td/><td/><td/><td/><td/><td>3</td><td/><td>http://www.installengine.com/Msiengine30</td><td/></row>
-		<row><td>SingleImage</td><td>Express</td><td>0</td><td>http://</td><td>0</td><td>install</td><td>install</td><td>[LocalAppDataFolder]Downloaded Installations</td><td>1</td><td>http://www.installengine.com/Msiengine20</td><td>http://www.installengine.com/Msiengine20</td><td>0</td><td>http://www.installengine.com/cert05/isengine</td><td>0</td><td/><td/><td/><td>3</td><td>http://www.installengine.com/cert05/dotnetfx</td><td>0</td><td>1033</td><td/><td/><td/><td/><td/><td>3</td><td/><td>http://www.installengine.com/Msiengine30</td><td/></row>
+		<row><td>SingleImage</td><td>Express</td><td>0</td><td>http://</td><td>0</td><td>install</td><td>install</td><td>[LocalAppDataFolder]Downloaded Installations</td><td>1</td><td>http://www.installengine.com/Msiengine20</td><td>http://www.installengine.com/Msiengine20</td><td>0</td><td>http://www.installengine.com/cert05/isengine</td><td>0</td><td/><td/><td/><td>3</td><td>http://www.installengine.com/cert05/dotnetfx</td><td>0</td><td>1033</td><td/><td/><td/><td/><td/><td>3</td><td/><td>http://www.installengine.com/Msiengine30</td><td>29EAD0</td></row>
 		<row><td>WebDeployment</td><td>Express</td><td>0</td><td>http://</td><td>0</td><td>setup</td><td>Default</td><td>[LocalAppDataFolder]Downloaded Installations</td><td>2</td><td>http://www.Installengine.com/Msiengine20</td><td>http://www.Installengine.com/Msiengine20</td><td>0</td><td>http://www.installengine.com/cert05/isengine</td><td>0</td><td/><td/><td/><td>3</td><td>http://www.installengine.com/cert05/dotnetfx</td><td>0</td><td>1033</td><td/><td/><td/><td/><td/><td>3</td><td/><td>http://www.installengine.com/Msiengine30</td><td/></row>
 	</table>
 
@@ -4271,7 +4267,7 @@
 UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 			</td></row>
 		<row><td>DefaultProductConfiguration</td><td>Express</td></row>
-		<row><td>EnableSwidtag</td><td>1</td></row>
+		<row><td>EnableSwidtag</td><td>0</td></row>
 		<row><td>ISCompilerOption_CompileBeforeBuild</td><td>1</td></row>
 		<row><td>ISCompilerOption_Debug</td><td>0</td></row>
 		<row><td>ISCompilerOption_IncludePath</td><td/></row>

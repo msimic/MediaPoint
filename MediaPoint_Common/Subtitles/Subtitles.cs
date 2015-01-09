@@ -21,12 +21,14 @@ namespace MediaPoint.Subtitles
 	{
 		public enum SubtitleType
 		{
+            None,
 			File,
 			Embedded
 		}
 
 		public enum SubtitleSubType
 		{
+            None,
 			Srt,
 			Sub,
 			VobSub,
@@ -909,13 +911,16 @@ namespace MediaPoint.Subtitles
 			lock (this)
 			{
 				ClearSubtitles();
+                subFiles = new List<SubtitleItem>();
+
+                string subEp = SubtitleUtil.FindSeasonAndEpisode(videoFile);
 
 				var dir = Path.GetDirectoryName(videoFile);
 
 				var files = new List<string>(Directory.GetFiles(dir));
-				files.Remove(videoFile);
+				files.RemoveAll(f => Path.GetExtension(f).ToLowerInvariant() == Path.GetExtension(videoFile));
 
-				subFiles = new List<SubtitleItem>();
+
 				foreach (var file in files)
 				{
 					if (Path.GetExtension(file).ToLower() == ".srt" ||
@@ -938,13 +943,18 @@ namespace MediaPoint.Subtitles
 						}
 				}
 
-				if (files.Count == 1 && (Path.GetExtension(files[0]).ToLower() == ".srt" ||
-										 Path.GetExtension(files[0]).ToLower() == ".sub" ||
-										 Path.GetExtension(files[0]).ToLower() == ".ass" ||
-										 Path.GetExtension(files[0]).ToLower() == ".ssa"))
+                if (subEp != "")
+                {
+                    subFiles.RemoveAll(m => SubtitleUtil.FindSeasonAndEpisode(m.Path) != subEp);
+                }
+
+                if (subEp == "" && subFiles.Count == 1 && (Path.GetExtension(subFiles[0].Path).ToLower() == ".srt" ||
+                                         Path.GetExtension(subFiles[0].Path).ToLower() == ".sub" ||
+                                         Path.GetExtension(subFiles[0].Path).ToLower() == ".ass" ||
+                                         Path.GetExtension(subFiles[0].Path).ToLower() == ".ssa"))
 				{
-					if (fillNow) OpenSubtitle(files[0], overrideEnc, null, null);
-					return files[0];
+                    if (fillNow) OpenSubtitle(subFiles[0].Path, overrideEnc, null, null);
+                    return subFiles[0].Path;
 				}
 				else if (File.Exists(Path.ChangeExtension(videoFile.ToLower(), ".srt")))
 				{
@@ -966,25 +976,25 @@ namespace MediaPoint.Subtitles
 					if (fillNow) OpenSubtitle(Path.ChangeExtension(videoFile, ".ass"), overrideEnc, null, null);
 					return Path.ChangeExtension(videoFile, ".ass");
 				}
-				else if (Directory.GetFiles(dir, "*.srt", SearchOption.TopDirectoryOnly).Count() == 1)
+                else if (subEp == "" && Directory.GetFiles(dir, "*.srt", SearchOption.TopDirectoryOnly).Count() == 1)
 				{
 					var file = Directory.GetFiles(dir, "*.srt", SearchOption.TopDirectoryOnly).First();
 					if (fillNow) OpenSubtitle(file, overrideEnc, null, null);
 					return file;
 				}
-				else if (Directory.GetFiles(dir, "*.sub", SearchOption.TopDirectoryOnly).Count() == 1)
+                else if (subEp == "" && Directory.GetFiles(dir, "*.sub", SearchOption.TopDirectoryOnly).Count() == 1)
 				{
 					var file = Directory.GetFiles(dir, "*.sub", SearchOption.TopDirectoryOnly).First();
 					if (fillNow) OpenSubtitle(file, overrideEnc, null, null);
 					return file;
 				}
-				else if (Directory.GetFiles(dir, "*.ssa", SearchOption.TopDirectoryOnly).Count() == 1)
+                else if (subEp == "" && Directory.GetFiles(dir, "*.ssa", SearchOption.TopDirectoryOnly).Count() == 1)
 				{
 					var file = Directory.GetFiles(dir, "*.ssa", SearchOption.TopDirectoryOnly).First();
 					if (fillNow) OpenSubtitle(file, overrideEnc, null, null);
 					return file;
 				}
-				else if (Directory.GetFiles(dir, "*.ass", SearchOption.TopDirectoryOnly).Count() == 1)
+                else if (subEp == "" && Directory.GetFiles(dir, "*.ass", SearchOption.TopDirectoryOnly).Count() == 1)
 				{
 					var file = Directory.GetFiles(dir, "*.ass", SearchOption.TopDirectoryOnly).First();
 					if (fillNow) OpenSubtitle(file, overrideEnc, null, null);
@@ -997,7 +1007,7 @@ namespace MediaPoint.Subtitles
 			}
 		}
 
-        private string OrderedFilenames(string videoFile, List<SubtitleItem> subFiles, Encoding overrideEnc, bool fillNow)
+        public static string OrderedFilenames(string videoFile, List<SubtitleItem> subFiles, Encoding overrideEnc, bool fillNow)
         {
             var os = subFiles.Select(s => {
                 string s1 = Path.GetFileNameWithoutExtension(s.Path).ToLowerInvariant();

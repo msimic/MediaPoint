@@ -28,6 +28,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>1607</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -39,6 +40,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>1607</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -206,8 +208,10 @@
     <Compile Include="Converters\LastStringIfNull.cs" />
     <Compile Include="Converters\LanguageToFlagConverter.cs" />
     <Compile Include="Converters\FullscreenPaddingConverter.cs" />
+    <Compile Include="AttachedProperties\ListBoxAutoScroll.cs" />
     <Compile Include="Converters\MultiplyWithConverter.cs" />
     <Compile Include="Converters\IntegerBiggerThanToVisibilityConverter.cs" />
+    <Compile Include="Converters\PixelToPointConverter.cs" />
     <Compile Include="Converters\StringNotEmptyToVisibilityConverter.cs" />
     <Compile Include="Converters\NotNullToVisibilityConverter.cs" />
     <Compile Include="Converters\PlayingToVisibilityConverter.cs" />
@@ -220,7 +224,12 @@
     <Compile Include="Effects\WaterEffect.cs" />
     <Compile Include="Extensions\AnimationExtensions.cs" />
     <Compile Include="Extensions\AssemblyExtensions.cs" />
+    <Compile Include="Extensions\SetPropertyAction.cs" />
     <Compile Include="Extensions\WindowInteropExtensions.cs" />
+    <Compile Include="InterceptKeys.cs" />
+    <Compile Include="Plates.xaml.cs">
+      <DependentUpon>Plates.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Resources\EmbeddedFonts.cs" />
     <Compile Include="Audio\SampleAggregator.cs" />
     <Compile Include="Themes\StyleLoader.cs" />
@@ -388,6 +397,10 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Page Include="Plates.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Window1.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

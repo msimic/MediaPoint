@@ -1477,6 +1477,7 @@ namespace MediaPoint.App.Behaviors
 		private IntPtr HwndHook(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
 			IntPtr returnval = IntPtr.Zero;
+            
             //const int SC_SCREENSAVE = 0xF140;
             //const int SC_MONITORPOWER = 0xF170;
             //const int WM_SYSCOMMAND = 0x0112;
@@ -1543,11 +1544,11 @@ namespace MediaPoint.App.Behaviors
 				case WM_NCPAINT:
 					{
 						// Works for Windows Vista and higher
-						if (Environment.OSVersion.Version.Major >= 6)
-						{
-							var m = new MARGINS {bottomHeight = 1, leftWidth = 1, rightWidth = 1, topHeight = 1};
-							DwmExtendFrameIntoClientArea(m_hwnd, ref m);
-						}
+                        //if (Environment.OSVersion.Version.Major >= 6)
+                        //{
+                        //    var m = new MARGINS {bottomHeight = 1, leftWidth = 1, rightWidth = 1, topHeight = 1};
+                        //    DwmExtendFrameIntoClientArea(m_hwnd, ref m);
+                        //}
 						handled = true;
 					}
 					break;

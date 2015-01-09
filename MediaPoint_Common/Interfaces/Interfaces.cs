@@ -575,6 +575,17 @@ namespace MediaPoint.Common.Interfaces
         [PreserveSig]
         int put_OSD([MarshalAsAttribute(UnmanagedType.I1)] bool fOSD);
 
+        [PreserveSig]
+        int get_SaveFullPath([MarshalAsAttribute(UnmanagedType.I1)] ref bool fSaveFullPath);
+
+        [PreserveSig]
+        int put_SaveFullPath([MarshalAsAttribute(UnmanagedType.I1)]bool fSaveFullPath);
+
+        [PreserveSig]
+        int get_SubtitleTiming(ref int delay, ref int speedmul, ref int speeddiv);
+
+        [PreserveSig]
+        int put_SubtitleTiming(int delay, int speedmul, int speeddiv);
     }
 
     [ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,

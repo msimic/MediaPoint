@@ -120,6 +120,7 @@ namespace MediaPoint.VM
             set
             {
                 SetValue(() => IsSubtitleSearchInProgress, value);
+                if (HasVideo == false) return; // silent
                 if (IsSubtitleSearchInProgress)
                 {
                     Main.ShowOsdMessage("Subtitle search is in progress.");
@@ -234,8 +235,11 @@ namespace MediaPoint.VM
 			get { return GetValue<double>(() => Volume); }
 			set
 			{
-			    SetValue(() => Volume, value);
-                ServiceLocator.GetService<IMainView>().UpdateTaskbarButtons();
+                if (SetValue(() => Volume, value))
+                {
+                    ServiceLocator.GetService<IMainView>().UpdateTaskbarButtons();
+                    Main.ShowOsdMessage(string.Format("Volume {0}%", (int)Math.Round(value * 100)));
+                }
 			}
 		}
 
@@ -280,8 +284,10 @@ namespace MediaPoint.VM
 			get { return GetValue(() => Rate); }
 			set
             {
-                SetValue(() => Rate, value);
-                Main.ShowOsdMessage(string.Format("Playback rate changed to '{0}'", value));
+                if (SetValue(() => Rate, value))
+                {
+                    Main.ShowOsdMessage(string.Format("Playback rate changed to '{0}'", value));
+                }
             }
 		}
 
@@ -309,20 +315,31 @@ namespace MediaPoint.VM
             set {
                 SetValue(() => ShowOnlineSubtitles, value);
 
-                if (value == true && OnlineSubtitleChoices.Count == 0 && Source != null)
+                if (value == true && OnlineSubtitleChoices.Count == 0 && Source != null && HasVideo)
                 {
                     RefreshOnlineSubs();
                 }
             }
         }
 
-        public void ClearSelectedSubtitle() { SetValue(() => SelectedSubtitle, null); }
+        public void ClearSelectedSubtitle() 
+        {
+            SetValue(() => SelectedSubtitle, null);
+        }
+
 		public SubtitleItem SelectedSubtitle
 		{
 			get { return GetValue(() => SelectedSubtitle); }
 			set
             {
                 if (value == null) return; // listboxes bound would clear this when clearing itemssource, so if need to clear in code use ClearSelectedSubtitle()
+
+                if (value.Type == SubtitleItem.SubtitleType.None)
+                {
+                    ClearSelectedSubtitle();
+                    Main.ShowOsdMessage("Subtitle unset");
+                    return;
+                }
 
                 SetValue(() => SelectedSubtitle, value);
                 Main.ShowOsdMessage(string.Format("Setting subtitle '{0}'", value.DisplayName));
@@ -333,6 +350,35 @@ namespace MediaPoint.VM
         {
             get { return GetValue(() => DownloadedSubtitle); }
             set { SetValue(() => DownloadedSubtitle, value); }
+        }
+
+        public ObservableCollection<string> EmbeddedSubtitleStreams
+        {
+            get { return GetValue(() => EmbeddedSubtitleStreams); }
+            set
+            {
+                if (SetValue(() => EmbeddedSubtitleStreams, value) && value != null)
+                {
+                    ReinsertEmbeddedSubtitlesIntoSubtitleStreams(value);
+                }
+            }
+        }
+
+        private void ReinsertEmbeddedSubtitlesIntoSubtitleStreams(ObservableCollection<string> value)
+        {
+            for (int i = SubtitleStreams.Count - 1; i >= 0; i--)
+            {
+                if (SubtitleStreams[i].Type == SubtitleItem.SubtitleType.Embedded)
+                {
+                    SubtitleStreams.RemoveAt(i);
+                }
+            }
+            for (int i = 0; i < value.Count; i++)
+            {
+                if (value[i].ToLowerInvariant() == "s: no subtitles") continue;
+                string name = "Embedded: " + value[i].Substring(2);
+                SubtitleStreams.Insert(i + 1, new SubtitleItem(SubtitleItem.SubtitleType.Embedded, SubtitleItem.SubtitleSubType.None, value[i], name));
+            }
         }
 
 		public ObservableCollection<string> AudioStreams
@@ -448,6 +494,8 @@ namespace MediaPoint.VM
             {
                 return new Command(o =>
                 {
+                    if (HasVideo == false) return;
+
                     if (o is string && (string)o == "online")
                     {
                         // this means we clicked on the show online subtitles button so lets refresh the results
@@ -579,6 +627,7 @@ namespace MediaPoint.VM
             Source = null;
             if (View != null) View.ExecuteCommand(PlayerCommand.Stop);
             Main.ShowOsdMessage("Stopped");
+            HasVideo = false;
         }
 
 		public void Stop()
@@ -591,7 +640,7 @@ namespace MediaPoint.VM
 			Status = "Stopped";
             ServiceLocator.GetService<IMainView>().UpdateTaskbarButtons();
             Main.ShowOsdMessage("Stopped");
-
+            HasVideo = false;
 		}
 
         public void LoadMediaInfo()
@@ -676,14 +725,18 @@ namespace MediaPoint.VM
             b.DoWork += (sender, args) =>
             {
                 Monitor.Enter(_subtitleSearchLocker);
-            
+
                 try
                 {
                     args.Result = SubtitleUtil.DownloadSubtitle(SelectedOnlineSubtitle, Source.LocalPath);
                 }
                 catch (WebException)
                 {
-                    Main.ShowOsdMessage("Internet connection unavailable.");
+                    Main.ShowOsdMessage("Failed to download subtitle: Internet connection unavailable");
+                }
+                catch (Exception)
+                {
+                    Main.ShowOsdMessage("Failed to download subtitle from '" + SelectedOnlineSubtitle.Service + "'");
                 }
                 finally
                 {
@@ -733,6 +786,10 @@ namespace MediaPoint.VM
                 QueryIMDBForUri(uri);
             }
 
+            Main.ShowVisualizations = false;
+            Main.ShowEqualizer = false;
+            HasVideo = true;
+
             Source = uri;
             LoadMediaInfo();
             IsPaused = false;
@@ -746,6 +803,15 @@ namespace MediaPoint.VM
                 ServiceLocator.GetService<IMainView>().DelayedInvoke(() => SelectedSubtitle = sub, 200);
             }
 
+            if (Source != null)
+            {
+                Main.ShowOsdMessage(string.Format("Opening '{0}'", Path.GetFileName(SourceFileName)));
+            }
+            else
+            {
+                Main.ShowOsdMessage("No file loaded");
+            }
+
 			return true;
 		}
 
@@ -755,8 +821,8 @@ namespace MediaPoint.VM
 
             b.DoWork += (sender, args) =>
             {
-                string strTitle, strYear, strTitleAndYear;
-                args.Result = SubtitleUtil.GetIMDbFromFilename(uri.LocalPath, out strTitle, out strTitleAndYear, out strYear, MessageCallback);
+                string strTitle, strYear, strTitleAndYear; int season, episode;
+                args.Result = SubtitleUtil.GetIMDbFromFilename(uri.LocalPath, Path.GetDirectoryName(uri.LocalPath), out strTitle, out strTitleAndYear, out strYear, out season, out episode, MessageCallback);
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
@@ -818,6 +884,8 @@ namespace MediaPoint.VM
             {
                 try
                 {
+                    if (HasVideo == false) return;
+
                     if (args.Result != null)
                     {
                         if (args.Result is IMDb)
@@ -851,8 +919,10 @@ namespace MediaPoint.VM
 
         private void SetupDownloadedSubtitleAndIMDbInfo(Uri uri, string resultSub, IMDb imdb, object param2)
         {
-            IMDb = imdb;
             OnlineSubtitleChoices.Clear();
+            if (HasVideo == false) return;
+            IMDb = imdb;
+            
             if (param2 is List<SubtitleMatch>)
             {
                 foreach (var st in (List<SubtitleMatch>)param2)
@@ -877,7 +947,7 @@ namespace MediaPoint.VM
                 List<SubtitleMatch> otherChoices;
                 try
                 {
-                    SubtitleUtil.FindSubtitleForFilename(SubtitleDefaultSearchText, Main.SubtitleLanguages.Select(l => l.Id).ToArray(), Main.SubtitleServices.Select(l => l.Id).ToArray(), out imdb, out otherChoices, MessageCallback, true, false);
+                    SubtitleUtil.FindSubtitleForFilename(SubtitleDefaultSearchText, SubtitleDefaultSearchText, Main.SubtitleLanguages.Select(l => l.Id).ToArray(), Main.SubtitleServices.Select(l => l.Id).ToArray(), out imdb, out otherChoices, MessageCallback, true, false);
                     args.Result = otherChoices;
                 }
                 catch (WebException)
@@ -912,25 +982,32 @@ namespace MediaPoint.VM
                 return;
             }
 
-            if (!_subtitleIsDownloading &&
-                SubtitleStreams.Any(s => s.Type == SubtitleItem.SubtitleType.File && File.Exists(s.Path)))
+            try
             {
-                // if nothing is downloading and we have file subs in the folder
-                string lcode = Main.SubtitleLanguages.Count > 0 ? Main.SubtitleLanguages[0].Id : "";
 
-                SubtitleItem bestSubMatch = null;
-
-                for (int i = 0; i < Main.SubtitleLanguages.Count; i++)
+                if (!_subtitleIsDownloading && Source != null &&
+                    SubtitleStreams.Any(s => s.Type == SubtitleItem.SubtitleType.File && File.Exists(s.Path)))
                 {
-                    // this should care also for EMBEDDED subs
-                    bestSubMatch = SubtitleStreams.Where(s => s.Type == SubtitleItem.SubtitleType.File && File.Exists(s.Path)).OrderBy(f => lcode == "" || Path.GetFileNameWithoutExtension(f.Path).EndsWith(lcode) ? 0 : 1).FirstOrDefault();
-                    if (bestSubMatch != null) break;
+                    // if nothing is downloading and we have file subs in the folder
+                    string lcode = Main.SubtitleLanguages.Count > 0 ? Main.SubtitleLanguages[0].Id : "";
+
+                    SubtitleItem bestSubMatch = null;
+
+                    for (int i = 0; i < Main.SubtitleLanguages.Count; i++)
+                    {
+                        // TODO this should care also for EMBEDDED subs
+                        bestSubMatch = SubtitleStreams.Where(s => s.Type == SubtitleItem.SubtitleType.File && File.Exists(s.Path)).OrderBy(f => Path.GetFileNameWithoutExtension(f.Path).ToLowerInvariant().StartsWith(Path.GetFileNameWithoutExtension(Source.LocalPath.ToLowerInvariant())) && (lcode == "" || Path.GetFileNameWithoutExtension(f.Path).EndsWith(lcode)) ? 0 : 1).FirstOrDefault();
+                        if (bestSubMatch != null) break;
+                    }
+
+                    ServiceLocator.GetService<IMainView>().DelayedInvoke(() => { SelectedSubtitle = bestSubMatch; }, 200);
+                    return;
                 }
-
-                ServiceLocator.GetService<IMainView>().DelayedInvoke(() => { SelectedSubtitle = bestSubMatch; }, 200);
-                return;
             }
-
+            finally
+            {
+                Monitor.Exit(_subtitleSearchLocker);
+            }
             DownloadSubtitleForUriAndQueryIMDB(Source);
         }
 
@@ -940,19 +1017,23 @@ namespace MediaPoint.VM
 			SubtitleStreams.Clear();
 		    var scMgr = new Subtitles.Subtitles();
 
+            SubtitleStreams.Add(new SubtitleItem(SubtitleItem.SubtitleType.None, SubtitleItem.SubtitleSubType.None, "", "<No Subtitles>"));
 			// embedded
-			long wouldLikeToLoadEmbedded = -1;
-			bool loadedEmbeddedSub = (video.LocalPath.ToLowerInvariant().EndsWith("mkv") ||
-									  video.LocalPath.ToLowerInvariant().EndsWith("mp4")) &&
-                                     (wouldLikeToLoadEmbedded = scMgr.ListEmbeddedSubtitles(video.LocalPath, out subs)) >= 0;
+            //long wouldLikeToLoadEmbedded = -1;
+            //bool loadedEmbeddedSub = (video.LocalPath.ToLowerInvariant().EndsWith("mkv") ||
+            //                          video.LocalPath.ToLowerInvariant().EndsWith("mp4")) &&
+            //                         (wouldLikeToLoadEmbedded = scMgr.ListEmbeddedSubtitles(video.LocalPath, out subs)) >= 0;
 
 
-			foreach (var embeddedSubtitleStream in subs)
-			{
-			    SubtitleStreams.Add(embeddedSubtitleStream);
-			}
+            //foreach (var embeddedSubtitleStream in subs)
+            //{
+            //    SubtitleStreams.Add(embeddedSubtitleStream);
+            //}
 
-			subs.Clear();
+            //subs.Clear();
+
+            // TODO would like to load embedded
+            if (EmbeddedSubtitleStreams != null && EmbeddedSubtitleStreams.Count > 0) ReinsertEmbeddedSubtitlesIntoSubtitleStreams(EmbeddedSubtitleStreams);
 
 			// files
             string wouldLikeToLoadFile = scMgr.LoadSubtitles(video.LocalPath, out subs, null);
@@ -967,15 +1048,24 @@ namespace MediaPoint.VM
 				return SubtitleStreams.First(f => f.Path == wouldLikeToLoadFile);
 			}
             
-            if (wouldLikeToLoadEmbedded >= 0 && loadedEmbeddedSub)
-            {
-                return SubtitleStreams.First(e => e.Path == wouldLikeToLoadEmbedded.ToString());
-            }
+            //if (wouldLikeToLoadEmbedded >= 0 && loadedEmbeddedSub)
+            //{
+            //    return SubtitleStreams.First(e => e.Path == wouldLikeToLoadEmbedded.ToString());
+            //}
 
 			return null;
 		}
 
 		#endregion
 
-	}
+
+        public void FrameStep()
+        {
+            Pause();
+            MediaPosition+=416666;
+            Play(true);
+            ServiceLocator.GetService<IMainView>().DelayedInvoke((Action)(() => { Pause(); Main.ShowOsdMessage("Framesteping at " + Position); }), 40);
+
+        }
+    }
 }

@@ -29,7 +29,7 @@ namespace MediaPoint.Common.Subtitles
         public static string DownloadSubtitle(string fileName, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback)
         {
             var fn = Path.GetFileName(fileName);
-            SubtitleMatch subtitle = FindSubtitleForFilename(fn, preferredLanguages, preferredServices, out imdbMatch, out otherChoices, messageCallback);
+            SubtitleMatch subtitle = FindSubtitleForFilename(fn, Path.GetDirectoryName(fileName), preferredLanguages, preferredServices, out imdbMatch, out otherChoices, messageCallback);
             return DownloadSubtitle(subtitle, fileName);
         }
 
@@ -112,26 +112,40 @@ namespace MediaPoint.Common.Subtitles
             return resultFile;
         }
 
-        public static IMDb GetIMDbFromFilename(string filename, out string strTitle, out string strTitleAndYear, out string strYear, Action<string> messageCallback)
+        public static IMDb GetIMDbFromFilename(string filename, string folderName, out string strTitle, out string strTitleAndYear, out string strYear, out int season, out int episode, Action<string> messageCallback)
         {
             if (messageCallback != null) messageCallback("Matching media with IMDb ...");
 
             // extract meaningful data from the filename
-            GetMovieMetadata(
+            var imd = GetMovieMetadata(
                 filename,
                 out strTitle,
                 out strTitleAndYear,
-                out strYear);
+                out strYear,
+                out season,
+                out episode, true, true);
+
+            if (imd != null) return imd;
 
             if (strTitle != "" && strYear == "")
             {
+                int tmpSeason, tmpEpisode;
                 // no year, maybe we find one in the folder
                 string tmpTitle;
                 string tmpTitleAndYear;
                 GetMovieMetadata(Path.GetDirectoryName(filename) + ".dummyextension",
                     out tmpTitle,
                     out tmpTitleAndYear,
-                    out strYear);
+                    out strYear,
+                    out tmpSeason,
+                    out tmpEpisode);
+
+                if (tmpSeason != 0)
+                {
+                    // found season and episode in folder
+                    season = tmpSeason;
+                    episode = tmpEpisode;
+                }
 
                 if (strYear != "")
                     strTitleAndYear = string.Format("{0} ({1})", strTitle, strYear);
@@ -145,17 +159,26 @@ namespace MediaPoint.Common.Subtitles
             if (!string.IsNullOrEmpty(strTitle))
             {
                 // scrape imdb to find movie metadata
-                imdb = new IMDb(strTitle, strYear, false);
+                if (season != 0)
+                {
+                    imdb = new IMDb(strTitle, season, episode, strYear, false);
+                }
+                else
+                {
+                    imdb = new IMDb(strTitle, strYear, false);
+                }
             }
 
             if (imdb == null || imdb.status == false)
             {
                 // if failed try with folder name
                 GetMovieMetadata(
-                Path.GetDirectoryName(filename) + ".dummyextension",
-                out strTitle,
-                out strTitleAndYear,
-                out strYear);
+                    folderName + ".dummyextension",
+                    out strTitle,
+                    out strTitleAndYear,
+                    out strYear,
+                    out season,
+                    out episode);
 
                 // cleanup multiple spaces
                 strTitle = new Regex(@"\s+").Replace(strTitle, " ");
@@ -194,16 +217,23 @@ namespace MediaPoint.Common.Subtitles
 
         }
 
-        public static SubtitleMatch FindSubtitleForFilename(string filename, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback, bool noFiltering = false, bool needsImdb = true)
+        public static SubtitleMatch FindSubtitleForFilename(string filename, string folderName, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback, bool noFiltering = false, bool needsImdb = true)
         {
+            int season, episode;
             string regexSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars()) + @"\.\_";
             Regex r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
             filename = r.Replace(filename, " ");
 
             filename = Path.GetFileName(filename);
             string strTitle, strYear, strTitleAndYear;
-            imdbMatch = GetIMDbFromFilename(filename, out strTitle, out strTitleAndYear, out strYear, messageCallback);
-            string sep1 = FindSeasonAndEpisode(filename);
+            string sep1 = "";
+
+            imdbMatch = GetIMDbFromFilename(filename, folderName, out strTitle, out strTitleAndYear, out strYear, out season, out episode, messageCallback);
+
+            if (season != 0)
+            {
+                sep1 = string.Format("s{0:00}e{1:00}", season, episode);
+            }
 
             if (sep1 != "") needsImdb = false;
 
@@ -216,8 +246,8 @@ namespace MediaPoint.Common.Subtitles
 
             string[] patterns = new string[imdbMatch == null ? 1 : string.IsNullOrEmpty(imdbMatch.OriginalTitle) || string.IsNullOrEmpty(imdbMatch.Title) ? 2 : 3];
             patterns[0] = filename;
-            if (patterns.Length > 1) patterns[1] = imdbMatch.Title;
-            if (patterns.Length > 2) patterns[2] = imdbMatch.OriginalTitle;
+            if (patterns.Length > 1) patterns[1] = imdbMatch.Title.TrimStart('\\', '\"').TrimEnd('\\', '\"');
+            if (patterns.Length > 2) patterns[2] = imdbMatch.OriginalTitle.TrimStart('\\', '\"').TrimEnd('\\', '\"');
             if (imdbMatch != null) for (int i = 1; i < patterns.Length; i++) patterns[i] += string.Format(" ({0})", imdbMatch.Year);
 
             Array.Reverse(patterns); // we like imdb first sicne we might skip searching further on some matches
@@ -233,7 +263,7 @@ namespace MediaPoint.Common.Subtitles
             
             otherChoices = ret;
             
-            var ret2 = ret.Select(s => new { priority = preferredLanguages.ToList().IndexOf(s.Language), Sub = s }).OrderBy(s => preferredLanguages.Length - s.priority).FirstOrDefault();
+            var ret2 = ret.Select(s => new { priority = preferredLanguages.ToList().IndexOf(s.Language), Sub = s }).OrderByDescending(s => preferredLanguages.Length - s.priority).FirstOrDefault();
 
             return ret2 == null ? null : ret2.Sub;
         }
@@ -355,30 +385,86 @@ namespace MediaPoint.Common.Subtitles
 
         private static IEnumerable<SubtitleMatch> RateSubs(IEnumerable<Subtitle> subs, string[] patterns, bool podnapisi)
         {
+            int season;
+            int episode;
             foreach (var subtitle in subs)
             {
-                var files = podnapisi ? subtitle.FileName.Split(' ') : new string[] { Path.GetFileNameWithoutExtension(subtitle.FileName) };
+                string subFileName = subtitle.FileName;
+                if (podnapisi && subtitle.FileName.Length > 15)
+                {
+                    subFileName = subtitle.FileName.RemoveSpecialCharacters();
+                    string[] words = subFileName.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    if (words.Length > 1)
+                    {
+                        if (words.Skip(1).Any(w => w == words[0]))
+                        {
+                            int cut = subFileName.IndexOf(words[0], subFileName.IndexOf(words[1]));
+                            if (cut != -1)
+                            {
+                                subFileName = subFileName.Substring(0, cut);
+
+                            }
+                        }
+                    }
+                    subFileName = subFileName.Trim();
+                    subFileName = subFileName.Replace(' ', '.');
+                }
+                var files = podnapisi ? subFileName.Split(new string[] {" "}, StringSplitOptions.RemoveEmptyEntries) : new string[] { Path.GetFileNameWithoutExtension(subFileName) };
                 double best = 0;
                 string bestFile = "";
                 string bestPattern = "";
                 foreach (var file in files)
                 {
                     string title1, year1, titleAndYear1;
+                    
+                    GetMovieMetadata(file, out title1, out titleAndYear1, out year1, out season, out episode);
 
-                    GetMovieMetadata(file, out title1, out titleAndYear1, out year1);
+                    if (string.IsNullOrEmpty(year1))
+                    {
+                        var yearmatch = Regex.Match(file, @"\d{4}");
+                        if (yearmatch.Success)
+                        {
+                            year1 = yearmatch.Value;
+                        }
+                    }
+
+                    string movieEpisode = "";
+                    foreach (var pattern in patterns)
+                    {
+                        var tmpEpisode = FindSeasonAndEpisode(pattern);
+                        if (tmpEpisode != "")
+                        {
+                            movieEpisode = tmpEpisode;
+                        }
+                    }
 
                     foreach (var pattern in patterns)
                     {
                         string title2, year2, titleAndYear2;
 
-                        GetMovieMetadata(pattern, out title2, out titleAndYear2, out year2);
+                        GetMovieMetadata(pattern, out title2, out titleAndYear2, out year2, out season, out episode);
 
                         double m = WordMatches(year2 == "" ? title1 : titleAndYear1, year1 == "" ? title2 : titleAndYear2);
 
                         if (!string.IsNullOrEmpty(year1) && year1 == year2)
                             m *= 1.1;
-                        if (!string.IsNullOrEmpty(year1) && !string.IsNullOrEmpty(year2) && year1 != year2)
+                        if (string.IsNullOrEmpty(year1) && !string.IsNullOrEmpty(year2))
                             m *= 0.9;
+                        if (!string.IsNullOrEmpty(year1) && !string.IsNullOrEmpty(year2) && year1 != year2)
+                            m *= 0.6;
+
+                        if (movieEpisode != "" && 
+                            FindSeasonAndEpisode(file) != "")
+                        {
+                            if (movieEpisode.ToLowerInvariant() == FindSeasonAndEpisode(file).ToLowerInvariant())
+                            {
+                                m *= 1.1;
+                            }
+                            else
+                            {
+                                m *= 0;
+                            }
+                        }
 
                         if (best < m)
                         {
@@ -412,21 +498,63 @@ namespace MediaPoint.Common.Subtitles
             return (double)found.Length / longest;
         }
 
-        public static void GetMovieMetadata(string strFileName, out string strTitle, out string strTitleAndYear, out string strYear, bool bCleanChars = true)
+        public static IMDb GetMovieMetadata(string strFileName, out string strTitle, out string strTitleAndYear, out string strYear, out int season, out int episode, bool bCleanChars = true, bool tryHash = false)
         {
+            season = 0;
+            episode = 0;
+            strTitle = "";
+            strYear = "";
+
+            string sep1 = FindSeasonAndEpisode(strFileName);
+
+            if (sep1 != "")
+            {
+                var sep = sep1.ToLowerInvariant().Split('s', 'e');
+                if (sep.Length == 3)
+                {
+                    season = int.Parse(sep[1]);
+                    episode = int.Parse(sep[2]);
+                }
+            }
+
+            if (tryHash && File.Exists(strFileName))
+            {
+                var ret = HashMatcher.HashMatcher.Match(strFileName);
+                if (ret.Any(r => !string.IsNullOrEmpty(r.ImdbCode)))
+                {
+                    try
+                    {
+                        var imdb = new IMDb(Convert.ToInt32(ret.First(r => !string.IsNullOrEmpty(r.ImdbCode)).ImdbCode));
+                        if (imdb.status && imdb.SeriesSeason == season && imdb.SeriesEpisode == episode)
+                        {
+                            strTitle = imdb.Title;
+                            strTitleAndYear = imdb.Title + " (" + imdb.Year + ")";
+                            strYear = imdb.Year;
+                            season = 0;
+                            episode = 0;
+                            if (imdb.IsSeries)
+                            {
+                                season = imdb.SeriesSeason;
+                                episode = imdb.SeriesEpisode;
+                            }
+                            return imdb;
+                        }
+                    }
+                    catch { }
+                }
+            }
+
             if (strFileName.ToLowerInvariant().Contains(Path.GetDirectoryName(strFileName).ToLowerInvariant()))
             {
                 strFileName = Path.GetFileNameWithoutExtension(strFileName);
             }
-
-            strTitle = "";
-            strYear = "";
 
             const string videoCleanDateTimeRegExp = "(.*[^ _\\,\\.\\(\\)\\[\\]\\-])[ _\\.\\(\\)\\[\\]\\-]+(19[0-9][0-9]|20[0-1][0-9])([ _\\,\\.\\(\\)\\[\\]\\-]|[^0-9]$)";
 
             var videoCleanStringRegExps = new List<string>();
             videoCleanStringRegExps.Add("[ _\\,\\.\\(\\)\\[\\]\\-](ac3|dts|custom|dc|remastered|divx|divx5|dsr|dsrip|dutch|dvd|dvd5|dvd9|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|extended|ws|telesync|ts|telecine|tc|brrip|bdrip|480p|480i|576p|576i|720p|720i|1080p|1080i|3d|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\\[.*\\])([ _\\,\\.\\(\\)\\[\\]\\-]|$)");
             videoCleanStringRegExps.Add("(\\[.*\\])");
+            videoCleanStringRegExps.Add("(-.*$)");
 
             string stringPrefixClean = ("^(ac3|dts|remastered|divx|divx5|dsr|dsrip|dvd|dvd5|dvd9|dvdrip|dvdscr|dvdscreener|screener|dvdivx|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|repack|rerip|retail|r3|r5|bd5|se|svcd|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|480p|480i|576p|576i|720p|720i|1080p|1080i|3d|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|www.www|cd[1-9]|\\[.*\\])");
 
@@ -434,7 +562,7 @@ namespace MediaPoint.Common.Subtitles
 
             if (string.IsNullOrEmpty(strFileName) || strFileName.Equals(".."))
             {
-                return;
+                return null;
             }
 
             Regex reYear = new Regex(videoCleanDateTimeRegExp, RegexOptions.IgnoreCase);
@@ -443,6 +571,12 @@ namespace MediaPoint.Common.Subtitles
                 var m = reYear.Matches(strTitleAndYear);
                 strTitleAndYear = m[0].Groups[1].Value;
                 strYear = m[0].Groups[2].Value;
+            }
+
+            Regex episodeRegex = new Regex(@"(?<seasonandepisode>S(?<season>\d{1,2})E(?<episode>\d{1,2}))", RegexOptions.IgnoreCase);
+            if (episodeRegex.IsMatch(strTitleAndYear))
+            {
+                strTitleAndYear = strTitleAndYear.Substring(0, episodeRegex.Match(strTitleAndYear).Index);
             }
 
             for (int i = 0; i < videoCleanStringRegExps.Count; i++)
@@ -495,6 +629,7 @@ namespace MediaPoint.Common.Subtitles
                 strTitleAndYear = strTitle + " (" + strYear + ")";
             }
 
+            return null;
         }
     }
 }

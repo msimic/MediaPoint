@@ -14,11 +14,21 @@ namespace MediaPoint.Common.Helpers
 {
     public class IMDb
     {
+        public bool IsSeries { get; set; }
         public bool status { get; set; }
         public string Id { get; set; }
         public string Title { get; set; }
+        public int SeriesSeason { get; set; }
+        public int SeriesEpisode { get; set; }
+        public string SeriesSubtitle { get; set; }
         public string DisplayTitle { get { return !string.IsNullOrEmpty(OriginalTitle) ? OriginalTitle : Title; } }
-        public string DisplaySubTitle { get { return !string.IsNullOrEmpty(OriginalTitle) ? (Title == OriginalTitle ? "" : Title) : ""; } }
+        public string DisplaySubTitle {
+            get
+            {
+                if (SeriesSubtitle != null) return SeriesSubtitle;
+                return !string.IsNullOrEmpty(OriginalTitle) ? (Title == OriginalTitle ? "" : Title) : ""; 
+            }
+        }
         public string OriginalTitle { get; set; }
         public string Year { get; set; }
         public string Rating { get; set; }
@@ -55,15 +65,31 @@ namespace MediaPoint.Common.Helpers
         public ArrayList RecommendedTitles { get; set; }
         public string ImdbURL { get; set; }
 
-        //Constructor
-        public IMDb(string MovieName, string year = "", bool GetExtraInfo = true)
+        public IMDb(int imdbId, bool GetExtraInfo = false)
         {
+             parseIMDbPage(("http://www.imdb.com/title/tt" + imdbId).Replace("www.", "akas."), GetExtraInfo);
+        }
+
+        //Constructor
+        public IMDb(string MovieName, string year = "", bool GetExtraInfo = true) : this(MovieName, 0, 0, year, GetExtraInfo)
+        {
+           
+        }
+
+        public IMDb(string MovieName, int season, int episode, string year = "", bool GetExtraInfo = true)
+        {
+            if (season != 0)
+            {
+                IsSeries = true;
+                SeriesSeason = season;
+                SeriesEpisode = episode;
+            }
             int y;
             if (!int.TryParse(year, out y))
             {
-                
+                y = 0;
             }
-            string imdbUrl = getIMDbUrl(MovieName, year);
+            string imdbUrl = getIMDbUrl(MovieName, year, season, episode);
             status = false;
             if (!string.IsNullOrEmpty(imdbUrl))
             {
@@ -72,7 +98,7 @@ namespace MediaPoint.Common.Helpers
         }
 
         //Get IMDb URL from search results
-        private string getIMDbUrl(string MovieName, string year = "", string searchEngine = "google")
+        private string getIMDbUrl(string MovieName, string year, int season, int episode, string searchEngine = "google")
         {
             //string url = GoogleSearch + MovieName + (year != "" ? "+" + year : ""); //default to Google search
             //if (searchEngine.ToLower().Equals("bing")) url = BingSearch + MovieName + (year != "" ? "+" + year : "");
@@ -89,20 +115,42 @@ namespace MediaPoint.Common.Helpers
              
             Random r = new Random();
 
-            var termFormats = new string[] {"imdb title {0}", "title imdb {0}", "imdb {0} title", "{0} imdb title", "title {0} imdb"};
-            string term = string.Format(termFormats[r.Next(termFormats.Length)], MovieName + " " + year);
-            GwebSearchClient client = new GwebSearchClient("http://www.imdb.com");
-            
+            GwebSearchClient client = null;
+            string term = null;
+
+            if (season != 0)
+            {
+                var termFormats = new string[] { "imdb tv episode {0}", "tv episode imdb {0}", "imdb {0} tv episode", "{0} imdb tv episode", "tv episode {0} imdb" };
+                string movieWithSep = MovieName + " season " + season + " episode " + episode + " " + year;
+                term = string.Format(termFormats[r.Next(termFormats.Length)], movieWithSep);
+                client = new GwebSearchClient("http://www.imdb.com");
+            }
+            else
+            {
+                var termFormats = new string[] { "imdb title {0}", "title imdb {0}", "imdb {0} title", "{0} imdb title", "title {0} imdb" };
+                term = string.Format(termFormats[r.Next(termFormats.Length)], MovieName + " " + year);
+                client = new GwebSearchClient("http://www.imdb.com");
+            }
+
             IList<IWebResult> results;
             try
             {
-                results = client.Search(term, 1);
+                int limit = 1;
+                if (season != 0) limit = 20;
+                results = client.Search(term, limit);
                 if (results.Count == 0)
                     return string.Empty;
             }
             catch
             {
                 return String.Empty;
+            }
+
+            if (season != 0)
+            {
+                var match = results.FirstOrDefault(m => m.Content.ToLowerInvariant().Contains("season " + season + ": episode " + episode));
+                if (match != null)
+                    return match.Url;
             }
 
             return results[0].Url;
@@ -118,11 +166,30 @@ namespace MediaPoint.Common.Helpers
                 status = true;
                 //Title = match(@"<title>(IMDb \- )*(.*?) \(.*?</title>", html, 2);
                 Title = match(@"tn15title\""><h1>(.*?)<", html); //match(@"<title>(IMDb \- )*(.*?) \([^)]*?(\d{4}).*?\)?.*?</title>", html, 2);
-                if (Title.ToLowerInvariant().Contains("tahra"))
-                {
-                    
-                }
+
                 OriginalTitle = match(@"title-extra"">(.*?)<", html);
+
+                if (IsSeries)
+                {
+                    string episodeName = match(@"tn15title\""><h1>[^<]*?<span><em>(.*?)<", html);
+                    string episodeExtra = match(@"tn15title\""><h1>[^<]*?<span><em>[^<]*?</em>(.*?)<", html);
+                    SeriesSubtitle = episodeName + " " + episodeExtra + "\r\n" + "Season " + SeriesSeason + ", Episode " + SeriesEpisode;
+                }
+                else
+                {
+                    try
+                    {
+                        var season = match(@"\(Season (\d*), Episode \d*\)", html);
+                        var episode = match(@"\(Season \d*, Episode (\d*)\)", html);
+                        string episodeName = match(@"tn15title\""><h1>[^<]*?<span><em>(.*?)<", html);
+                        string episodeExtra = match(@"tn15title\""><h1>[^<]*?<span><em>[^<]*?</em>(.*?)<", html);
+                        IsSeries = true;
+                        SeriesSeason = Convert.ToInt32(season);
+                        SeriesEpisode = Convert.ToInt32(episode);
+                        SeriesSubtitle = episodeName + " " + episodeExtra + "\r\n" + "Season " + SeriesSeason + ", Episode " + SeriesEpisode;
+                    }
+                    catch { }
+                }
 
                 if (OriginalTitle == "")
                 {

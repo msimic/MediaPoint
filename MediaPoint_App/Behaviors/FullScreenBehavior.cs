@@ -158,7 +158,7 @@ namespace MediaPoint.App.Behaviors
 
 				if (newValue)
 				{
-					window.Tag = window.WindowStyle;
+					//window.Tag = window.WindowStyle;
 					window.WindowStyle = WindowStyle.None;
 					window.Topmost = true;
 				    window.MaxHeight = Int32.MaxValue;
@@ -205,7 +205,7 @@ namespace MediaPoint.App.Behaviors
 
 			_wnd.SourceInitialized += Window_SourceInitialized;
 			_wnd.MouseDoubleClick += Window_MouseDoubleClick;
-			_wnd.KeyDown += Window_KeyDown;
+			//_wnd.PreviewKeyDown += Window_KeyDown;
 
 			AttachHook();
 

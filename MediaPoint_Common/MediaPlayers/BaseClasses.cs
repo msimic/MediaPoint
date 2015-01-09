@@ -131,6 +131,16 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             }
         }
 
+        private int _delay;
+        public int Delay
+        {
+            get { return _delay; }
+            set
+            {
+                _delay = value;
+                Owner.InitSubSettings();
+            }
+        }
         public MediaPlayerBase Owner { get; set; }
     }
 
@@ -141,6 +151,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
     /// <param name="pSurface">The pointer to the D3D surface</param>
     public delegate void NewAllocatorSurfaceDelegate(object sender, IntPtr pSurface);
 
+    public delegate void PlateFoundDelegate(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence);
     /// <summary>
     /// The arguments that store information about a failed media attempt
     /// </summary>
@@ -172,6 +183,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// Invokes when a new surface has been allocated
         /// </summary>
         event NewAllocatorSurfaceDelegate NewAllocatorSurface;
+        event PlateFoundDelegate PlateFound;
+
     }
 
     [ComImport, Guid("FA10746C-9B63-4b6c-BC49-FC300EA5F256")]
@@ -548,6 +561,11 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             if (!HasVideo) return;
             //Dispatcher.BeginInvoke((Action) (() =>
             //{
+            if (_vobsub != null && SubtitleSettings.Subtitle == null)
+            {
+                int ret = ((IDirectVobSub3)_vobsub).OpenSubtitles("");
+                return;
+            }
                 if (_vobsub != null && SubtitleSettings.Subtitle != null &&
                     SubtitleSettings.Subtitle.Type ==
                     SubtitleItem.SubtitleType.File)
@@ -562,7 +580,15 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                         SubtitleSettings.Subtitle.Type ==
                         SubtitleItem.SubtitleType.Embedded)
                 {
-                    //_splitterSettings.SetAdvancedSubtitleConfig()
+                    int index = SubtitleStreams.IndexOf(SubtitleSettings.Subtitle.Path);
+                    if (index != -1)
+                    {
+                        index += VideoStreams.Count;
+                        index += AudioStreams.Count;
+                        HRESULT hr = (HRESULT)((IAMStreamSelect)_splitter).Enable(index, AMStreamSelectEnableFlags.Enable);
+                        int ret = ((IDirectVobSub3)_vobsub).OpenSubtitles("!");
+                    
+                    }
                 }
             //}));
         }
@@ -576,7 +602,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             lf.lfFaceName = SubtitleSettings.FontFamily.Substring(0, Math.Min(SubtitleSettings.FontFamily.Length, 32));
             lf.lfHeight = SubtitleSettings.Size * -1;
             lf.lfWeight = SubtitleSettings.Bold ? 700 : 400;
-
+            _vobsub.put_SubtitleTiming(SubtitleSettings.Delay, 1, 1);
             _vobsub.put_TextSettings(lf, 92, MakeCOLORREF(SubtitleSettings.Color.R, SubtitleSettings.Color.G, SubtitleSettings.Color.B), SubtitleSettings.Shadow, SubtitleSettings.Outline, true);
         }
 
@@ -833,6 +859,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// Event notifies when there is a new surface allocated
         /// </summary>
         public event NewAllocatorSurfaceDelegate NewAllocatorSurface;
+
+        public event PlateFoundDelegate PlateFound;
 
         /// <summary>
         /// Frees any remaining memory
@@ -1122,6 +1150,14 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
             m_customAllocator.NewAllocatorFrame += CustomAllocatorNewAllocatorFrame;
             m_customAllocator.NewAllocatorSurface += CustomAllocatorNewAllocatorSurface;
+            m_customAllocator.PlateFound += CustomAllocatorPlateFound;
+        }
+
+        private void CustomAllocatorPlateFound(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence)
+        {
+            var del = PlateFound;
+            if (del != null)
+                del(this, text, left, top, right, bottom, angle, confidence);
         }
 
         /// <summary>
@@ -1150,6 +1186,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
             m_customAllocator.NewAllocatorFrame -= CustomAllocatorNewAllocatorFrame;
             m_customAllocator.NewAllocatorSurface -= CustomAllocatorNewAllocatorSurface;
+            m_customAllocator.PlateFound -= CustomAllocatorPlateFound;
 
             m_customAllocator.Dispose();
 
@@ -1346,13 +1383,13 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 DsError.ThrowExceptionForHR(hr);
 
                 //#if SHADERS
-                string errors = "";
+                //string errors = "";
                 //hr = _presenterSettings.SetPixelShader(Resources.Shader, ref errors);
-                if (hr != 0)
-                {
-                    MessageBox.Show(errors, "Shader compilation failed", MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-                }
+                //if (hr != 0)
+                //{
+                //    MessageBox.Show(errors, "Shader compilation failed", MessageBoxButtons.OK,
+                //        MessageBoxIcon.Information);
+                //}
                 //#endif
 
                 var filterConfig = filter as IEVRFilterConfig;

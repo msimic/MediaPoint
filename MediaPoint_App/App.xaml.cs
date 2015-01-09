@@ -12,6 +12,7 @@ using MediaPoint.VM;
 using MediaPoint.App.Themes;
 using Microsoft.VisualBasic.ApplicationServices;
 using System.Linq;
+using MediaPoint.Interfaces;
 
 namespace MediaPoint.App
 {
@@ -42,8 +43,11 @@ namespace MediaPoint.App
             var sl = new StyleLoader(Resources);
             ServiceLocator.RegisterService<IStyleLoader>(sl);
             ServiceLocator.RegisterService<IMainView>(w);
+            ServiceLocator.RegisterService<IFramePictureProvider>(w);
             ServiceLocator.RegisterService<IDialogService>(dlgsrv);
             var vm = new Main { Themes = new ObservableCollection<string>(StyleLoader.GetAllStyles()) };
+            ServiceLocator.RegisterService<IPlateProcessor>(vm);
+            
             w.DataContext = vm;
             //sl.LoadStyle("default");
             StyleLoader.CurrentStyleFolder = "default";
@@ -54,6 +58,9 @@ namespace MediaPoint.App
             {
                 (MainWindow as Window1).StartupFile = args[1];
             }
+
+            InterceptKeys.Start((MainWindow as Window1));
+
             w.Show();
         }
 
@@ -77,8 +84,14 @@ namespace MediaPoint.App
 
 		private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
 		{
-            MessageBox.Show(e.Exception.Message + Environment.NewLine + e.Exception.StackTrace);
-            this.Shutdown(1);
+            var ex = e.Exception;
+            while (ex.InnerException != null)
+            {
+                ex = ex.InnerException;
+            }
+            MessageBox.Show(MainWindow, ex.Message + Environment.NewLine + ex.StackTrace, "Serious problem occured - App may crash!", MessageBoxButton.OK, MessageBoxImage.Error);
+            //this.Shutdown(1);
+            e.Handled = true;
 		}
 
         public class SingleInstanceManager : Microsoft.VisualBasic.ApplicationServices.WindowsFormsApplicationBase
@@ -93,8 +106,13 @@ namespace MediaPoint.App
 
             protected override bool OnUnhandledException(Microsoft.VisualBasic.ApplicationServices.UnhandledExceptionEventArgs e)
             {
-                MessageBox.Show(e.Exception.Message + Environment.NewLine + e.Exception.StackTrace);
-                e.ExitApplication = true;
+                var ex = e.Exception;
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
+                MessageBox.Show(Application.Current.MainWindow, ex.Message + Environment.NewLine + ex.StackTrace, "Serious problem occured - App may crash!", MessageBoxButton.OK, MessageBoxImage.Error);
+                e.ExitApplication = false;
                 return base.OnUnhandledException(e);
             }
 

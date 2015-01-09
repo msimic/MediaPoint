@@ -2808,8 +2808,10 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
          CAutoTiming t(func_name[i],0);
 
 		CTextFile ftmp(CTextFile::UTF8);
-		ftmp.Open(fp);
+		bool opened = ftmp.Open(fp);
 
+		if (!opened) return false;
+		ftmp.Seek(0,0);
 		if(!OpenFuncts[i].open(&ftmp, *this, CharSet) /*|| !GetCount()*/)
         {
             if(m_entries.GetCount() > 0)
@@ -2835,8 +2837,9 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
 
         CWebTextFile f2(CTextFile::UTF8);
         if(f2.Open(f->GetFilePath() + _T(".style")))
+		{
             OpenSubStationAlpha(&f2, *this, CharSet);
-
+		}
         //      Sort();
         CreateSegments();
 

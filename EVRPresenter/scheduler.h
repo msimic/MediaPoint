@@ -45,6 +45,7 @@ public:
     HRESULT ProcessSamplesInQueue(LONG *plNextSleep);
     HRESULT ProcessSample(IMFSample *pSample, LONG *plNextSleep);
     HRESULT Flush();
+	int Count() { return m_ScheduledSamples.Count();}
 
     // ThreadProc for the scheduler thread.
     static DWORD WINAPI SchedulerThreadProc(LPVOID lpParameter);
@@ -81,4 +82,5 @@ private:
 struct SchedulerCallback
 {
     virtual HRESULT PresentSample(IMFSample *pSample, LONGLONG llTarget, LONGLONG timeDelta, LONGLONG remainingInQueue, LONGLONG frameDurationDiv4) = 0;
+	virtual void AlprProcess(IMFSample * pSample) = 0;
 };

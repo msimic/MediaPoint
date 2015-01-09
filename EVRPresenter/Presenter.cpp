@@ -2172,7 +2172,6 @@ done:
 // - ProcessOutput
 // - DeliverFrameStepSample
 //-----------------------------------------------------------------------------
-
 HRESULT EVRCustomPresenter::DeliverSample(IMFSample *pSample, BOOL bRepaint)
 {
     assert(pSample != NULL);

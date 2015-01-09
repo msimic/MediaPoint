@@ -68,11 +68,16 @@ namespace MediaPoint.App.Behaviors
 			}
 
 			var r = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop, SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
-			if (r.Contains(left, top))
-			{
-				this.AssociatedObject.Left = left;
-				this.AssociatedObject.Top = top;
-			}
+            if (r.Contains(left, top))
+            {
+                this.AssociatedObject.Left = left;
+                this.AssociatedObject.Top = top;
+            }
+            else
+            {
+                return;
+            }
+
 			//restore size
 			if (this.AssociatedObject.ResizeMode != ResizeMode.NoResize)
 			{

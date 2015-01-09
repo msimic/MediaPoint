@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MediaPoint"
-        Icon="/Images/app.ico" Name="window"
+        Icon="/Images/app.ico" Name="window" Margin="0" Padding="0"
         Style="{DynamicResource WindowStyle}" Background="Black"
         xmlns:controls="clr-namespace:MediaPoint.Controls;assembly=MediaPoint.Controls"
         xmlns:tb="clr-namespace:MediaPoint.Common.TaskbarNotification;assembly=MediaPoint.Common"
@@ -10,6 +10,7 @@
         WindowStartupLocation="CenterScreen" Visibility="Collapsed"
         xmlns:svl="clr-namespace:WPFSoundVisualizationLib;assembly=WPFSoundVisualizationLib"
         PreviewMouseMove="Window_PreviewMouseMove" SizeChanged="Window_SizeChanged"
+        Activated="window_Activated"
         StateChanged="OnStateChanged" IsVisibleChanged="OnIsVisibleChanged">
     <Window.Triggers>
         <EventTrigger
@@ -38,20 +39,20 @@
             </tb:TaskbarIcon.TrayToolTip>
         </tb:TaskbarIcon>
         <controls:MainWindowContent Focusable="False" Style="{DynamicResource MainWindowContent}">
-            <Grid>
-                <controls:HidingOverlay x:Name="windowControls" Style="{DynamicResource HidingOverlay}">                    
-                </controls:HidingOverlay>
-                
-                <Grid Name="visualContainer" RenderTransformOrigin="0.5,0.5" Style="{DynamicResource VideoContainer}">
-                    <Grid.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform x:Name="scale" ScaleX="1.0" ScaleY="1.0" />
-                            <RotateTransform x:Name="rotation" Angle="0" />
-                            <SkewTransform CenterX="0.5" CenterY="0.5" AngleX="0" AngleY="0" x:Name="skew"></SkewTransform>
-                        </TransformGroup>
-                    </Grid.RenderTransform>
-                    <Grid Background="#00000000" x:Name="mediaPlayerContainer" >
-                        <controls:MediaUriElement Focusable="False" x:Name="mediaPlayer" DataContext="{Binding Player}"
+                <Grid>
+                    <controls:HidingOverlay x:Name="windowControls" Style="{DynamicResource HidingOverlay}">
+                    </controls:HidingOverlay>
+
+                    <Grid Name="visualContainer" RenderTransformOrigin="0.5,0.5" Style="{DynamicResource VideoContainer}">
+                        <Grid.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="scale" ScaleX="1.0" ScaleY="1.0" />
+                                <RotateTransform x:Name="rotation" Angle="0" />
+                                <SkewTransform CenterX="0.5" CenterY="0.5" AngleX="0" AngleY="0" x:Name="skew"></SkewTransform>
+                            </TransformGroup>
+                        </Grid.RenderTransform>
+                        <Grid Background="#00000000" x:Name="mediaPlayerContainer" >
+                            <controls:MediaUriElement Focusable="False" x:Name="mediaPlayer" DataContext="{Binding Player}"
                                                     DeeperColor="{Binding IsDeeperColor}"
                                                     Stretch="Uniform"
                                                     AudioRenderer="{Binding Main.AudioRenderer}"
@@ -80,36 +81,118 @@
                                                     SubtitleCharset="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubEncoding}"
                                                     SubtitleSize="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleSize}"
                                                     SubtitleColor="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleColor}"
+                                                    SubtitleDelay="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleDelay}"
                                                     Subtitle="{Binding SelectedSubtitle}"
                                                     Loop="{Binding Loop}">
-                        </controls:MediaUriElement>
+                            </controls:MediaUriElement>
+                        </Grid>
+                        <!--<Canvas Name="canvas">
+                            <Rectangle Focusable="False" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5" Stroke="Red" StrokeThickness="5" Fill="#77FFFF00">
+                                <Rectangle.RenderTransform>
+                                    <RotateTransform Angle="{Binding PlateAngle}"></RotateTransform>
+                                </Rectangle.RenderTransform>
+                                <Rectangle.Width>
+                                    <MultiBinding Converter="{StaticResource PixelToPointConverter}" ConverterParameter="width">
+                                        <Binding Path="PlateWidth"></Binding>
+                                        <Binding Path="ActualWidth" ElementName="canvas"></Binding>
+                                        <Binding Path="." ElementName="mediaPlayer"></Binding>
+                                    </MultiBinding>
+                                </Rectangle.Width>
+                                <Rectangle.Height>
+                                    <MultiBinding Converter="{StaticResource PixelToPointConverter}" ConverterParameter="height">
+                                        <Binding Path="PlateHeight"></Binding>
+                                        <Binding Path="ActualHeight" ElementName="canvas"></Binding>
+                                        <Binding Path="." ElementName="mediaPlayer"></Binding>
+                                    </MultiBinding>
+                                </Rectangle.Height>
+                                <Canvas.Left>
+                                    <MultiBinding Converter="{StaticResource PixelToPointConverter}" ConverterParameter="width">
+                                        <Binding Path="PlateLeft"></Binding>
+                                        <Binding Path="ActualWidth" ElementName="canvas"></Binding>
+                                        <Binding Path="." ElementName="mediaPlayer"></Binding>
+                                    </MultiBinding>
+                                </Canvas.Left>
+                                <Canvas.Top>
+                                    <MultiBinding Converter="{StaticResource PixelToPointConverter}" ConverterParameter="height">
+                                        <Binding Path="PlateTop"></Binding>
+                                        <Binding Path="ActualHeight" ElementName="canvas"></Binding>
+                                        <Binding Path="." ElementName="mediaPlayer"></Binding>
+                                    </MultiBinding>
+                                </Canvas.Top>
+                                <Rectangle.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Setter Property="Opacity" Value="0"/>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Resources>
+                                            <ResourceDictionary>
+                                                <DoubleAnimation x:Key="FadeIn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
+                                                <DoubleAnimation x:Key="FadeOut" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+                                                <ObjectAnimationUsingKeyFrames x:Key="FadeInVisibility" BeginTime="0:0:0"
+                        Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                        <DiscreteObjectKeyFrame.Value>
+                                                            <Visibility>Visible</Visibility>
+                                                        </DiscreteObjectKeyFrame.Value>
+                                                    </DiscreteObjectKeyFrame>
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames x:Key="FadeOutVisibility" BeginTime="0:0:0.2"
+                        Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0">
+                                                        <DiscreteObjectKeyFrame.Value>
+                                                            <Visibility>Collapsed</Visibility>
+                                                        </DiscreteObjectKeyFrame.Value>
+                                                    </DiscreteObjectKeyFrame>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </ResourceDictionary>
+                                        </Style.Resources>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ShowPlate}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <StaticResource ResourceKey="FadeIn"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <StaticResource ResourceKey="FadeOut"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Rectangle.Style>
+                            </Rectangle>
+                        </Canvas>-->
                     </Grid>
+
+                    <controls:IMDbOverlay Focusable="False" x:Name="imdbOverlay" Style="{DynamicResource IMDbOverlay}">
+                    </controls:IMDbOverlay>
+
+                    <controls:OnlineSubs Focusable="False" x:Name="onlineSubs" Style="{DynamicResource OnlineSubs}">
+                    </controls:OnlineSubs>
+
+                    <controls:Visualizations Focusable="False" x:Name="visualizations" Style="{DynamicResource Visualizations}">
+                    </controls:Visualizations>
+
+                    <controls:Equalizer Focusable="False" x:Name="equalizer" Style="{DynamicResource Equalizer}">
+                    </controls:Equalizer>
+
+                    <controls:Playlist Focusable="False" x:Name="playlist" Style="{DynamicResource Playlist}">
+                    </controls:Playlist>
+
+                    <controls:Options Focusable="False" x:Name="options" Style="{DynamicResource Options}">
+                    </controls:Options>
+
+                    <controls:MediaControls FocusVisualStyle="{x:Null}" Focusable="True" x:Name="mediaControls" Style="{DynamicResource MediaControls}" Visibility="{Binding Player, Converter={StaticResource NotNullToVisibility}}">
+                    </controls:MediaControls>
+
+                    <controls:OSD Focusable="False" x:Name="osd" Style="{DynamicResource OSD}">
+                    </controls:OSD>
                 </Grid>
-
-                <controls:IMDbOverlay Focusable="False" x:Name="imdbOverlay" Style="{DynamicResource IMDbOverlay}">
-                </controls:IMDbOverlay>
-
-                <controls:OnlineSubs Focusable="False" x:Name="onlineSubs" Style="{DynamicResource OnlineSubs}">
-                </controls:OnlineSubs>
-
-                <controls:Visualizations Focusable="False" x:Name="visualizations" Style="{DynamicResource Visualizations}">
-                </controls:Visualizations>
-
-                <controls:Equalizer Focusable="False" x:Name="equalizer" Style="{DynamicResource Equalizer}">
-                </controls:Equalizer>
-
-                <controls:Playlist Focusable="False" x:Name="playlist" Style="{DynamicResource Playlist}">
-                </controls:Playlist>
-                
-                <controls:Options Focusable="False" x:Name="options" Style="{DynamicResource Options}">
-                </controls:Options>
-                
-                <controls:MediaControls Focusable="False" x:Name="mediaControls" Style="{DynamicResource MediaControls}" Visibility="{Binding Player, Converter={StaticResource NotNullToVisibility}}">
-                </controls:MediaControls>
-
-                <controls:OSD Focusable="False" x:Name="osd" Style="{DynamicResource OSD}">
-                </controls:OSD>
-            </Grid>
-        </controls:MainWindowContent>
+            </controls:MainWindowContent>
     </Grid>
 </Window>

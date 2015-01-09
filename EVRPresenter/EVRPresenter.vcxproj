@@ -42,6 +42,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v110</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -114,17 +115,17 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;EVRPRESENTER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <RegisterOutput>false</RegisterOutput>
-      <AdditionalDependencies>strmiids.lib;dxva2.lib;d3d9.lib;mfuuid.lib;mfplat.lib;mf.lib;evr.lib;winmm.lib;d3dx9.lib;d3dcompiler.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>strmiids.lib;dxva2.lib;d3d9.lib;mfuuid.lib;mfplat.lib;mf.lib;evr.lib;winmm.lib;d3dx9.lib;d3dcompiler.lib;comsuppw.lib;$(SolutionDir)..\..\Skilja\ALPR\ALPR\bin\Skilja.PR.API.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(SolutionDir)output\bin\x86\$(ProjectName)$(PlatformArchitecture).dll</OutputFile>
       <ModuleDefinitionFile>EVRPresenter$(PlatformArchitecture).def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -177,9 +178,11 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>strmiids.lib;dxva2.lib;d3d9.lib;mfuuid.lib;mfplat.lib;mf.lib;evr.lib;winmm.lib;d3dx9.lib;d3dcompiler.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>strmiids.lib;dxva2.lib;d3d9.lib;mfuuid.lib;mfplat.lib;mf.lib;evr.lib;winmm.lib;d3dx9.lib;d3dcompiler.lib;comsuppw.lib;$(SolutionDir)..\..\Skilja\ALPR\ALPR\bin\Skilja.PR.API.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\output\bin\x86\$(ProjectName)$(PlatformArchitecture).dll</OutputFile>
       <ModuleDefinitionFile>EVRPresenter$(PlatformArchitecture).def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -230,6 +233,7 @@
     <ClCompile Include="PresentEngine.cpp" />
     <ClCompile Include="Presenter.cpp" />
     <ClCompile Include="scheduler.cpp" />
+    <ClCompile Include="WindowShadow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="EVRPresenter32.def" />
@@ -243,6 +247,8 @@
     <ClInclude Include="PresentEngine.h" />
     <ClInclude Include="Presenter.h" />
     <ClInclude Include="scheduler.h" />
+    <ClInclude Include="WindowShadow.h" />
+    <ClInclude Include="WindowShadowerUuid.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

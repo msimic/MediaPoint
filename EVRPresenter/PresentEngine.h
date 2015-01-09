@@ -5,6 +5,7 @@
 #include <comutil.h>
 #include <string>
 #include <D3D9Types.h>
+#include "..\..\..\Skilja\ALPR\ALPR\Skilja.PR.API.Native\PlateRecognition.h"
 
 //-----------------------------------------------------------------------------
 // D3DPresentEngine class
@@ -17,6 +18,21 @@
 // The goal of this class is to isolate the EVRCustomPresenter class from
 // the details of Direct3D as much as possible.
 //-----------------------------------------------------------------------------
+
+const DWORD D3DFVF_TLVERTEX = D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+
+//Custom vertex
+struct TLVERTEX
+{
+    float x;
+    float y;
+    float z;
+    float rhw;
+    D3DCOLOR colour;
+    float u;
+    float v;
+};
+
 
 typedef HRESULT(__stdcall* PTR_DXVA2CreateDirect3DDeviceManager9)(UINT* pResetToken, IDirect3DDeviceManager9** ppDeviceManager);
 
@@ -76,6 +92,13 @@ public:
 	HRESULT SetDeviceResetCallback(IDeviceResetCallback *pCallback);
 	IDirect3DDeviceManager9* GetManager();
 	HRESULT SetAdapter(POINT p);
+	void GetBytesFromSurface(IDirect3DSurface9* pSurface);
+	void BlitD3D (RECT *rDest, D3DCOLOR vertexColour, float rotate);
+
+	IDirect3DDevice9            *m_pDevice;
+	IEVRPresenterCallback		*m_pCallback;
+
+	void AlprProcess(IMFSample *pSample);
 
 protected:
 	HRESULT InitializeD3D();
@@ -91,7 +114,9 @@ protected:
     virtual HRESULT PresentSwapChain(IDirect3DSwapChain9* pSwapChain, IDirect3DSurface9* pSurface);
 
 protected:
-	IEVRPresenterCallback		*m_pCallback;
+	
+	void ALPR(IDirect3DSurface9* pD3DSurface);
+    
 	IDeviceResetCallback		*m_pDeviceResetCallback;
     UINT                        m_DeviceResetToken;     // Reset token for the D3D device manager.
 	int							m_bufferCount;
@@ -108,7 +133,7 @@ protected:
 
     // COM interfaces
     IDirect3D9Ex                *m_pD3D9;
-    IDirect3DDevice9            *m_pDevice;
+
     IDirect3DDeviceManager9     *m_pDeviceManager;        // Direct3D device manager.
     IDirect3DSurface9           *m_pSurfaceRepaint;       // Surface for repaint requests.
 	IDirect3DSurface9			*m_pRenderSurface;
@@ -133,4 +158,9 @@ protected:
 	IDirect3DTexture9* StringTex;
 
 	ID3DXFont* pFont;
+	ID3DXFont* pFontBig;
+	LicencePlateOCRResultHandle res;
+	IDirect3DVertexBuffer9* vertexBuffer;
+	IDirect3DTexture9 *tex;
+	unsigned char *transparentYellow;
 };

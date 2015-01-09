@@ -28,7 +28,7 @@ namespace MediaPoint.Converters
             //}), System.Windows.Threading.DispatcherPriority.ContextIdle);
             var s = actual.Difference(monitor);
             //var ret2 = new Thickness(s.Width / 2, s.Height / 2, s.Width / 2, s.Height / 2);
-            //System.Diagnostics.Debug.WriteLine(ret2.ToString());
+            System.Diagnostics.Debug.WriteLine("Padding " + s.Width / 2);
             return s.Width / 2;
 		}
 

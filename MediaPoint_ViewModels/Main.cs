@@ -20,10 +20,15 @@ using MediaPoint.MVVM.Services;
 using System.Threading;
 using MediaPoint.Common.Helpers;
 using System.Reactive.Linq;
+using MediaPoint.Interfaces;
+using System.Windows;
+using MediaPoint.Helpers;
+using MediaPoint.Common.TaskbarNotification.Interop;
+using System.Windows.Media.Imaging;
 
 namespace MediaPoint.VM
 {
-	public class Main : ViewModel
+    public class Main : ViewModel, IKeyboardHandler, IPlateProcessor
 	{
         internal static class NativeMethods
         {
@@ -45,6 +50,17 @@ namespace MediaPoint.VM
 		#region Ctor
 		public Main()
 		{
+            Plates = new ObservableCollection<Plate>();
+
+            Observable.Interval(TimeSpan.FromSeconds(1.5)).Subscribe(i =>
+            {
+                if (ShowPlate == true)
+                {
+                    ShowPlate = false;
+                }
+            });
+
+            ServiceLocator.RegisterOverrideService<IKeyboardHandler>((IKeyboardHandler)this);
             Equalizer = new Equalizer();
 		    SubtitleColor = Colors.White;
 		    AutoLoadSubtitles = true;
@@ -129,7 +145,7 @@ namespace MediaPoint.VM
 			Player = new Player(this);
             Playlist = new Playlist(Player);
 		    SubEncoding = Encodings[1];
-
+            InitShortcuts();
             var updateThread = new Thread((() =>
                                 {
                                     while (!_exiting)
@@ -150,9 +166,372 @@ namespace MediaPoint.VM
                                 })) { IsBackground = true, Priority = ThreadPriority.BelowNormal };
             updateThread.Start();
 		}
+
+        private void InitShortcuts()
+        {
+            InitActions();
+
+            KeyboardShortcuts = new ObservableCollection<KeyboardShortcut>();
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Framestep",
+                Key = Key.Decimal,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Play/Pause",
+                Key = Key.Space,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Subs Delay +",
+                Key = Key.Right,
+                Control = true,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Subs Delay -",
+                Key = Key.Left,
+                Control = true,
+                Shift = false,
+                Alt = false
+            });
+
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Previous Track",
+                Key = Key.PageUp,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Next Track",
+                Key = Key.PageDown,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Seek Back 1%",
+                Key = Key.Left,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Seek Forward 1%",
+                Key = Key.Right,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Increase Subtitle Size",
+                Key = Key.Up,
+                Control = false,
+                Shift = true,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Decrease Subtitle Size",
+                Key = Key.Down,
+                Control = false,
+                Shift = true,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Increase Volume",
+                Key = Key.Up,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Decrease Volume",
+                Key = Key.Down,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Go Fullscreen",
+                Key = Key.F,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Exit Fullscreen",
+                Key = Key.Escape,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Save Video Screenshot",
+                Key = Key.PrintScreen,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            foreach (var sc in KeyboardShortcuts)
+            {
+                var ac = PlayerActions.FirstOrDefault(pa => pa.ActionId == sc.ActionId);
+                if (ac != null)
+                {
+                    ac.Shortcut = sc;
+                }
+            }
+        }
+
+        private void InitActions()
+        {
+            PlayerActions = new ObservableCollection<PlayerAction>();
+
+            var frameStep = new PlayerAction
+            {
+                ActionId = "Framestep",
+                Action = new Action(() =>
+                {
+                    if (Player.IsPlaying == false && Player.IsPaused == false)
+                    {
+                        return;
+                    }
+
+                    Player.FrameStep();
+                })
+            };
+            PlayerActions.Add(frameStep);
+
+            var playPause = new PlayerAction
+            {
+                ActionId = "Play/Pause",
+                Action = new Action(() =>
+                {
+                    if (Player.IsPaused || Player.Source == null)
+                        Player.Play();
+                    else if (Player.Source != null)
+                        Player.Pause();
+                })
+            };
+            PlayerActions.Add(playPause);
+
+            var subDelayRight = new PlayerAction
+            {
+                ActionId = "Subs Delay +",
+                Action = new Action(() =>
+                {
+                    SubtitleDelay += 200;
+                })
+            };
+            PlayerActions.Add(subDelayRight);
+
+            var subDelayLeft = new PlayerAction
+            {
+                ActionId = "Subs Delay -",
+                Action = new Action(() =>
+                {
+                    SubtitleDelay -= 200;
+                })
+            };
+            PlayerActions.Add(subDelayLeft);
+
+            var seekLeft = new PlayerAction
+            {
+                ActionId = "Seek Back 1%",
+                Action = new Action(() =>
+                {
+                    Player.MediaPosition = Math.Max(0, Player.MediaPosition - (Player.MediaDuration / 100));
+                    ShowOsdMessage("Seeking: " + Player.Position);
+                })
+            };
+            PlayerActions.Add(seekLeft);
+
+            var seekRigth = new PlayerAction
+            {
+                ActionId = "Seek Forward 1%",
+                Action = new Action(() =>
+                {
+                    Player.MediaPosition = Math.Min(Player.MediaDuration, Player.MediaPosition + (Player.MediaDuration / 100));
+                    ShowOsdMessage("Seeking: " + Player.Position);
+                })
+            };
+            PlayerActions.Add(seekRigth);
+
+            var incSub = new PlayerAction
+            {
+                ActionId = "Increase Subtitle Size",
+                Action = new Action(() =>
+                {
+                    if (SubtitleSize < 150) SubtitleSize += 2;
+                })
+            };
+            PlayerActions.Add(incSub);
+
+            var decSub = new PlayerAction
+            {
+                ActionId = "Decrease Subtitle Size",
+                Action = new Action(() =>
+                {
+                    if (SubtitleSize > 6) SubtitleSize -= 2;
+                })
+            };
+            PlayerActions.Add(decSub);
+
+            var incVol = new PlayerAction
+            {
+                ActionId = "Increase Volume",
+                Action = new Action(() =>
+                {
+                    Player.Volume = Math.Min(1, Player.Volume + .1);
+                })
+            };
+            PlayerActions.Add(incVol);
+
+            var decVol = new PlayerAction
+            {
+                ActionId = "Decrease Volume",
+                Action = new Action(() =>
+                {
+                    Player.Volume = Math.Max(0, Player.Volume - .1);
+                })
+            };
+            PlayerActions.Add(decVol);
+
+            var nextTrack = new PlayerAction
+            {
+                ActionId = "Next Track",
+                Action = new Action(() =>
+                {
+                    if (Playlist.NextCommand.CanExecute(null)) Playlist.NextCommand.Execute(null);
+                })
+            };
+            PlayerActions.Add(nextTrack);
+
+            var prevTrack = new PlayerAction
+            {
+                ActionId = "Previous Track",
+                Action = new Action(() =>
+                {
+                    if (Playlist.PreviousCommand.CanExecute(null)) Playlist.PreviousCommand.Execute(null);
+                })
+            };
+            PlayerActions.Add(prevTrack);
+
+            var fs = new PlayerAction
+            {
+                ActionId = "Go Fullscreen",
+                Action = new Action(() =>
+                {
+                    _view.ExecuteCommand(MainViewCommand.Maximize);
+                })
+            };
+            PlayerActions.Add(fs);
+
+            var exFs = new PlayerAction
+            {
+                ActionId = "Exit Fullscreen",
+                Action = new Action(() =>
+                {
+                    _view.ExecuteCommand(MainViewCommand.Restore);
+                })
+            };
+            PlayerActions.Add(exFs);
+
+            var ss = new PlayerAction
+            {
+                ActionId = "Save Video Screenshot",
+                Action = new Action(() =>
+                {
+                    var bs = ServiceLocator.GetService<IFramePictureProvider>().GetBitmapOfVideoElement();
+                    if (bs != null)
+                    {
+                        Microsoft.Win32.SaveFileDialog sf = new Microsoft.Win32.SaveFileDialog();
+                        sf.AddExtension = true;
+                        sf.DefaultExt = ".png";
+                        sf.Filter = "Portable Network Graphics (*.png)|*.png|All Files|*.*";
+                        sf.FilterIndex = 0;
+                        sf.FileName = Path.GetFileNameWithoutExtension(Player.SourceFileName) + ".png";
+                        if (true == sf.ShowDialog(ServiceLocator.GetService<IMainView>().GetWindow()))
+                        {
+                            SaveImageToFile(bs, sf.FileName);
+                        }
+                    }
+                })
+            };
+            PlayerActions.Add(ss);
+            
+            
+        }
+
+        public static void SaveImageToFile(BitmapSource image, string filePath)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                BitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(image));
+                encoder.Save(fileStream);
+            }
+        }
+
 		#endregion
 
 		#region "Properties"
+
+        public ObservableCollection<KeyboardShortcut> KeyboardShortcuts
+        {
+            get { return GetValue(() => KeyboardShortcuts); }
+            set { SetValue(() => KeyboardShortcuts, value); }
+        }
+
+        public List<string> PlayerActionNames
+        {
+            get
+            {
+                return PlayerActions.Select(pa => pa.ActionId).ToList();
+            }
+        }
+
+        public ObservableCollection<PlayerAction> PlayerActions
+        {
+            get { return GetValue(() => PlayerActions); }
+            set { SetValue(() => PlayerActions, value); }
+        }
 
         public bool ShowVisualizations
         {
@@ -289,7 +668,25 @@ namespace MediaPoint.VM
         public int SubtitleSize
         {
             get { return GetValue(() => SubtitleSize); }
-            set { SetValue(() => SubtitleSize, value); }
+            set
+            {
+                if (SetValue(() => SubtitleSize, value))
+                {
+                    ShowOsdMessage("Subtitle size: " + value);
+                }
+            }
+        }
+
+        public int SubtitleDelay
+        {
+            get { return GetValue(() => SubtitleDelay); }
+            set
+            {
+                if (SetValue(() => SubtitleDelay, value))
+                {
+                    ShowOsdMessage("Subtitle delay: " + value);
+                }
+            }
         }
 
 		public FontObject SubtitleFont
@@ -542,11 +939,15 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
                 var okFonts = new List<FontObject>();
                 foreach (FontFamily font in fonts)
                 {
-                    var f = new FontObject(font);
-                    if (f.GetStyledFontGeometryUsingCache() != null)
+                    try
                     {
-                        okFonts.Add(f);
+                        var f = new FontObject(font);
+                        if (f.GetStyledFontGeometryUsingCache() != null)
+                        {
+                            okFonts.Add(f);
+                        }
                     }
+                    catch { }
                 }
 
                 if (!File.Exists(cacheFilePath) || okFonts.Count != FontObject.GeometryCount)
@@ -590,5 +991,213 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
 
 		#endregion
 
-	}
+
+        public bool HandleKey(Key key, bool isControl, bool isAlt, bool isShift, bool isExternal)
+        {
+            var shortcut = KeyboardShortcuts.FirstOrDefault(ks => ks.Key == key &&
+                ks.Control == isControl &&
+                ks.Alt == isAlt &&
+                ks.Shift == isShift &&
+                ks.External == isExternal);
+
+            if (shortcut != null)
+            {
+                return shortcut.Execute(PlayerActions);
+            }
+
+            return false;
+        }
+
+        public string Name
+        {
+            get { return "MainVM"; }
+        }
+
+        DateTime _lastPlateTime = DateTime.Now;
+
+        public double PlateLeft
+        {
+            get { return GetValue(() => PlateLeft); }
+            set { SetValue(() => PlateLeft, value); }
+        }
+
+        public double PlateTop
+        {
+            get { return GetValue(() => PlateTop); }
+            set { SetValue(() => PlateTop, value); }
+        }
+
+        public double PlateWidth
+        {
+            get { return GetValue(() => PlateWidth); }
+            set { SetValue(() => PlateWidth, value); }
+        }
+
+        public double PlateHeight
+        {
+            get { return GetValue(() => PlateHeight); }
+            set { SetValue(() => PlateHeight, value); }
+        }
+
+        public double PlateAngle
+        {
+            get { return GetValue(() => PlateAngle); }
+            set { SetValue(() => PlateAngle, value); }
+        }
+
+        public bool ShowPlate
+        {
+            get { return GetValue(() => ShowPlate); }
+            set { SetValue(() => ShowPlate, value); }
+        }
+
+        Plate IsFuzzyMatch(string text, Rect rect)
+        {
+            if (Plates.Count == 0) return null;
+
+            for (int i = Plates.Count - 1; i >= Math.Max(0, Plates.Count - 4); i--)
+            {
+                if ((DateTime.Now - Plates[i].time) > TimeSpan.FromSeconds(15)) continue;
+
+                bool textMatch = Levenshtein.Compare(Plates[i].Text ?? "", text ?? "") <= 2;
+
+                if (textMatch)
+                {
+                    return Plates[i];
+                }
+
+                if ((DateTime.Now - Plates[i].time) < TimeSpan.FromSeconds(1.5)) continue;
+                
+                Rect r1 = Plates[i].AsRect();
+                bool rectmatch = r1.IntersectsWith(rect);
+
+                if (rectmatch)
+                {
+                    return Plates[i];
+                }
+            }
+
+            return null;
+        }
+
+        public class Plate : ViewModel
+        {
+            public int Left;
+            public int Top;
+            public int Width;
+            public int Height;
+            public double Angle;
+            public string Text
+            {
+                get { return GetValue(() => Text); }
+                set { SetValue(() => Text, value); }
+            }
+            public DateTime time;
+            public int Confidence
+            {
+                get { return GetValue(() => Confidence); }
+                set { SetValue(() => Confidence, value); }
+            }
+            public Rect AsRect()
+            {
+                return new Rect(Left, Top, Width, Height);
+            }
+        }
+
+        public Plate SelectedPlate
+        {
+            get { return GetValue(() => SelectedPlate); }
+            set { SetValue(() => SelectedPlate, value); }
+        }
+
+        public ObservableCollection<Plate> Plates
+        {
+            get { return GetValue(() => Plates); }
+            set { SetValue(() => Plates, value); }
+        }
+
+        public void ProcessPlate(string text, int left, int top, int right, int bottom, double angle, int confidence)
+        {
+            if (confidence < 800) return;
+
+            var chars = text.ToCharArray().ToList();
+
+            if (chars[1] == 'I' && chars[2] == 'J')
+            {
+                chars[1] = 'U';
+                chars.RemoveAt(2);
+            }
+
+            for (int i = 0; i < 1; i++)
+            {
+                if (chars[i] == '0')
+                    chars[i] = 'O';
+                if (chars[i] == '1')
+                    chars[i] = 'I';
+            }
+            for (int i = chars.Count - 1; i >= chars.Count - 2; i--)
+            {
+                if (chars[i] == '0')
+                    chars[i] = 'O';
+                if (chars[i] == '1')
+                    chars[i] = 'I';
+            }
+
+            text = new string(chars.ToArray());
+            var rect = new Rect(left, top, right - left, bottom - top);
+
+            Plate match;
+
+            if ((match = IsFuzzyMatch(text, rect)) != null)
+            {
+                UpdatePlate(match, rect, angle, text, confidence);
+                return;
+            }
+
+            if (match == null)
+                SetPlate(text, confidence, rect, angle);
+        }
+
+        private void SetPlate(string text, int confidence, Rect rect, double angle)
+        {
+            Plate p = new Plate();
+            p.Text = text;
+            p.time = DateTime.Now;
+
+            Plates.Add(p);
+
+            UpdatePlate(p, rect, angle, text, confidence);
+
+            ShowOsdMessage("Plate: " + text + " with " + confidence / 10 + "% confidence");
+        }
+
+        private void UpdatePlate(Plate plate, Rect rect, double angle, string text, int confidence)
+        {
+            _lastPlateTime = DateTime.Now;
+
+            plate.Angle = angle;
+            plate.Left = (int)rect.Left;
+            plate.Top = (int)rect.Top;
+            plate.Width = (int)rect.Width;
+            plate.Height = (int)rect.Height;
+            if (plate.Confidence > 0 && plate.Confidence < confidence && plate.Text != text)
+            {
+                ShowOsdMessage("Plate updated: " + text + " with " + confidence / 10 + "% confidence");
+                plate.Confidence = confidence;
+                plate.Text = text;
+            }
+
+            if (plate.Confidence == 0) plate.Confidence = confidence;
+
+            SelectedPlate = plate;
+
+            PlateLeft = rect.Left - 5;
+            PlateTop = rect.Top - 5;
+            PlateWidth = rect.Width + 10;
+            PlateHeight = rect.Height + 10;
+            PlateAngle = angle;
+
+            ShowPlate = true;
+        }
+    }
 }

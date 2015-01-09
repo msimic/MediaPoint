@@ -373,6 +373,11 @@ HRESULT Scheduler::ProcessSample(IMFSample *pSample, LONG *plNextSleep)
 	}
 	else
 	{
+		if (m_ScheduledSamples.Count() > 1)
+		{
+				m_pCB->AlprProcess(pSample);
+		}
+
 		// The sample is not ready yet. Return it to the queue.
 		hr = m_ScheduledSamples.PutBack(pSample);
 	}

@@ -715,26 +715,26 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                         //    hr = lavVideoSettings.SetHWAccelResolutionFlags(LAVHWResFlag.SD | LAVHWResFlag.HD | LAVHWResFlag.UHD);
                         //}
 
-//#if DEBUG
+#if DEBUG
                         hr = lavVideoSettings.SetTrayIcon(true);
-//#endif
+#endif
                     }
 
                     hr = m_graph.AddFilter(_video, "LavVideo");
                     DsError.ThrowExceptionForHR(hr);
                 }
 
-                //IBaseFilter vobSub = FilterProvider.GetVobSubFilter();
+                IBaseFilter vobSub = FilterProvider.GetVobSubFilter();
 
-                //if (vobSub != null)
-                //{
-                //    hr = m_graph.AddFilter(vobSub, "VobSub");
-                //    DsError.ThrowExceptionForHR(hr);
-                //    IDirectVobSub vss = vobSub as IDirectVobSub;
-                //    if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
-                //    _vobsub = vss;
-                //    InitSubSettings();
-                //}
+                if (vobSub != null)
+                {
+                    hr = m_graph.AddFilter(vobSub, "VobSub");
+                    DsError.ThrowExceptionForHR(hr);
+                    IDirectVobSub vss = vobSub as IDirectVobSub;
+                    if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
+                    _vobsub = vss;
+                    InitSubSettings();
+                }
 
                 hr = m_graph.Connect(DsFindPin.ByName((IBaseFilter)splitter, "Audio"), DsFindPin.ByDirection(_audio, PinDirection.Input, 0));
                 if (hr == 0)
@@ -744,7 +744,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
 
                 IBaseFilter dcDsp = FilterProvider.GetDCDSPFilter();
-                if (dcDsp != null && false)
+                if (dcDsp != null)
                 {
                     if (_dspFilter != null) Marshal.ReleaseComObject(_dspFilter);
                     _dspFilter = (IDCDSPFilterInterface)dcDsp;
@@ -786,31 +786,31 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
                 if (HasVideo)
                 {
-                    //hr = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)_video, PinDirection.Output, 0), DsFindPin.ByDirection(vobSub, PinDirection.Input, 0));
-                    //DsError.ThrowExceptionForHR(hr);
-                    //if (hr == 0)
-                    //{
-                    //    int lc;
-                    //    ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
-                    //    subconnected = (lc != 0);
-                    //    IPin pn = DsFindPin.ByName((IBaseFilter)splitter, "Subtitle");
-                    //    if (pn != null)
-                    //    {
-                    //        hr = m_graph.Connect(pn, DsFindPin.ByDirection(vobSub, PinDirection.Input, 1));
-                    //        ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
-                    //        subconnected = (lc != 0);
-                    //    }
-                    //    hr = m_graph.Connect(DsFindPin.ByDirection(vobSub, PinDirection.Output, 0),
-                    //                          DsFindPin.ByDirection(_renderer, PinDirection.Input, 0));
-                    //}
-                    //else
-                    //{
+                    hr = m_graph.Connect(DsFindPin.ByDirection((IBaseFilter)_video, PinDirection.Output, 0), DsFindPin.ByDirection(vobSub, PinDirection.Input, 0));
+                    DsError.ThrowExceptionForHR(hr);
+                    if (hr == 0)
+                    {
+                        int lc;
+                        ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
+                        subconnected = (lc != 0);
+                        IPin pn = DsFindPin.ByName((IBaseFilter)splitter, "Subtitle");
+                        if (pn != null)
+                        {
+                            hr = m_graph.Connect(pn, DsFindPin.ByDirection(vobSub, PinDirection.Input, 1));
+                            ((IDirectVobSub)vobSub).get_LanguageCount(out lc);
+                            subconnected = (lc != 0);
+                        }
+                        hr = m_graph.Connect(DsFindPin.ByDirection(vobSub, PinDirection.Output, 0),
+                                              DsFindPin.ByDirection(_renderer, PinDirection.Input, 0));
+                    }
+                    else
+                    {
                         if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
                         _vobsub = null; 
                         hr = m_graph.Connect(DsFindPin.ByDirection(_video, PinDirection.Output, 0),
                                           DsFindPin.ByDirection(_renderer, PinDirection.Input, 0));
 
-                    //}
+                    }
                 }
 
                 /* Loop over each pin of the source filter */

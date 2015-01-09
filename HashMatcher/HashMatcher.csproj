@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--Project was exported from assembly: D:\SourceCode\Mars\MediaPoint\Libs\AllArchitectures\SubtitleDownloader.dll-->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7CD46084-0448-4B5D-BCAE-ABE027389DC7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AssemblyName>HashMatcher</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    <ApplicationVersion>3.0.14.0</ApplicationVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\output\bin\x86\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\output\bin\x86\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CookComputing.XmlRpcV2">
+      <HintPath>..\Libs\AllArchitectures\CookComputing.XmlRpcV2.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="HashMatcher.cs" />
+    <Compile Include="SubtitleDownloader\Configuration.cs" />
+    <Compile Include="SubtitleDownloader\Util\StringExtensions.cs" />
+    <Compile Include="SubtitleDownloader\Util\FileUtils.cs" />
+    <Compile Include="SubtitleDownloader\Util\Decoder.cs" />
+    <Compile Include="SubtitleDownloader\Util\SimilarityUtils.cs" />
+    <Compile Include="SubtitleDownloader\Implementations\OpenSubtitles\OpenSubtitlesDownloader.cs" />
+    <Compile Include="SubtitleDownloader\Implementations\OpenSubtitles\IOpenSubtitlesProxy.cs" />
+    <Compile Include="SubtitleDownloader\Implementations\OpenSubtitles\subtitle.cs" />
+    <Compile Include="SubtitleDownloader\Implementations\OpenSubtitles\subrt.cs" />
+    <Compile Include="SubtitleDownloader\Implementations\OpenSubtitles\subInfo.cs" />
+    <Compile Include="SubtitleDownloader\Implementations\OpenSubtitles\subdata.cs" />
+    <Compile Include="SubtitleDownloader\Implementations\OpenSubtitles\subRes.cs" />
+    <Compile Include="SubtitleDownloader\Core\SubtitleSearchQuery.cs" />
+    <Compile Include="SubtitleDownloader\Core\ImdbSearchQuery.cs" />
+    <Compile Include="SubtitleDownloader\Core\EpisodeSearchQuery.cs" />
+    <Compile Include="SubtitleDownloader\Core\SearchQuery.cs" />
+    <Compile Include="SubtitleDownloader\Core\ISubtitleDownloader.cs" />
+    <Compile Include="SubtitleDownloader\Core\Languages.cs" />
+    <Compile Include="SubtitleDownloader\Core\SubLang.cs" />
+    <Compile Include="SubtitleDownloader\Core\Subtitle.cs" />
+    <Compile Include="SubtitleDownloader\Core\SubtitleDownloaderFactory.cs" />
+    <Compile Include="SubtitleDownloader\Properties\Settings.cs" />
+    <Compile Include="xmlrpc\Tracer.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SubtitleDownloader\Configuration.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

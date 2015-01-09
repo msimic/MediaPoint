@@ -110,6 +110,10 @@
     <NoWarn>1607</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CookComputing.XmlRpcV2, Version=3.0.0.0, Culture=neutral, PublicKeyToken=a7d6e17aa302004d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\AllArchitectures\CookComputing.XmlRpcV2.dll</HintPath>
+    </Reference>
     <Reference Include="DirectShowLib-2005">
       <HintPath>..\Libs\AllArchitectures\DirectShowLib-2005.dll</HintPath>
     </Reference>
@@ -152,6 +156,7 @@
     <Compile Include="Helpers\LanguageISOTranslator.cs" />
     <Compile Include="Helpers\ReflectionHelper.cs" />
     <Compile Include="Helpers\VisualHelper.cs" />
+    <Compile Include="Helpers\WindowShadow.cs" />
     <Compile Include="Interfaces\DCDSPFilters.cs" />
     <Compile Include="Interfaces\IEqualizer.cs" />
     <Compile Include="Interfaces\ITag.cs" />
@@ -422,6 +427,12 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HashMatcher\HashMatcher.csproj">
+      <Project>{7cd46084-0448-4b5d-bcae-abe027389dc7}</Project>
+      <Name>HashMatcher</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

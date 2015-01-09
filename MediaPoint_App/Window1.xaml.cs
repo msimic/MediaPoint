@@ -32,7 +32,7 @@ namespace MediaPoint.App
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class Window1 : IMainView, ISpectrumPlayer, ISpectrumVisualizer
+    public partial class Window1 : IMainView, ISpectrumPlayer, ISpectrumVisualizer, IInputTeller, IFramePictureProvider
     {
         private double _skewX;
         private double _skewY;
@@ -69,6 +69,22 @@ namespace MediaPoint.App
             }
         }
 
+        private void OnGotFocus(object sender, RoutedEventArgs e)
+        {
+            IsInInputControl = IsInInput(e);
+        }
+
+        private bool IsInInput(RoutedEventArgs e)
+        {
+            return e.OriginalSource is System.Windows.Controls.Control && e.OriginalSource != mediaControls;
+        }
+
+        private void OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            IsInInputControl = false;
+        }
+
+
         public Window1()
         {
             InitializeComponent();
@@ -85,13 +101,25 @@ namespace MediaPoint.App
             Layout.PreviewDragOver += Layout_PreviewDragOver;
             Layout.PreviewDrop += Window1_PreviewDrop;
 
-            MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
+            AddHandler(
+                UIElement.GotFocusEvent,
+                new RoutedEventHandler(OnGotFocus),
+                true
+            );
+
+            AddHandler(
+                UIElement.LostFocusEvent,
+                new RoutedEventHandler(OnLostFocus),
+                true
+            );
+
+            //MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
             
-            foreach (MMDevice device in enumerator.EnumerateAudioEndPoints(DataFlow.All, DeviceState.All))
-            {
-                Console.WriteLine("*** {0}, {1}, {2}", device.FriendlyName, device.DeviceFriendlyName, device.State);
-                if (device.State == DeviceState.Active) Console.WriteLine("   {0}", device.AudioEndpointVolume.Channels.Count);
-            }
+            //foreach (MMDevice device in enumerator.EnumerateAudioEndPoints(DataFlow.All, DeviceState.All))
+            //{
+            //    Console.WriteLine("*** {0}, {1}, {2}", device.FriendlyName, device.DeviceFriendlyName, device.State);
+            //    if (device.State == DeviceState.Active) Console.WriteLine("   {0}", device.AudioEndpointVolume.Channels.Count);
+            //}
         }
 
         void Layout_PreviewDragOver(object sender, DragEventArgs e)
@@ -162,7 +190,7 @@ namespace MediaPoint.App
                     foreach (var file in data)
                     {
                         string extension = Path.GetExtension(file);
-                        if (extension != null)
+                        if (extension != null && extension != string.Empty)
                         {
                             var ext = extension.Substring(1).ToLowerInvariant();
                             if (!SupportedFiles.All.ContainsKey(ext))
@@ -231,7 +259,7 @@ namespace MediaPoint.App
         {
             bool didSomething = false;
             WindowInteropHelper winHelp = new WindowInteropHelper(this);
-
+            Window window = this;
             switch (command)
             {
                 case MainViewCommand.Close:
@@ -251,24 +279,55 @@ namespace MediaPoint.App
                     break;
                 case MainViewCommand.Maximize:
                     didSomething = true;
-                    ShowInTaskbar = true;
-                    Visibility = Visibility.Visible;
-                    MaxWidth = Int32.MaxValue;
-                    MaxHeight = Int32.MaxValue;
-                    WindowState = WindowState.Maximized;
-                    SetForegroundWindow(winHelp.Handle);
+                    //ShowInTaskbar = true;
+                    //Visibility = Visibility.Visible;
+                    //MaxWidth = Int32.MaxValue;
+                    //MaxHeight = Int32.MaxValue;
+                    //WindowState = WindowState.Maximized;
+                    //Tag = WindowStyle;
+                    ////WindowStyle = System.Windows.WindowStyle.None;
+                    //ShowWindow(winHelp.Handle, (uint)WindowShowStyle.ShowMaximized);
+                    //window.Tag = window.WindowStyle;
+                    //window.WindowStyle = WindowStyle.None;
+                    //SetForegroundWindow(winHelp.Handle);
+                    //window.Topmost = true;
+                    //window.MaxHeight = Int32.MaxValue;
+                    //window.MaxWidth = Int32.MaxValue;
+                    //window.WindowState = WindowState.Maximized;
+                    //if (window.DataContext is Main)
+                    //{
+                    //    (window.DataContext as Main).IsMaximized = true;
+                    //}
+                    window.WindowStyle = WindowStyle.None;
+					window.Topmost = true;
+				    window.MaxHeight = Int32.MaxValue;
+                    window.MaxWidth = Int32.MaxValue;
+					window.WindowState = WindowState.Maximized;
+                    if (window.DataContext is Main)
+                    {
+                        (window.DataContext as Main).IsMaximized = true;
+                    }
                     break;
                 case MainViewCommand.Restore:
                     didSomething = true;
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                    MinWidth = _lastMinSize.Width;
-                    MinHeight = _lastMinSize.Height;
-                    SetForegroundWindow(winHelp.Handle);
-                    ShowWindow(winHelp.Handle, (uint)WindowShowStyle.Restore);
-                    WindowState = WindowState.Normal;
-                    ShowInTaskbar = true;
-                    Show();
-
+                    //WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    //MinWidth = _lastMinSize.Width;
+                    //MinHeight = _lastMinSize.Height;
+                    ////SetForegroundWindow(winHelp.Handle);
+                    //WindowState = WindowState.Normal;
+                    //ShowWindow(winHelp.Handle, (uint)WindowShowStyle.Restore);
+                    //WindowStyle = (WindowStyle)this.Tag;
+                    //ShowInTaskbar = true;
+                    //Hide();
+                    //Show();
+                    //this.Topmost = false;
+                    window.Topmost = false;
+					window.WindowStyle = (WindowStyle)window.Tag; //WindowStyle.SingleBorderWindow;
+					window.WindowState = WindowState.Normal;
+                    if (window.DataContext is Main)
+                    {
+                        (window.DataContext as Main).IsMaximized = false;
+                    }
                     break;
             }
 
@@ -282,6 +341,7 @@ namespace MediaPoint.App
             /// <summary>Hides the window and activates another window.</summary>
             /// <remarks>See SW_HIDE</remarks>
             Hide = 0,
+            ShowMaximized = 3,
             /// <summary>Activates and displays the window. If the window is
             /// minimized or maximized, the system restores it to its original size
             /// and position. An application should specify this flag when restoring
@@ -353,24 +413,35 @@ namespace MediaPoint.App
         {
             playlist.MouseEnter += MediaControlsOnMouseEnter;
             playlist.MouseLeave += MediaControlsOnMouseLeave;
+            playlist.IsVisibleChanged += uiPanel_IsVisibleChanged;
 
             mediaControls.MouseEnter += MediaControlsOnMouseEnter;
             mediaControls.MouseLeave += MediaControlsOnMouseLeave;
-
+            
             windowControls.MouseEnter += MediaControlsOnMouseEnter;
             windowControls.MouseLeave += MediaControlsOnMouseLeave;
+            windowControls.IsVisibleChanged += uiPanel_IsVisibleChanged;
 
             imdbOverlay.MouseEnter += MediaControlsOnMouseEnter;
             imdbOverlay.MouseLeave += MediaControlsOnMouseLeave;
+            imdbOverlay.IsVisibleChanged += uiPanel_IsVisibleChanged;
 
             onlineSubs.MouseEnter += MediaControlsOnMouseEnter;
             onlineSubs.MouseLeave += MediaControlsOnMouseLeave;
+            onlineSubs.IsVisibleChanged += uiPanel_IsVisibleChanged;
 
             equalizer.MouseEnter += MediaControlsOnMouseEnter;
             equalizer.MouseLeave += MediaControlsOnMouseLeave;
+            equalizer.IsVisibleChanged += uiPanel_IsVisibleChanged;
 
             options.MouseEnter += MediaControlsOnMouseEnter;
             options.MouseLeave += MediaControlsOnMouseLeave;
+            options.IsVisibleChanged += uiPanel_IsVisibleChanged;
+        }
+
+        void uiPanel_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if ((bool)e.NewValue != true) mediaControls.Focus();
         }
 
         public override void OnApplyTemplate()
@@ -634,6 +705,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                                         };
                 storyboard.Begin();
             }
+            Dispatcher.BeginInvoke((Action)(() => { if (_shadower != null) _shadower.SetShadowSize(6); }), DispatcherPriority.Normal);
         }
 
         private bool OneClick { get; set; }
@@ -710,7 +782,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         private ThumbnailToolBarButton[] _buttons;
         private bool _once;
         private bool _onceDone;
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private unsafe void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ServiceLocator.RegisterOverrideService(this as ISpectrumVisualizer);
 
@@ -718,16 +790,85 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
                     _once = true;
+                    _originalStyle = WindowStyle;
+                    Tag = _originalStyle;
                     var ih = new WindowInteropHelper(this);
                     IntPtr hwnd = ih.Handle;
                     TaskbarManager.Instance.ThumbnailToolBars.AddButtons(hwnd, _buttons);
                     _lastMinSize = new Size(MinWidth, MinHeight);
                     Visibility = Visibility.Visible;
+                    _shadower = WindowShadow.CreateNew().Shadower;
+                    IntPtr hinstance = Marshal.GetHINSTANCE(this.GetType().Module);
+                    int hr = _shadower.Init(hinstance);
+                    hr = _shadower.CreateForWindow(hwnd);
+                    _shadower.SetShadowSize(6);
+                    HwndSource source = HwndSource.FromVisual(this) as HwndSource;
+
+                    if (source != null)
+                    {
+                        var _hook = new HwndSourceHook(WndProc);
+                        source.AddHook(_hook);
+                    }
                     _onceDone = true;
                 }), DispatcherPriority.ApplicationIdle);
         }
 
-        private void Window_Initialized(object sender, EventArgs e)
+        private const Int32 WM_EXITSIZEMOVE = 0x0232;
+        private const Int32 WM_SIZING = 0x0214;
+        private const Int32 WM_SIZE = 0x0005;
+
+        private const Int32 SIZE_RESTORED = 0x0000;
+        private const Int32 SIZE_MINIMIZED = 0x0001;
+        private const Int32 SIZE_MAXIMIZED = 0x0002;
+        private const Int32 SIZE_MAXSHOW = 0x0003;
+        private const Int32 SIZE_MAXHIDE = 0x0004;
+
+        private IntPtr WndProc(IntPtr hwnd, Int32 msg, IntPtr wParam, IntPtr lParam, ref Boolean handled)
+        {
+            IntPtr result = IntPtr.Zero;
+
+            switch (msg)
+            {
+                case WM_SIZING:             // sizing gets interactive resize
+                    //OnResizing();
+                    _shadower.SetShadowSize(0);
+                    break;
+
+                case WM_SIZE:               // size gets minimize/maximize as well as final size
+                    {
+                        int param = wParam.ToInt32();
+
+                        switch (param)
+                        {
+                            case SIZE_RESTORED:
+                                //OnRestored();
+                                break;
+                            case SIZE_MINIMIZED:
+                                //OnMinimized();
+                                break;
+                            case SIZE_MAXIMIZED:
+                                //OnMaximized();
+                                break;
+                            case SIZE_MAXSHOW:
+                                break;
+                            case SIZE_MAXHIDE:
+                                break;
+                        }
+                    }
+                    break;
+
+                case WM_EXITSIZEMOVE:
+                    //OnResized();
+                    _shadower.SetShadowSize(6);
+                    break;
+            }
+
+            return result;
+        }
+
+        IWindowShadow _shadower;
+
+        private unsafe void Window_Initialized(object sender, EventArgs e)
         {
             ServiceLocator.RegisterOverrideService(mediaPlayer as IPlayerView);
 
@@ -748,7 +889,6 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             bNext.Click += (o, args) => ButtonClicked("next");
             bVolup.Click += (o, args) => ButtonClicked("volumeup");
             bVolDown.Click += (o, args) => ButtonClicked("volumedown");
-
         }
 
         public void UpdateTaskbarButtons()
@@ -830,6 +970,8 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
 
         public bool GetFFTData(float[] fftDataBuffer)
         {
+            if (visualizations.Visibility != System.Windows.Visibility.Visible) return false;
+
             _sampleAggregator.GetFFTResults(fftDataBuffer);
             DoPreEmphesis(fftDataBuffer, 90f / 100);
             //DoLogarithmic(fftDataBuffer, 0.0f, 1f);
@@ -866,6 +1008,8 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         float[] _data;
         public void DisplayFFTData(float[] data)
         {
+            if (visualizations.Visibility != System.Windows.Visibility.Visible) return;
+
             OnPropertyChanged("IsPlaying");
             _data = data;
             if (data == null) return;
@@ -884,6 +1028,30 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+        private System.Windows.WindowStyle _originalStyle;
 
+        //Window v;
+        private void window_Activated(object sender, EventArgs e)
+        {
+            //if (v == null)
+            //{
+            //    v = new Plates();
+            //    v.DataContext = Application.Current;
+            //    v.Owner = this;
+            //    v.Show();
+            //}
+        }
+
+
+        public bool IsInInputControl
+        {
+            get;
+            set;
+        }
+
+        public System.Windows.Media.Imaging.BitmapSource GetBitmapOfVideoElement()
+        {
+            return mediaPlayer.GetBitmapOfVideoElement();
+        }
     }
 }
