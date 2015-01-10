@@ -337,9 +337,9 @@ LRESULT CALLBACK CWndShadow::ParentProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 					// Awful! It seems that if the window size was not decreased
 					// the window region would never be updated until WM_PAINT was sent.
 					// So do not Update() until next WM_PAINT is received in this case
-					else if(LOWORD(lParam) > LOWORD(pThis->m_WndSize) || HIWORD(lParam) > HIWORD(pThis->m_WndSize))
+					/*else if(LOWORD(lParam) > LOWORD(pThis->m_WndSize) || HIWORD(lParam) > HIWORD(pThis->m_WndSize))
 						pThis->m_bUpdate = true;
-					else
+					else*/
 						pThis->Update(hwnd);
 				}
 
@@ -754,7 +754,7 @@ bool CWndShadow::SetColor(COLORREF NewColor)
 	return true;
 }
 
-void CWndShadow::Show(HWND hParentWnd)
+HRESULT CWndShadow::Show(HWND hParentWnd)
 {
 	// Clear all except the enabled status
 	m_Status &= SS_ENABLED | SS_DISABLEDBYAERO;
@@ -778,8 +778,11 @@ void CWndShadow::Show(HWND hParentWnd)
 	{
 		ShowWindow(m_hWnd, SW_SHOWNA);
 		Update(hParentWnd);
+		return S_OK;
 	}
 	else
+	{
 		ShowWindow(m_hWnd, SW_HIDE);
-	
+		return S_FALSE;
+	}
 }

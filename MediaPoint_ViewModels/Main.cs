@@ -25,10 +25,11 @@ using System.Windows;
 using MediaPoint.Helpers;
 using MediaPoint.Common.TaskbarNotification.Interop;
 using System.Windows.Media.Imaging;
+using MediaPoint.VM.Services.Model;
 
 namespace MediaPoint.VM
 {
-    public class Main : ViewModel, IKeyboardHandler, IPlateProcessor
+    public class Main : ViewModel, IKeyboardHandler, IPlateProcessor, ISettings
 	{
         internal static class NativeMethods
         {
@@ -51,6 +52,7 @@ namespace MediaPoint.VM
 		public Main()
 		{
             Plates = new ObservableCollection<Plate>();
+            SubtitleMinScore = 0.55;
 
             Observable.Interval(TimeSpan.FromSeconds(1.5)).Subscribe(i =>
             {
@@ -674,6 +676,15 @@ namespace MediaPoint.VM
                 {
                     ShowOsdMessage("Subtitle size: " + value);
                 }
+            }
+        }
+
+        public double SubtitleMinScore
+        {
+            get { return GetValue(() => SubtitleMinScore); }
+            set
+            {
+                SetValue(() => SubtitleMinScore, value);
             }
         }
 

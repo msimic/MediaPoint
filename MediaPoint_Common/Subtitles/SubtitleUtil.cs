@@ -10,6 +10,8 @@ using SubtitleDownloader.Core;
 using MediaPoint.Common.Extensions;
 using System.Net;
 using System.Threading;
+using MediaPoint.MVVM.Services;
+using MediaPoint.VM.Services.Model;
 
 namespace MediaPoint.Common.Subtitles
 {
@@ -253,8 +255,11 @@ namespace MediaPoint.Common.Subtitles
             Array.Reverse(patterns); // we like imdb first sicne we might skip searching further on some matches
 
             var ret = GetOrderedSubsMatches(preferredServices, preferredLanguages, patterns, messageCallback, noFiltering);
-            
-            ret.RemoveAll(m => m.Score <= 0.4); // crap
+
+            var settings = ServiceLocator.GetService<ISettings>();
+            double minScore = settings != null ? settings.SubtitleMinScore : 0.55;
+
+            ret.RemoveAll(m => m.Score <= minScore); // crap
 
             if (!needsImdb && imdbMatch == null)
             {
@@ -415,6 +420,10 @@ namespace MediaPoint.Common.Subtitles
                 string bestPattern = "";
                 foreach (var file in files)
                 {
+                    if (file.Length < 2)
+                    {
+                        continue;
+                    }
                     string title1, year1, titleAndYear1;
                     
                     GetMovieMetadata(file, out title1, out titleAndYear1, out year1, out season, out episode);
@@ -519,13 +528,36 @@ namespace MediaPoint.Common.Subtitles
 
             if (tryHash && File.Exists(strFileName))
             {
-                var ret = HashMatcher.HashMatcher.Match(strFileName);
+                var ret = HashMatcher.HashMatcher.Match(strFileName, "eng");
                 if (ret.Any(r => !string.IsNullOrEmpty(r.ImdbCode)))
                 {
                     try
                     {
-                        var imdb = new IMDb(Convert.ToInt32(ret.First(r => !string.IsNullOrEmpty(r.ImdbCode)).ImdbCode));
-                        if (imdb.status && imdb.SeriesSeason == season && imdb.SeriesEpisode == episode)
+                        var bestGuess = ret.GroupBy(g => g.ImdbCode).OrderByDescending(g => g.Count()).First().First();
+
+                        string sep2 = FindSeasonAndEpisode(bestGuess.FileName);
+                        int tmpSeason = 0; int tmpEpisode = 0;
+                        if (sep2 != "")
+                        {
+                            var sepx = sep1.ToLowerInvariant().Split('s', 'e');
+                            if (sepx.Length == 3)
+                            {
+                                tmpSeason = int.Parse(sepx[1]);
+                                tmpEpisode = int.Parse(sepx[2]);
+                            }
+                        }
+
+
+                        var imdb = new IMDb(Convert.ToInt32(bestGuess.ImdbCode));
+
+                        if (imdb.IsSeries == false && tmpSeason > 0)
+                        {
+                            imdb.SeriesSeason = tmpSeason;
+                            imdb.SeriesEpisode = tmpEpisode;
+                            imdb.IsSeries = true;
+                        }
+
+                        if (imdb.status && (season == 0 || (imdb.SeriesSeason == season && imdb.SeriesEpisode == episode)))
                         {
                             strTitle = imdb.Title;
                             strTitleAndYear = imdb.Title + " (" + imdb.Year + ")";

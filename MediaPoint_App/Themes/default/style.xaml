@@ -636,7 +636,6 @@
             <Setter.Value>
                 <Behaviors:StylizedBehaviorCollection>
                     <Behaviors:WindowStateBehavior />
-                    <Behaviors:BorderlessWindowBehavior ResizeWithGrip="True" />
                 </Behaviors:StylizedBehaviorCollection>
             </Setter.Value>
         </Setter>
@@ -1698,8 +1697,8 @@
                                 </Grid.ColumnDefinitions>
                                 <Image Source="{Binding Player.IMDb.Poster}" HorizontalAlignment="Center" VerticalAlignment="Center" MaxHeight="120"></Image>
                                 <StackPanel Grid.Column="1" Margin="20" MaxWidth="400" HorizontalAlignment="Center"  VerticalAlignment="Center">
-                                  <StackPanel Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <TextBlock>
+                                  <!--<StackPanel Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Center">-->
+                                    <TextBlock TextWrapping="Wrap" TextAlignment="Center">
                                       <Hyperlink Focusable="False" NavigateUri="{Binding Player.IMDb.ImdbURL}" Cursor="Hand">
                                         <Interactivity:Interaction.Triggers>
                                           <Interactivity:EventTrigger EventName="RequestNavigate" >
@@ -1710,7 +1709,7 @@
                                         <TextBlock Style="{DynamicResource DefaultFontStyle}" Foreground="#59C2FF" FontSize="14" Text="{Binding Player.IMDb.Year, StringFormat=' ({0})'}"></TextBlock>
                                       </Hyperlink>
                                     </TextBlock>
-                                  </StackPanel>
+                                  <!--</StackPanel>-->
                                   <TextBlock HorizontalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="14" Visibility="{Binding Player.IMDb.DisplaySubTitle, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" TextAlignment="Center" Text="{Binding Player.IMDb.DisplaySubTitle}"></TextBlock>
                                   <TextBlock HorizontalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" Foreground="White" FontSize="14" Text="{Binding Player.IMDb.GenresString}"></TextBlock>
                                   <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

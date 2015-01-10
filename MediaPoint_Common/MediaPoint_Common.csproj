@@ -170,6 +170,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ScreenSaver\ScreenSaver.cs" />
+    <Compile Include="Services\ISettings.cs" />
+    <Compile Include="Services\ServiceLocator.cs" />
     <Compile Include="Subtitles\SubtitleUtil.cs" />
     <Compile Include="TaskbarNotification\BalloonIcon.cs" />
     <Compile Include="DirectX\Direct3D.cs" />

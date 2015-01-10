@@ -65,7 +65,9 @@ public:
 	STDMETHOD(Init)(HINSTANCE hInstance);
 	STDMETHOD(UpdateWindow)(HWND window);
 	STDMETHOD(SetShadowSize)(int size);
-	
+// Show or hide the shadow, depending on the enabled status stored in m_Status
+	STDMETHOD(Show)(HWND hParent);
+
 	// IUnknown methods
     STDMETHOD(QueryInterface)(REFIID riid, void ** ppv);
     STDMETHOD_(ULONG, AddRef)();
@@ -157,6 +159,5 @@ protected:
 			(GetBValue(cl) * (DWORD)nAlpha / 255);
 	}
 
-	// Show or hide the shadow, depending on the enabled status stored in m_Status
-	void Show(HWND hParent); 
+	 
 };

@@ -117,7 +117,7 @@ namespace MediaPoint.App.Behaviors
 		public WindowStateSettings(string settingsKey) : base(settingsKey) { }
 
 		[UserScopedSetting]
-		[DefaultSettingValue("800")]
+		[DefaultSettingValue("820")]
 		public double Width
 		{
 			get { return (double)this["Width"]; }
@@ -125,7 +125,7 @@ namespace MediaPoint.App.Behaviors
 		}
 
 		[UserScopedSetting]
-		[DefaultSettingValue("600")]
+		[DefaultSettingValue("500")]
 		public double Height
 		{
 			get { return (double)this["Height"]; }

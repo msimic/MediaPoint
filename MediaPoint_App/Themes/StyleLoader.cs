@@ -145,7 +145,7 @@ namespace MediaPoint.App.Themes
 			try
 			{
 				var themeName = "";
-				using (FileStream fs = new FileStream(fileName, FileMode.Open))
+				using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
 				{
 					ResourceDictionary dic = (ResourceDictionary)XamlReader.Load(fs);
 					if (!dic.Contains(THEME_PREFIX))
@@ -160,6 +160,7 @@ namespace MediaPoint.App.Themes
 					appDic.MergedDictionaries.Add(dic);
 					appDic.EndInit();
 					CurrentStyleFolder = Path.Combine(path, @"Themes\" + styleName);
+                    
 					return themeName;
 				}
 			}

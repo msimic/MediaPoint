@@ -81,6 +81,7 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE Init(HINSTANCE hInstance) = 0;
 	virtual HRESULT STDMETHODCALLTYPE UpdateWindow(HWND hParentWnd) = 0;
 	virtual HRESULT STDMETHODCALLTYPE SetShadowSize(int size) = 0;
+	virtual HRESULT STDMETHODCALLTYPE Show(HWND hParentWnd) = 0;
 };
 
 // Project headers.

@@ -21,6 +21,9 @@ namespace MediaPoint.Common.Helpers
         int UpdateWindow(IntPtr hParentWnd);
         [PreserveSig]
         int SetShadowSize(int size);
+        [PreserveSig]
+        int Show(IntPtr hParentWnd);
+        
     }
 
     public class WindowShadow

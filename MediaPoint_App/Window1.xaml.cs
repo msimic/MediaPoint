@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -26,6 +27,8 @@ using System.Windows.Controls.Primitives;
 using System.Collections.Generic;
 using MediaPoint.VM.Config;
 using System.IO;
+using System.Windows.Interactivity;
+using MediaPoint.App.Behaviors;
 
 namespace MediaPoint.App
 {
@@ -88,7 +91,18 @@ namespace MediaPoint.App
         public Window1()
         {
             InitializeComponent();
+
             Visibility = Visibility.Collapsed;
+
+            var ih = new WindowInteropHelper(this);
+            ih.EnsureHandle();
+            IntPtr hwnd = ih.Handle;
+            _shadower = WindowShadow.CreateNew().Shadower;
+            IntPtr hinstance = Marshal.GetHINSTANCE(this.GetType().Module);
+            int hr = _shadower.Init(hinstance);
+            hr = _shadower.CreateForWindow(hwnd);
+            _shadower.SetShadowSize(6);
+                    
             var timer = new DispatcherTimer(DispatcherPriority.Background);
             timer.Tick += Timer_Tick;
             timer.Interval = new TimeSpan(0, 0, 3);
@@ -238,8 +252,44 @@ namespace MediaPoint.App
                 AnimationExtensions.AnimatePropertyTo(skew, s => s.AngleY, _skewY, 0.3);
             }
         }
+
+        [DllImport("User32.dll")]
+        public static extern IntPtr SendMessage(
+             IntPtr hWnd, UInt32 Msg, Int32 wParam, Int32 lParam);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetWindowRect(HandleRef hWnd, out RECT lpRect);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;        // x position of upper-left corner
+            public int Top;         // y position of upper-left corner
+            public int Right;       // x position of lower-right corner
+            public int Bottom;      // y position of lower-right corner
+        }
+
         void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs args)
         {
+            if (this.Visibility == Visibility.Visible)
+            {
+                try
+                {
+                    Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        RefreshBorderlessBehavior();
+                        if (_shadower != null)
+                        {
+                            _shadower.SetShadowSize(0);
+                            _shadower.SetShadowSize(6);
+                            var hwnd = new WindowInteropHelper(this).Handle;
+                            int fail = _shadower.Show(hwnd);
+                        }
+                    }), DispatcherPriority.ApplicationIdle);
+                }
+                catch { }
+            }
             CheckTrayIcon();
         }
 
@@ -311,8 +361,8 @@ namespace MediaPoint.App
                 case MainViewCommand.Restore:
                     didSomething = true;
                     //WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                    //MinWidth = _lastMinSize.Width;
-                    //MinHeight = _lastMinSize.Height;
+                    MinWidth = _lastMinSize.Width;
+                    MinHeight = _lastMinSize.Height;
                     ////SetForegroundWindow(winHelp.Handle);
                     //WindowState = WindowState.Normal;
                     //ShowWindow(winHelp.Handle, (uint)WindowShowStyle.Restore);
@@ -705,7 +755,9 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                                         };
                 storyboard.Begin();
             }
-            Dispatcher.BeginInvoke((Action)(() => { if (_shadower != null) _shadower.SetShadowSize(6); }), DispatcherPriority.Normal);
+            //Dispatcher.BeginInvoke((Action)(() => {
+            //    if (_shadower != null) _shadower.SetShadowSize(6);
+            //}), DispatcherPriority.Normal);
         }
 
         private bool OneClick { get; set; }
@@ -796,12 +848,6 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                     IntPtr hwnd = ih.Handle;
                     TaskbarManager.Instance.ThumbnailToolBars.AddButtons(hwnd, _buttons);
                     _lastMinSize = new Size(MinWidth, MinHeight);
-                    Visibility = Visibility.Visible;
-                    _shadower = WindowShadow.CreateNew().Shadower;
-                    IntPtr hinstance = Marshal.GetHINSTANCE(this.GetType().Module);
-                    int hr = _shadower.Init(hinstance);
-                    hr = _shadower.CreateForWindow(hwnd);
-                    _shadower.SetShadowSize(6);
                     HwndSource source = HwndSource.FromVisual(this) as HwndSource;
 
                     if (source != null)
@@ -809,8 +855,38 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                         var _hook = new HwndSourceHook(WndProc);
                         source.AddHook(_hook);
                     }
+
+                    Visibility = Visibility.Visible;
+                    
+
                     _onceDone = true;
                 }), DispatcherPriority.ApplicationIdle);
+
+            RefreshBorderlessBehavior();
+
+        }
+
+        public void RefreshBorderlessBehavior()
+        {
+            bool isLoading = false;
+            BehaviorCollection itemBehaviors = Interaction.GetBehaviors(this);
+            if (itemBehaviors.Any(b => b is BorderlessWindowBehavior) == true)
+            {
+                try
+                {
+                    itemBehaviors.Remove(itemBehaviors.First(b => b is BorderlessWindowBehavior));
+                }
+                catch
+                {
+                    isLoading = true;
+                }
+            }
+            if (!isLoading)
+            {
+                var bwb = new BorderlessWindowBehavior();
+                itemBehaviors.Add(bwb);
+                bwb.ResizeWithGrip = (WindowStyle == System.Windows.WindowStyle.None);
+            }
         }
 
         private const Int32 WM_EXITSIZEMOVE = 0x0232;
@@ -831,7 +907,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             {
                 case WM_SIZING:             // sizing gets interactive resize
                     //OnResizing();
-                    _shadower.SetShadowSize(0);
+                    //if (_shadower != null) _shadower.SetShadowSize(0);
                     break;
 
                 case WM_SIZE:               // size gets minimize/maximize as well as final size
@@ -859,7 +935,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
 
                 case WM_EXITSIZEMOVE:
                     //OnResized();
-                    _shadower.SetShadowSize(6);
+                    //if (_shadower != null) _shadower.SetShadowSize(6);
                     break;
             }
 

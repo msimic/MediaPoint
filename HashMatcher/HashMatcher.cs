@@ -13,13 +13,20 @@ namespace HashMatcher
     {
         public static List<Subtitle> Match(string file, params string[] languages)
         {
-            OpenSubtitlesDownloader sd = new OpenSubtitlesDownloader();
-            SearchQuery sq = new SearchQuery(@"");
-            sq.LanguageCodes = languages;
-            sq.FileSize = (int)new FileInfo(file).Length;
-            sq.FileHash = FileUtils.HexadecimalHash(file);
-            var found = sd.SearchSubtitles(sq);
-            return found;
+            try
+            {
+                OpenSubtitlesDownloader sd = new OpenSubtitlesDownloader();
+                SearchQuery sq = new SearchQuery(@"");
+                sq.LanguageCodes = languages;
+                sq.FileSize = (int)new FileInfo(file).Length;
+                sq.FileHash = FileUtils.HexadecimalHash(file);
+                var found = sd.SearchSubtitles(sq);
+                return found;
+            }
+            catch
+            {
+                return new List<Subtitle>();
+            }
         }
     }
 }

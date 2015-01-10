@@ -158,7 +158,7 @@ namespace MediaPoint.App.Behaviors
 
 				if (newValue)
 				{
-					//window.Tag = window.WindowStyle;
+					window.Tag = window.WindowStyle;
 					window.WindowStyle = WindowStyle.None;
 					window.Topmost = true;
 				    window.MaxHeight = Int32.MaxValue;

@@ -1255,7 +1255,7 @@ namespace MediaPoint.App.Behaviors
 		/// </summary>
 		/// <param name="hwnd">The HWND.</param>
 		/// <param name="lParam">The l param.</param>
-		private static void WmGetMinMaxInfo(System.IntPtr hwnd, System.IntPtr lParam)
+		private void WmGetMinMaxInfo(System.IntPtr hwnd, System.IntPtr lParam)
 		{
 			MINMAXINFO mmi = (MINMAXINFO) Marshal.PtrToStructure(lParam, typeof (MINMAXINFO));
 
@@ -1271,6 +1271,11 @@ namespace MediaPoint.App.Behaviors
 				RECT rcMonitorArea = monitorInfo.rcMonitor;
 				mmi.ptMaxPosition.x = Math.Abs(rcMonitorArea.left);
 				mmi.ptMaxPosition.y = Math.Abs(rcMonitorArea.top);
+                if (AssociatedObject != null)
+                {
+                    mmi.ptMinTrackSize.x = (int)(AssociatedObject as Window).MinWidth * 92/72;
+                    mmi.ptMinTrackSize.y = (int)(AssociatedObject as Window).MinHeight * 92 / 72;
+                }
 				mmi.ptMaxSize.x = Math.Abs(rcMonitorArea.right);
 				mmi.ptMaxSize.y = Math.Abs(rcMonitorArea.bottom);
 			}
@@ -1320,7 +1325,7 @@ namespace MediaPoint.App.Behaviors
 			}
 
 
-			AssociatedObject.WindowStyle = WindowStyle.None;
+			//AssociatedObject.WindowStyle = WindowStyle.None;
 			AssociatedObject.ResizeMode = ResizeWithGrip ? ResizeMode.CanResizeWithGrip : ResizeMode.CanResize;
 
 			base.OnAttached();
@@ -1363,7 +1368,7 @@ namespace MediaPoint.App.Behaviors
 			dpd = DependencyPropertyDescriptor.FromProperty(Window.TemplateProperty, AssociatedObject.GetType());
 			dpd.RemoveValueChanged(AssociatedObject, _OnWindowPropertyChangedThatRequiresTemplateFixup);
 			AssociatedObject.StateChanged -= _FixupRestoreBounds;
-			AssociatedObject.ResizeMode = ResizeMode.CanResize;
+            AssociatedObject.SetValue(Window.ResizeModeProperty, DependencyProperty.UnsetValue);
 			_FixupFrameworkIssues(true);
 			RemoveHwndHook();
 			base.OnDetaching();
@@ -1377,6 +1382,7 @@ namespace MediaPoint.App.Behaviors
 			if (AssociatedObject.IsLoaded)
 			{
 				m_hwndSource = HwndSource.FromVisual(AssociatedObject) as HwndSource;
+                if (m_hwndSource == null) return;
 				m_hwndSource.AddHook(HwndHook);
 				m_hwnd = new WindowInteropHelper(AssociatedObject).Handle;
 
@@ -1477,7 +1483,6 @@ namespace MediaPoint.App.Behaviors
 		private IntPtr HwndHook(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
 			IntPtr returnval = IntPtr.Zero;
-            
             //const int SC_SCREENSAVE = 0xF140;
             //const int SC_MONITORPOWER = 0xF170;
             //const int WM_SYSCOMMAND = 0x0112;
@@ -1491,7 +1496,7 @@ namespace MediaPoint.App.Behaviors
 			{
 				case WINDOWPOSCHANGING:
 					{
-                        if (AssociatedObject.IsInitialized && AssociatedObject.WindowState == WindowState.Normal)
+                        if (AssociatedObject != null && AssociatedObject.IsInitialized && AssociatedObject.WindowState == WindowState.Normal && AssociatedObject.WindowStyle == WindowStyle.None)
                         {
                             WINDOWPOS pos = (WINDOWPOS)Marshal.PtrToStructure(lParam, typeof(WINDOWPOS));
                             if ((pos.flags & (int)NOMOVE) != 0 || AssociatedObject.Content == null || (pos.cx == 0 && pos.cy == 0))
@@ -1503,6 +1508,11 @@ namespace MediaPoint.App.Behaviors
                             {
                                 double r = (double)mu.NaturalVideoWidth / (double)mu.NaturalVideoHeight;
 
+                                if ((double)pos.cx / pos.cy != r)
+                                {
+                                    pos.cy = (int)((double)pos.cx / r);
+                                }
+
                                 pos.cx = (int)(pos.cy * r);
                                 pos.cy = (int)(pos.cx / r);
 
@@ -1512,9 +1522,7 @@ namespace MediaPoint.App.Behaviors
                                     return IntPtr.Zero;
                                 }
 
-                                var ms = new Size(AssociatedObject.MinWidth, AssociatedObject.MinHeight);
-                                    //(Size)
-                                    //_transformToDevice.Transform(new Vector(AssociatedObject.MinWidth, AssociatedObject.MinHeight));
+                                var ms = (Size) _transformToDevice.Transform(new Vector(AssociatedObject.MinWidth, AssociatedObject.MinHeight));
 
                                 if (pos.cx < ms.Width)
                                 {
@@ -1538,34 +1546,41 @@ namespace MediaPoint.App.Behaviors
 					break;
 				case WM_NCCALCSIZE:
 					{
-						handled = true;
+                        if (AssociatedObject != null && AssociatedObject.WindowStyle == WindowStyle.None) handled = true;
 					}
 					break;
 				case WM_NCPAINT:
 					{
 						// Works for Windows Vista and higher
-                        //if (Environment.OSVersion.Version.Major >= 6)
-                        //{
-                        //    var m = new MARGINS {bottomHeight = 1, leftWidth = 1, rightWidth = 1, topHeight = 1};
-                        //    DwmExtendFrameIntoClientArea(m_hwnd, ref m);
-                        //}
-						handled = true;
+                        if (AssociatedObject != null && Environment.OSVersion.Version.Major >= 6 && AssociatedObject.WindowStyle == WindowStyle.None)
+                        {
+                            var m = new MARGINS { bottomHeight = 0, leftWidth = 0, rightWidth = 0, topHeight = 0 };
+                            DwmExtendFrameIntoClientArea(m_hwnd, ref m);
+                            handled = true;
+                        }
+                        
 					}
 					break;
 				case WM_NCACTIVATE:
 					{
-						/* As per http://msdn.microsoft.com/en-us/library/ms632633(VS.85).aspx , "-1" lParam does not
-                         * repaint the nonclient area to reflect the state change. */
-						returnval = DefWindowProc(hWnd, message, wParam, new IntPtr(-1));
-						handled = true;
+                        if (AssociatedObject != null && AssociatedObject.WindowStyle == WindowStyle.None)
+                        {
+                            /* As per http://msdn.microsoft.com/en-us/library/ms632633(VS.85).aspx , "-1" lParam does not
+                             * repaint the nonclient area to reflect the state change. */
+                            returnval = DefWindowProc(hWnd, message, wParam, new IntPtr(-1));
+                            handled = true;
+                        }
 					}
 					break;
 				case WM_GETMINMAXINFO:
 					{
-						/* From Lester's Blog (thanks @aeoth):  
-						 * http://blogs.msdn.com/b/llobo/archive/2006/08/01/maximizing-window-_2800_with-windowstyle_3d00_none_2900_-considering-taskbar.aspx */
-						//WmGetMinMaxInfo(hWnd, lParam);
-						//handled = true;
+                        if (AssociatedObject != null && AssociatedObject.WindowStyle == WindowStyle.None)
+                        {
+                            /* From Lester's Blog (thanks @aeoth):  
+                             * http://blogs.msdn.com/b/llobo/archive/2006/08/01/maximizing-window-_2800_with-windowstyle_3d00_none_2900_-considering-taskbar.aspx */
+                            WmGetMinMaxInfo(hWnd, lParam);
+                            handled = true;
+                        }
 					}
 					break;
 			}
@@ -1579,7 +1594,7 @@ namespace MediaPoint.App.Behaviors
 		                                                                                                	BorderlessWindowBehavior
 		                                                                                                	),
 		                                                                                                new PropertyMetadata
-		                                                                                                	(true,
+		                                                                                                	(false,
 		                                                                                                	 OnGripChanged));
 
 		private static void OnGripChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
