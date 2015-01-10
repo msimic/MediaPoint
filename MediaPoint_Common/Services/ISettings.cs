@@ -9,5 +9,7 @@ namespace MediaPoint.VM.Services.Model
     public interface ISettings : IService
     {
         double SubtitleMinScore { get; set; }
+        List<string> SubtitleLanguagesCodes { get; }
+        bool PreferenceToHashMatchedSubtitle { get; }
     }
 }

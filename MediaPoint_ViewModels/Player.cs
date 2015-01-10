@@ -822,7 +822,8 @@ namespace MediaPoint.VM
             b.DoWork += (sender, args) =>
             {
                 string strTitle, strYear, strTitleAndYear; int season, episode;
-                args.Result = SubtitleUtil.GetIMDbFromFilename(uri.LocalPath, Path.GetDirectoryName(uri.LocalPath), out strTitle, out strTitleAndYear, out strYear, out season, out episode, MessageCallback);
+                SubtitleDownloader.Core.Subtitle bestGuessSubtitle = null;
+                args.Result = SubtitleUtil.GetIMDbFromFilename(uri.LocalPath, Path.GetDirectoryName(uri.LocalPath), out strTitle, out strTitleAndYear, out strYear, out season, out episode, MessageCallback, out bestGuessSubtitle);
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
@@ -982,6 +983,8 @@ namespace MediaPoint.VM
                 return;
             }
 
+            SubtitleItem bestSubMatch = null;
+
             try
             {
 
@@ -990,8 +993,6 @@ namespace MediaPoint.VM
                 {
                     // if nothing is downloading and we have file subs in the folder
                     string lcode = Main.SubtitleLanguages.Count > 0 ? Main.SubtitleLanguages[0].Id : "";
-
-                    SubtitleItem bestSubMatch = null;
 
                     for (int i = 0; i < Main.SubtitleLanguages.Count; i++)
                     {
@@ -1008,7 +1009,7 @@ namespace MediaPoint.VM
             {
                 Monitor.Exit(_subtitleSearchLocker);
             }
-            DownloadSubtitleForUriAndQueryIMDB(Source);
+            if (bestSubMatch == null) DownloadSubtitleForUriAndQueryIMDB(Source);
         }
 
 		private SubtitleItem FillSubs(Uri video)

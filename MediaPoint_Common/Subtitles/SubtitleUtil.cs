@@ -31,8 +31,27 @@ namespace MediaPoint.Common.Subtitles
         public static string DownloadSubtitle(string fileName, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback)
         {
             var fn = Path.GetFileName(fileName);
-            SubtitleMatch subtitle = FindSubtitleForFilename(fn, Path.GetDirectoryName(fileName), preferredLanguages, preferredServices, out imdbMatch, out otherChoices, messageCallback);
-            return DownloadSubtitle(subtitle, fileName);
+
+            SubtitleMatch subtitle = null;
+
+            if (ServiceLocator.GetService<ISettings>().PreferenceToHashMatchedSubtitle)
+            {
+                subtitle = FindSubtitleForFilename(fileName, Path.GetDirectoryName(fileName), preferredLanguages, preferredServices, out imdbMatch, out otherChoices, messageCallback, false, true, true);
+
+                if (subtitle != null)
+                {
+                    return DownloadSubtitle(subtitle, fileName);
+                }
+            }
+
+            subtitle = FindSubtitleForFilename(fn, Path.GetDirectoryName(fileName), preferredLanguages, preferredServices, out imdbMatch, out otherChoices, messageCallback, false, true, false);
+
+            if (subtitle != null)
+            {
+                return DownloadSubtitle(subtitle, fileName);
+            }
+
+            return null;
         }
 
         static object _fileLocker = new object();
@@ -114,9 +133,11 @@ namespace MediaPoint.Common.Subtitles
             return resultFile;
         }
 
-        public static IMDb GetIMDbFromFilename(string filename, string folderName, out string strTitle, out string strTitleAndYear, out string strYear, out int season, out int episode, Action<string> messageCallback)
+        public static IMDb GetIMDbFromFilename(string filename, string folderName, out string strTitle, out string strTitleAndYear, out string strYear, out int season, out int episode, Action<string> messageCallback, out Subtitle bestGuessSubtitle)
         {
             if (messageCallback != null) messageCallback("Matching media with IMDb ...");
+
+            bestGuessSubtitle = null;
 
             // extract meaningful data from the filename
             var imd = GetMovieMetadata(
@@ -125,7 +146,7 @@ namespace MediaPoint.Common.Subtitles
                 out strTitleAndYear,
                 out strYear,
                 out season,
-                out episode, true, true);
+                out episode, out bestGuessSubtitle, true, true);
 
             if (imd != null) return imd;
 
@@ -140,7 +161,7 @@ namespace MediaPoint.Common.Subtitles
                     out tmpTitleAndYear,
                     out strYear,
                     out tmpSeason,
-                    out tmpEpisode);
+                    out tmpEpisode, out bestGuessSubtitle, true, false);
 
                 if (tmpSeason != 0)
                 {
@@ -180,7 +201,7 @@ namespace MediaPoint.Common.Subtitles
                     out strTitleAndYear,
                     out strYear,
                     out season,
-                    out episode);
+                    out episode, out bestGuessSubtitle, true, false);
 
                 // cleanup multiple spaces
                 strTitle = new Regex(@"\s+").Replace(strTitle, " ");
@@ -219,18 +240,36 @@ namespace MediaPoint.Common.Subtitles
 
         }
 
-        public static SubtitleMatch FindSubtitleForFilename(string filename, string folderName, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback, bool noFiltering = false, bool needsImdb = true)
+        public static SubtitleMatch FindSubtitleForFilename(string filename, string folderName, string[] preferredLanguages, string[] preferredServices, out IMDb imdbMatch, out List<SubtitleMatch> otherChoices, Action<string> messageCallback, bool noFiltering = false, bool needsImdb = true, bool allowBestGuess = false)
         {
             int season, episode;
             string regexSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars()) + @"\.\_";
+            string strTitle, strYear, strTitleAndYear;
+            
+            Subtitle bestGuessSubtitle = null;
+            imdbMatch = GetIMDbFromFilename(filename, folderName, out strTitle, out strTitleAndYear, out strYear, out season, out episode, messageCallback, out bestGuessSubtitle);
+
+            if (bestGuessSubtitle != null && allowBestGuess)
+            {
+                otherChoices = null;
+                return new SubtitleMatch
+                {
+                    Subtitle = bestGuessSubtitle,
+                    Language = bestGuessSubtitle.LanguageCode,
+                    MatchedBy = "Hasher",
+                    MatchRelease = "",
+                    Releases = new string [] {},
+                    Score = 1,
+                    Service = "OpenSubtitles"
+                };
+            }
+
+            filename = Path.GetFileName(filename);
             Regex r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
             filename = r.Replace(filename, " ");
 
             filename = Path.GetFileName(filename);
-            string strTitle, strYear, strTitleAndYear;
             string sep1 = "";
-
-            imdbMatch = GetIMDbFromFilename(filename, folderName, out strTitle, out strTitleAndYear, out strYear, out season, out episode, messageCallback);
 
             if (season != 0)
             {
@@ -392,6 +431,7 @@ namespace MediaPoint.Common.Subtitles
         {
             int season;
             int episode;
+            Subtitle bestGuessSubtitle = null;
             foreach (var subtitle in subs)
             {
                 string subFileName = subtitle.FileName;
@@ -425,8 +465,8 @@ namespace MediaPoint.Common.Subtitles
                         continue;
                     }
                     string title1, year1, titleAndYear1;
-                    
-                    GetMovieMetadata(file, out title1, out titleAndYear1, out year1, out season, out episode);
+
+                    GetMovieMetadata(file, out title1, out titleAndYear1, out year1, out season, out episode, out bestGuessSubtitle, true, false);
 
                     if (string.IsNullOrEmpty(year1))
                     {
@@ -451,7 +491,7 @@ namespace MediaPoint.Common.Subtitles
                     {
                         string title2, year2, titleAndYear2;
 
-                        GetMovieMetadata(pattern, out title2, out titleAndYear2, out year2, out season, out episode);
+                        GetMovieMetadata(pattern, out title2, out titleAndYear2, out year2, out season, out episode, out bestGuessSubtitle, true, false);
 
                         double m = WordMatches(year2 == "" ? title1 : titleAndYear1, year1 == "" ? title2 : titleAndYear2);
 
@@ -507,12 +547,13 @@ namespace MediaPoint.Common.Subtitles
             return (double)found.Length / longest;
         }
 
-        public static IMDb GetMovieMetadata(string strFileName, out string strTitle, out string strTitleAndYear, out string strYear, out int season, out int episode, bool bCleanChars = true, bool tryHash = false)
+        public static IMDb GetMovieMetadata(string strFileName, out string strTitle, out string strTitleAndYear, out string strYear, out int season, out int episode, out Subtitle bestSubtitleGuess, bool bCleanChars = true, bool tryHash = false)
         {
             season = 0;
             episode = 0;
             strTitle = "";
             strYear = "";
+            bestSubtitleGuess = null;
 
             string sep1 = FindSeasonAndEpisode(strFileName);
 
@@ -528,7 +569,8 @@ namespace MediaPoint.Common.Subtitles
 
             if (tryHash && File.Exists(strFileName))
             {
-                var ret = HashMatcher.HashMatcher.Match(strFileName, "eng");
+                var langs = ServiceLocator.GetService<ISettings>().SubtitleLanguagesCodes.ToArray();
+                var ret = HashMatcher.HashMatcher.Match(strFileName, langs);
                 if (ret.Any(r => !string.IsNullOrEmpty(r.ImdbCode)))
                 {
                     try
@@ -569,6 +611,9 @@ namespace MediaPoint.Common.Subtitles
                                 season = imdb.SeriesSeason;
                                 episode = imdb.SeriesEpisode;
                             }
+
+                            var ordered = ret.Where(s => s.ImdbCode == bestGuess.ImdbCode).OrderBy(s => langs.ToList().IndexOf(s.LanguageCode)).First();
+                            bestSubtitleGuess = new Subtitle(ordered.Id, ordered.ProgramName, ordered.FileName, ordered.LanguageCode);
                             return imdb;
                         }
                     }

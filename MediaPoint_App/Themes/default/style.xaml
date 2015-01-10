@@ -1909,8 +1909,11 @@
                                                             </StackPanel.Resources>
                                                             <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
                                                             <StackPanel Orientation="Vertical">
-                                                            <CheckBox IsChecked="{Binding AutoLoadSubtitles}">
+                                                            <CheckBox Name="chkSubDwn"  IsChecked="{Binding AutoLoadSubtitles}">
                                                             <TextBlock FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">AUTOMATICALLY DOWNLOAD MISSING SUBTITLE</TextBlock>
+                                                            </CheckBox>
+                                                            <CheckBox IsEnabled="{Binding Path=IsChecked, ElementName=chkSubDwn}"  IsChecked="{Binding PreferenceToHashMatchedSubtitle}">
+                                                            <TextBlock FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">PREFER SUBTITLES THAT MATCH THE FILE HASH</TextBlock>
                                                             </CheckBox>
                                                             <StackPanel Orientation="Horizontal">
                                                             <TextBlock Margin="0,0,5,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">LANGUAGE PREFERENCE (ORDERED):</TextBlock>

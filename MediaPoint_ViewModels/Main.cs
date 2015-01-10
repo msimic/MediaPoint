@@ -53,6 +53,7 @@ namespace MediaPoint.VM
 		{
             Plates = new ObservableCollection<Plate>();
             SubtitleMinScore = 0.55;
+            PreferenceToHashMatchedSubtitle = true;
 
             Observable.Interval(TimeSpan.FromSeconds(1.5)).Subscribe(i =>
             {
@@ -649,6 +650,20 @@ namespace MediaPoint.VM
             set { SetValue(() => AllLanguages, value); }
         }
 
+        public List<string> SubtitleLanguagesCodes
+        {
+            get
+            {
+                return SubtitleLanguages.Select(sl => sl.Id).ToList();
+            }
+        }
+
+        public bool PreferenceToHashMatchedSubtitle
+        {
+            get { return GetValue(() => PreferenceToHashMatchedSubtitle); }
+            set { SetValue(() => PreferenceToHashMatchedSubtitle, value); }
+        }
+        
         public List<ITag> SubtitleLanguages
         {
             get { return GetValue(() => SubtitleLanguages); }
