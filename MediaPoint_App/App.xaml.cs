@@ -14,6 +14,7 @@ using Microsoft.VisualBasic.ApplicationServices;
 using System.Linq;
 using MediaPoint.Interfaces;
 using MediaPoint.VM.Services.Model;
+using MediaPoint.Common.Services;
 
 namespace MediaPoint.App
 {
@@ -49,6 +50,7 @@ namespace MediaPoint.App
             var vm = new Main { Themes = new ObservableCollection<string>(StyleLoader.GetAllStyles()) };
             ServiceLocator.RegisterService<IPlateProcessor>(vm);
             ServiceLocator.RegisterService<ISettings>(vm);
+            ServiceLocator.RegisterService<IMainWindow>(w);
             
             w.DataContext = vm;
             //sl.LoadStyle("default");
@@ -64,6 +66,7 @@ namespace MediaPoint.App
             InterceptKeys.Start((MainWindow as Window1));
 
             w.Show();
+
         }
 
         public void Activate(string[] args)
@@ -134,9 +137,10 @@ namespace MediaPoint.App
                         ex = ex.InnerException;
                     }
                     MessageBox.Show(Application.Current.MainWindow, ex.Message + Environment.NewLine + ex.StackTrace, "Serious problem occured - App may crash!", MessageBoxButton.OK, MessageBoxImage.Error);
-                
+                    ((ServiceLocator.GetService<IMainWindow>() as Window1).DataContext as Main).ExitCommand.Execute(null);
                     return false;
                 }
+                ((ServiceLocator.GetService<IMainWindow>() as Window1).DataContext as Main).ExitCommand.Execute(null);
                 return false;
             }
 

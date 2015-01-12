@@ -617,8 +617,8 @@
     <Style TargetType="Window" x:Key="WindowStyle">
         <Setter Property="Width" Value="820"/>
         <Setter Property="Height" Value="500"/>
-        <Setter Property="MinHeight" Value="500"/>
-        <Setter Property="MinWidth" Value="820"/>
+        <!--<Setter Property="MinHeight" Value="500"/>
+        <Setter Property="MinWidth" Value="820"/>-->
         <Setter Property="ResizeMode" Value="NoResize"/>
         <Setter Property="WindowStyle" Value="None"/>
         <Setter Property="Template">
@@ -641,7 +641,7 @@
         </Setter>
       <Style.Triggers>
         <Trigger Property="WindowState" Value="Maximized">
-            <Setter Property="Padding" Value="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource FullscreenPaddingConverter}}" />
+            <!--<Setter Property="Padding" Value="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource FullscreenPaddingConverter}}" />-->
         </Trigger>
         <Trigger Property="ResizeMode" Value="CanResizeWithGrip">
           <Setter Property="Template">

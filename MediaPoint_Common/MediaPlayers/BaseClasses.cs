@@ -19,6 +19,9 @@ using Size=System.Windows.Size;
 using MediaPoint.Common.Interfaces;
 using System.Text;
 using MediaPoint.Common.Interfaces.LavAudio;
+using System.Windows.Interop;
+using MediaPoint.MVVM.Services;
+using MediaPoint.Common.Services;
 #endregion
 
 namespace MediaPoint.Common.DirectShow.MediaPlayers
@@ -1369,7 +1372,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 _presenterSettings = presenterSettings;
 
                 /* Use our interop hWnd */
-                IntPtr handle = GetDesktopWindow();//HwndHelper.Handle;
+                IntPtr handle = (ServiceLocator.GetService<IMainWindow>().GetWindowHandle()); // GetDesktopWindow();//HwndHelper.Handle;
 
                 /* QueryInterface the IMFVideoDisplayControl */
                 if (_displayControl != null) Marshal.ReleaseComObject(_displayControl);

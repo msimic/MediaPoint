@@ -1059,56 +1059,99 @@ namespace MediaPoint.Controls
 	                    var source = PresentationSource.FromVisual(_currentWindow);
 	                    Matrix transformFromDevice =
 	                        source.CompositionTarget.TransformFromDevice;
+
+                        Vector monitorPosition;
+
 	                    var ms = WindowExtensions.MonitorSize(ref _currentWindow,
-	                                                        transformFromDevice);
+	                                                        transformFromDevice, out monitorPosition);
 
 	                    float dpiX, dpiY;
 	                    Common.TaskbarNotification.Interop.WinApi.GetDPI(out dpiX, out dpiY);
 
-	                    double mw = ms.Width*0.7*(dpiX/96.0);
-	                    double mh = ms.Height*0.7*(dpiY/96.0);
-	                    double w = MediaPlayerBase.NaturalVideoWidth;
-	                    double h = MediaPlayerBase.NaturalVideoHeight;
-	                    double r = w/h;
+                        double maxW = ms.Width * 0.7;
+                        double maxH = ms.Height * 0.7;
+                        double minW = _currentWindow.MinWidth * (dpiX / 96.0);
+                        double minH = _currentWindow.MinHeight * (dpiX / 96.0);
+                        double w = MediaPlayerBase.NaturalVideoWidth;
+                        double h = MediaPlayerBase.NaturalVideoHeight;
+                        double r = w / h;
 
-	                    if (w < _currentWindow.MinWidth)
-	                    {
-	                        w = _currentWindow.MinWidth;
-	                        h = w/r;
-	                    }
-	                    if (h < _currentWindow.MinHeight)
-	                    {
-	                        h = _currentWindow.MinHeight;
-	                        w = h*r;
-	                    }
+                        var wih = new WindowInteropHelper(_currentWindow);
+                        IntPtr hWnd = wih.Handle;
 
-	                    if (w > mw)
-	                    {
-	                        w = mw;
-	                        h = w/r;
-	                    }
-	                    if (h > mh)
-	                    {
-	                        h = mh;
-	                        w = h*r;
-	                    }
+                        if (maxW > w && w > minW &&
+                            maxH > h && h > minH)
+                        {
+                            w *= (dpiX / 96.0);
+                            h *= (dpiY / 96.0);
 
-	                    var wih = new WindowInteropHelper(_currentWindow);
-	                    IntPtr hWnd = wih.Handle;
+                            double newW = w;
+                            double newH = h;
 
-	                    double minW = _currentWindow.MinWidth;
-	                    double minH = _currentWindow.MinHeight;
-	                    _currentWindow.MinWidth = 0;
-	                    _currentWindow.MinHeight = 0;
-	                    _currentWindow.Left = (int) ((ms.Width - w)/2);
-	                    _currentWindow.Top = (int) ((ms.Height - h)/2);
-	                    Size wpfSize = GetWPFSize(_currentWindow, new Size(w, h));
-	                    _currentWindow.Width = wpfSize.Width;
-	                    _currentWindow.Height = wpfSize.Height;
-	                    SetWindowPos(hWnd, IntPtr.Zero, (int) _currentWindow.Left,
-	                                (int) _currentWindow.Top, (int) w, (int) h, 0);
-	                    _currentWindow.MinWidth = minW;
-	                    _currentWindow.MinHeight = minH;
+                            SetWindowPos(hWnd, IntPtr.Zero, (int)((ms.Width * (dpiX / 96.0) - newW) / 2 + (monitorPosition.X * (dpiX / 96.0))),
+                                    (int)((ms.Height * (dpiY / 96.0) - newH) / 2 + (monitorPosition.Y * (dpiY / 96.0))), (int)(newW), (int)(newH), 0);
+                        }
+                        else
+                        {
+                            double newW = maxW;
+                            double newH = newW / r;
+
+                            if (newH > maxH)
+                            {
+                                newH = maxH;
+                                newW = newH * r;
+                            }
+
+                            newW *= (dpiX / 96.0);
+                            newH *= (dpiY / 96.0);
+
+                            SetWindowPos(hWnd, IntPtr.Zero, (int)((ms.Width * (dpiX / 96.0) - newW) / 2 + (monitorPosition.X * (dpiX / 96.0))),
+                                    (int)((ms.Height * (dpiY / 96.0) - newH) / 2 + (monitorPosition.Y * (dpiY / 96.0))), (int)(newW), (int)(newH), 0);
+                        }
+                        //double mw = ms.Width*0.7*(dpiX/96.0);
+                        //double mh = ms.Height*0.7*(dpiY/96.0);
+                        //double w = MediaPlayerBase.NaturalVideoWidth;
+                        //double h = MediaPlayerBase.NaturalVideoHeight;
+                        //double r = w/h;
+
+                        //if (w < _currentWindow.MinWidth)
+                        //{
+                        //    w = _currentWindow.MinWidth;
+                        //    h = w/r;
+                        //}
+                        //if (h < _currentWindow.MinHeight)
+                        //{
+                        //    h = _currentWindow.MinHeight;
+                        //    w = h*r;
+                        //}
+
+                        //if (w > mw)
+                        //{
+                        //    w = mw;
+                        //    h = w/r;
+                        //}
+                        //if (h > mh)
+                        //{
+                        //    h = mh;
+                        //    w = h*r;
+                        //}
+
+                        //var wih = new WindowInteropHelper(_currentWindow);
+                        //IntPtr hWnd = wih.Handle;
+
+                        //double minW = _currentWindow.MinWidth;
+                        //double minH = _currentWindow.MinHeight;
+                        //_currentWindow.MinWidth = 0;
+                        //_currentWindow.MinHeight = 0;
+                        //_currentWindow.Left = (int) ((ms.Width - w)/2);
+                        //_currentWindow.Top = (int) ((ms.Height - h)/2);
+                        //Size wpfSize = GetWPFSize(_currentWindow, new Size(w, h));
+                        //_currentWindow.Width = wpfSize.Width;
+                        //_currentWindow.Height = wpfSize.Height;
+                        //SetWindowPos(hWnd, IntPtr.Zero, (int) _currentWindow.Left,
+                        //            (int) _currentWindow.Top, (int) w, (int) h, 0);
+                        //_currentWindow.MinWidth = minW;
+                        //_currentWindow.MinHeight = minH;
 	                }
 	            }
 	        }), DispatcherPriority.ContextIdle);

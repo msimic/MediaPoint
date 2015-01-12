@@ -1250,6 +1250,105 @@ namespace MediaPoint.App.Behaviors
 		[DllImport("User32")]
 		internal static extern IntPtr MonitorFromWindow(IntPtr handle, int flags);
 
+        [DllImport("shcore.dll", CallingConvention = CallingConvention.StdCall)]
+        protected static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, ref uint xDpi, ref uint yDpi);
+
+        protected enum MonitorDpiType
+        {
+            MDT_Effective_DPI = 0,
+            MDT_Angular_DPI = 1,
+            MDT_Raw_DPI = 2,
+            MDT_Default = MDT_Effective_DPI
+        }
+
+        protected Point GetDpiForHwnd(IntPtr hwnd)
+        {
+            IntPtr monitor = MonitorFromWindow(hwnd, 2);
+
+            uint newDpiX = 96;
+            uint newDpiY = 96;
+            if (GetDpiForMonitor(monitor, (int)MonitorDpiType.MDT_Effective_DPI, ref newDpiX, ref newDpiY) != 0)
+            {
+                return new Point
+                {
+                    X = 96.0,
+                    Y = 96.0
+                };
+            }
+
+            return new Point
+            {
+                X = (double)newDpiX,
+                Y = (double)newDpiY
+            };
+        }
+
+        private void WmGetMinMaxInfoAA(IntPtr hwnd, IntPtr lParam)
+        {
+            MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO));
+            // Adjust the maximized size and position to fit the work area of the correct monitor
+            int MONITOR_DEFAULTTONEAREST = 0x00000002;
+            IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            if (monitor != IntPtr.Zero)
+            {
+                MONITORINFO monitorInfo = new MONITORINFO();
+                GetMonitorInfo(monitor, monitorInfo);
+                var dpi = GetDpiForHwnd(hwnd);
+                if (dpi.X != dpi.Y)
+                {
+                    dpi.X = dpi.Y;
+                }
+                RECT rcWorkArea = monitorInfo.rcWork;
+                RECT rcMonitorArea = monitorInfo.rcMonitor;
+                mmi.ptMaxPosition.x = Math.Abs(rcWorkArea.left - rcMonitorArea.left);
+                mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top);
+                var metroWindow = AssociatedObject as Window;
+                var ignoreTaskBar = true; // metroWindow != null && (metroWindow.IgnoreTaskbarOnMaximize || metroWindow.UseNoneWindowStyle);
+                var x = ignoreTaskBar ? monitorInfo.rcMonitor.left : monitorInfo.rcWork.left;
+                var y = ignoreTaskBar ? monitorInfo.rcMonitor.top : monitorInfo.rcWork.top;
+                mmi.ptMaxSize.x = ignoreTaskBar ? Math.Abs(monitorInfo.rcMonitor.right - x) : Math.Abs(monitorInfo.rcWork.right - x);
+                mmi.ptMaxSize.y = ignoreTaskBar ? Math.Abs(monitorInfo.rcMonitor.bottom - y) : Math.Abs(monitorInfo.rcWork.bottom - y);
+                // only do this on maximize
+                //if (!ignoreTaskBar && AssociatedObject.WindowState == WindowState.Maximized)
+                //{
+                //    mmi.ptMaxTrackSize.X = mmi.ptMaxSize.X;
+                //    mmi.ptMaxTrackSize.Y = mmi.ptMaxSize.Y;
+                //    mmi = AdjustWorkingAreaForAutoHide(monitor, mmi);
+                //}
+            }
+            Marshal.StructureToPtr(mmi, lParam, true);
+        }
+
+        private void HandleMaximizeA()
+        {
+            if (AssociatedObject != null && AssociatedObject.WindowState == WindowState.Maximized)
+            {
+                // remove resize border and window border, so we can move the window from top monitor position
+                AssociatedObject.BorderThickness = new Thickness(0);
+
+                var handle = new WindowInteropHelper(AssociatedObject).Handle;
+                // WindowChrome handles the size false if the main monitor is lesser the monitor where the window is maximized
+                // so set the window pos/size twice
+                IntPtr monitor = MonitorFromWindow(handle, 2);
+                if (monitor != IntPtr.Zero)
+                {
+                    var monitorInfo = new MONITORINFO();
+                    GetMonitorInfo(monitor, monitorInfo);
+                    var metroWindow = AssociatedObject as Window;
+                    var ignoreTaskBar = true;//metroWindow != null && (metroWindow.IgnoreTaskbarOnMaximize || metroWindow.UseNoneWindowStyle);
+                    var x = ignoreTaskBar ? monitorInfo.rcMonitor.left : monitorInfo.rcWork.left;
+                    var y = ignoreTaskBar ? monitorInfo.rcMonitor.top : monitorInfo.rcWork.top;
+                    var cx = ignoreTaskBar ? Math.Abs(monitorInfo.rcMonitor.right - x) : Math.Abs(monitorInfo.rcWork.right - x);
+                    var cy = ignoreTaskBar ? Math.Abs(monitorInfo.rcMonitor.bottom - y) : Math.Abs(monitorInfo.rcWork.bottom - y);
+                    SetWindowPos(handle, new IntPtr(-2), x, y, cx, cy, 0x0040);
+                }
+            }
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+
 		/// <summary>
 		/// Wms the get min max info.
 		/// </summary>
@@ -1269,16 +1368,15 @@ namespace MediaPoint.App.Behaviors
 				GetMonitorInfo(monitor, monitorInfo);
 				RECT rcWorkArea = monitorInfo.rcWork;
 				RECT rcMonitorArea = monitorInfo.rcMonitor;
-				mmi.ptMaxPosition.x = Math.Abs(rcMonitorArea.left);
-				mmi.ptMaxPosition.y = Math.Abs(rcMonitorArea.top);
-                if (AssociatedObject != null)
-                {
-                    mmi.ptMinTrackSize.x = (int)(AssociatedObject as Window).MinWidth * 92/72;
-                    mmi.ptMinTrackSize.y = (int)(AssociatedObject as Window).MinHeight * 92 / 72;
-                }
-				mmi.ptMaxSize.x = Math.Abs(rcMonitorArea.right);
-				mmi.ptMaxSize.y = Math.Abs(rcMonitorArea.bottom);
-			}
+                mmi.ptMaxPosition.x = 0; //(int)((double)rcMonitorArea.left / (120d / 96)); //(rcMonitorArea.left);
+                mmi.ptMaxPosition.y = 0; //(int)((double)rcMonitorArea.top / (120d / 96));
+                mmi.ptMaxSize.x = (int)((rcMonitorArea.right - rcMonitorArea.left));
+                mmi.ptMaxSize.y = (int)((rcMonitorArea.bottom - rcMonitorArea.top));
+                mmi.ptMaxTrackSize.x = mmi.ptMaxSize.x;
+                mmi.ptMaxTrackSize.y = mmi.ptMaxSize.y;
+                mmi.ptMinTrackSize.x = mmi.ptMaxTrackSize.x;
+                mmi.ptMinTrackSize.y = mmi.ptMaxTrackSize.y;
+            }
 
 			Marshal.StructureToPtr(mmi, lParam, true);
 		}
@@ -1323,7 +1421,6 @@ namespace MediaPoint.App.Behaviors
 			{
 				AssociatedObject.SourceInitialized += AssociatedObject_SourceInitialized;
 			}
-
 
 			//AssociatedObject.WindowStyle = WindowStyle.None;
 			AssociatedObject.ResizeMode = ResizeWithGrip ? ResizeMode.CanResizeWithGrip : ResizeMode.CanResize;
@@ -1499,7 +1596,7 @@ namespace MediaPoint.App.Behaviors
                         if (AssociatedObject != null && AssociatedObject.IsInitialized && AssociatedObject.WindowState == WindowState.Normal && AssociatedObject.WindowStyle == WindowStyle.None)
                         {
                             WINDOWPOS pos = (WINDOWPOS)Marshal.PtrToStructure(lParam, typeof(WINDOWPOS));
-                            if ((pos.flags & (int)NOMOVE) != 0 || AssociatedObject.Content == null || (pos.cx == 0 && pos.cy == 0))
+                            if (/*(pos.flags & (int)NOMOVE) != 0 || */ AssociatedObject.Content == null || (pos.cx == 0 && pos.cy == 0))
                             {
                                 return IntPtr.Zero;
                             }
@@ -1522,7 +1619,10 @@ namespace MediaPoint.App.Behaviors
                                     return IntPtr.Zero;
                                 }
 
-                                var ms = (Size) _transformToDevice.Transform(new Vector(AssociatedObject.MinWidth, AssociatedObject.MinHeight));
+                                var ms = (Size)_transformToDevice.Transform(new Vector(AssociatedObject.MinWidth, AssociatedObject.MinHeight));
+
+                                //ms.Width = ms.Width * (GetDpiForHwnd(hWnd).X / 120.0);
+                                //ms.Height = ms.Height * (GetDpiForHwnd(hWnd).Y / 120.0);
 
                                 if (pos.cx < ms.Width)
                                 {
@@ -1574,13 +1674,14 @@ namespace MediaPoint.App.Behaviors
 					break;
 				case WM_GETMINMAXINFO:
 					{
-                        if (AssociatedObject != null && AssociatedObject.WindowStyle == WindowStyle.None)
+                        if (AssociatedObject != null && AssociatedObject.WindowStyle == WindowStyle.None && AssociatedObject.WindowState == WindowState.Maximized)
                         {
                             /* From Lester's Blog (thanks @aeoth):  
                              * http://blogs.msdn.com/b/llobo/archive/2006/08/01/maximizing-window-_2800_with-windowstyle_3d00_none_2900_-considering-taskbar.aspx */
                             WmGetMinMaxInfo(hWnd, lParam);
-                            handled = true;
-                        }
+
+                        };
+                        handled = true;
 					}
 					break;
 			}

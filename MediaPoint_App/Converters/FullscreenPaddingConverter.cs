@@ -20,7 +20,8 @@ namespace MediaPoint.Converters
             Size actual = new Size(w.ActualWidth, w.ActualHeight);
             var source = PresentationSource.FromVisual(w);
 	        Matrix transformFromDevice = source.CompositionTarget.TransformFromDevice;
-            Size monitor = MediaPoint.Controls.Extensions.WindowExtensions.MonitorSize(ref w, transformFromDevice);
+            Vector monitorPosition;
+            Size monitor = MediaPoint.Controls.Extensions.WindowExtensions.MonitorSize(ref w, transformFromDevice, out monitorPosition);
             //w.Visibility = Visibility.Collapsed;
             //w.Dispatcher.BeginInvoke((Action)(() =>
             //{

@@ -29,13 +29,14 @@ using MediaPoint.VM.Config;
 using System.IO;
 using System.Windows.Interactivity;
 using MediaPoint.App.Behaviors;
+using MediaPoint.Common.Services;
 
 namespace MediaPoint.App
 {
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class Window1 : IMainView, ISpectrumPlayer, ISpectrumVisualizer, IInputTeller, IFramePictureProvider
+    public partial class Window1 : IMainView, ISpectrumPlayer, ISpectrumVisualizer, IInputTeller, IFramePictureProvider, IMainWindow
     {
         private double _skewX;
         private double _skewY;
@@ -46,6 +47,7 @@ namespace MediaPoint.App
         private string _startFile;
         private DateTime _timeToDelayReShowing = DateTime.Now;
         private Point _lastpoint;
+        private IntPtr _hwnd;
 
         public string StartupFile
         {
@@ -96,11 +98,11 @@ namespace MediaPoint.App
 
             var ih = new WindowInteropHelper(this);
             ih.EnsureHandle();
-            IntPtr hwnd = ih.Handle;
+            _hwnd = ih.Handle;
             _shadower = WindowShadow.CreateNew().Shadower;
             IntPtr hinstance = Marshal.GetHINSTANCE(this.GetType().Module);
             int hr = _shadower.Init(hinstance);
-            hr = _shadower.CreateForWindow(hwnd);
+            hr = _shadower.CreateForWindow(_hwnd);
             _shadower.SetShadowSize(6);
                     
             var timer = new DispatcherTimer(DispatcherPriority.Background);
@@ -314,7 +316,7 @@ namespace MediaPoint.App
             {
                 case MainViewCommand.Close:
                     didSomething = true;
-                    Application.Current.Shutdown();
+                    if (Application.Current != null) Application.Current.Shutdown();
                     break;
                 case MainViewCommand.Minimize:
                     didSomething = true;
@@ -1128,6 +1130,12 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         public System.Windows.Media.Imaging.BitmapSource GetBitmapOfVideoElement()
         {
             return mediaPlayer.GetBitmapOfVideoElement();
+        }
+
+
+        public IntPtr GetWindowHandle()
+        {
+            return _hwnd;
         }
     }
 }

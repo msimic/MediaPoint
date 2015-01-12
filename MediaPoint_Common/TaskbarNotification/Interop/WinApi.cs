@@ -1,6 +1,10 @@
+using MediaPoint.Common.Services;
+using MediaPoint.MVVM.Services;
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Interop;
 
 namespace MediaPoint.Common.TaskbarNotification.Interop
 {
@@ -94,7 +98,9 @@ namespace MediaPoint.Common.TaskbarNotification.Interop
 	  {
 		  try
 		  {
-			  using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+              Window mw = ServiceLocator.GetService<IMainWindow>().GetWindow();
+              IntPtr hwnd = new WindowInteropHelper(mw).Handle;
+			  using (Graphics g = Graphics.FromHwnd(hwnd))
 			  {
 				  dpiX = g.DpiX;
 				  dpiY = g.DpiY;

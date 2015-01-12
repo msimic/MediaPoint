@@ -53,13 +53,16 @@ namespace MediaPoint.Controls.Extensions
             return new Size(size.Width - other.Width, size.Height - other.Height);
         }
 
-        public static Size MonitorSize(ref Window window, Matrix dpimatrix)
+        [DllImport("user32.dll")]
+        static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        public static Size MonitorSize(ref Window window, Matrix dpimatrix, out Vector position)
         {
             W32Point pt = new W32Point();
             pt.X = (int)(window.Left + (window.Width) / 2);
             pt.Y = (int)(window.Height + (window.Height) / 2);
 
-            IntPtr monHandle = MonitorFromPoint(pt, 0x00000002);
+            IntPtr monHandle = MonitorFromWindow(new WindowInteropHelper(window).Handle, 0x00000002);
             W32MonitorInfo monInfo = new W32MonitorInfo();
             monInfo.Size = Marshal.SizeOf(typeof(W32MonitorInfo));
 
@@ -70,8 +73,10 @@ namespace MediaPoint.Controls.Extensions
 
             // use WorkArea struct to include the taskbar position.
             W32Rect monitor = monInfo.WorkArea;
-            
-            return (Size)dpimatrix.Transform(new Vector(Math.Abs(monitor.Right - monitor.Left), Math.Abs(monitor.Bottom - monitor.Top)));
+
+            position = dpimatrix.Transform(new Vector((monitor.Left), (monitor.Top)));
+
+            return (Size)dpimatrix.Transform(new Vector((monitor.Right - monitor.Left), (monitor.Bottom - monitor.Top)));
         }
 
 		private static Size MonitorSize(ref Window window, Matrix dpimatrix, bool full = false)
@@ -80,7 +85,7 @@ namespace MediaPoint.Controls.Extensions
 			pt.X = (int)(window.Left + (window.Width) / 2);
 			pt.Y = (int)(window.Height + (window.Height) / 2);
 
-			IntPtr monHandle = MonitorFromPoint(pt, 0x00000002);
+            IntPtr monHandle = MonitorFromWindow(new WindowInteropHelper(window).Handle, 0x00000002);
 			W32MonitorInfo monInfo = new W32MonitorInfo();
 			monInfo.Size = Marshal.SizeOf(typeof (W32MonitorInfo));
 
@@ -105,7 +110,7 @@ namespace MediaPoint.Controls.Extensions
 			}
 
 			// 0x00000002: return nearest monitor if pt is not contained in any monitor.
-			IntPtr monHandle = MonitorFromPoint(pt, 0x00000002);
+            IntPtr monHandle = MonitorFromWindow(new WindowInteropHelper(window).Handle, 0x00000002);
 			W32MonitorInfo monInfo = new W32MonitorInfo();
 			monInfo.Size = Marshal.SizeOf(typeof(W32MonitorInfo));
 

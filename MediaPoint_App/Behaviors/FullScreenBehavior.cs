@@ -141,6 +141,12 @@ namespace MediaPoint.App.Behaviors
 			window.SetValue(IsFullScreenProperty, value);
 		}
 
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool GetWindowRect(IntPtr hwnd, out BorderlessWindowBehavior.RECT lpRect);
+
 		/// <summary>
 		/// Called when the value of the IsFullScreenProperty dependency property changes.
 		/// </summary>
@@ -178,6 +184,7 @@ namespace MediaPoint.App.Behaviors
                     {
                         (window.DataContext as Main).IsMaximized = false;
                     }
+
 				}   // else
 
 			}   // if
