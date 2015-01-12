@@ -35,6 +35,17 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
+Name: aviAssociation; Description: "Associate ""avi"" extension"; GroupDescription: File extensions:
+Name: mkvAssociation; Description: "Associate ""mkv"" extension"; GroupDescription: File extensions:
+Name: mp4Association; Description: "Associate ""mp4"" extension"; GroupDescription: File extensions:
+
+[Registry]
+Root: HKCR; Subkey: ".avi"; ValueType: string; ValueName: ""; ValueData: "{#MyAppName}"; Flags: uninsdeletevalue; Tasks: aviAssociation 
+Root: HKCR; Subkey: ".mkv"; ValueType: string; ValueName: ""; ValueData: "{#MyAppName}"; Flags: uninsdeletevalue; Tasks: mkvAssociation 
+Root: HKCR; Subkey: ".mp4"; ValueType: string; ValueName: ""; ValueData: "{#MyAppName}"; Flags: uninsdeletevalue; Tasks: mp4Association 
+Root: HKCR; Subkey: "{#MyAppName}"; ValueType: string; ValueName: ""; ValueData: "Media File"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "{#MyAppName}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKCR; Subkey: "{#MyAppName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
 
 [Code]
 function IsDotNetDetected(version: string; service: cardinal): boolean;
@@ -98,6 +109,7 @@ end;
 
 function InitializeSetup(): Boolean;
 begin
+// TODO take ownership of regedit values for mkv avi mp4
     if not IsDotNetDetected('v3.5', 1) then begin
         MsgBox('{#MyAppName} requires Microsoft .NET Framework 3.5 SP1.'#13#13
           'The installer will attempt to install it at the end.'#13#13
