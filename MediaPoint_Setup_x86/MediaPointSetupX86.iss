@@ -36,6 +36,85 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
+[Code]
+function IsDotNetDetected(version: string; service: cardinal): boolean;
+// Indicates whether the specified version and service pack of the .NET Framework is installed.
+//
+// version -- Specify one of these strings for the required .NET Framework version:
+//    'v1.1.4322'     .NET Framework 1.1
+//    'v2.0.50727'    .NET Framework 2.0
+//    'v3.0'          .NET Framework 3.0
+//    'v3.5'          .NET Framework 3.5
+//    'v4\Client'     .NET Framework 4.0 Client Profile
+//    'v4\Full'       .NET Framework 4.0 Full Installation
+//    'v4.5'          .NET Framework 4.5
+//
+// service -- Specify any non-negative integer for the required service pack level:
+//    0               No service packs required
+//    1, 2, etc.      Service pack 1, 2, etc. required
+var
+    key: string;
+    install, release, serviceCount: cardinal;
+    check45, success: boolean;
+var reqNetVer : string;
+begin
+    // .NET 4.5 installs as update to .NET 4.0 Full
+    if version = 'v4.5' then begin
+        version := 'v4\Full';
+        check45 := true;
+    end else
+        check45 := false;
+
+    // installation key group for all .NET versions
+    key := 'SOFTWARE\Microsoft\NET Framework Setup\NDP\' + version;
+
+    // .NET 3.0 uses value InstallSuccess in subkey Setup
+    if Pos('v3.0', version) = 1 then begin
+        success := RegQueryDWordValue(HKLM, key + '\Setup', 'InstallSuccess', install);
+    end else begin
+        success := RegQueryDWordValue(HKLM, key, 'Install', install);
+    end;
+
+    // .NET 4.0/4.5 uses value Servicing instead of SP
+    if Pos('v4', version) = 1 then begin
+        success := success and RegQueryDWordValue(HKLM, key, 'Servicing', serviceCount);
+    end else begin
+        success := success and RegQueryDWordValue(HKLM, key, 'SP', serviceCount);
+    end;
+
+    // .NET 4.5 uses additional value Release
+    if check45 then begin
+        success := success and RegQueryDWordValue(HKLM, key, 'Release', release);
+        success := success and (release >= 378389);
+    end;
+
+    result := success and (install = 1) and (serviceCount >= service);
+end;
+
+function IsRequiredDotNetDetected(): Boolean;  
+begin
+    result := IsDotNetDetected('v3.5', 1);
+end;
+
+function InitializeSetup(): Boolean;
+begin
+    if not IsDotNetDetected('v3.5', 1) then begin
+        MsgBox('{#MyAppName} requires Microsoft .NET Framework 3.5 SP1.'#13#13
+          'The installer will attempt to install it at the end.'#13#13
+          'Please note that you must complete this in order to run {#MyAppName}.', mbInformation, MB_OK);        
+    end
+    
+    result := true;
+end; 
+
+procedure ShowSplashScreen(p1:HWND;p2:string;p3,p4,p5,p6,p7:integer;p8:boolean;p9:Cardinal;p10:integer); external 'ShowSplashScreen@files:isgsg.dll stdcall delayload';
+
+procedure InitializeWizard;
+begin
+ExtractTemporaryFile('Splash.jpg');
+ShowSplashScreen(WizardForm.Handle,ExpandConstant('{tmp}')+'\Splash.jpg',1000,3000,1000,0,255,True,$00FF00,10);
+end;
+
 [Files]
 Source: "..\output\bin\x86\MediaPoint.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\CookComputing.XmlRpcV2.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -72,6 +151,10 @@ Source: "..\output\bin\x86\WPFToolkit.dll"; DestDir: "{app}"; Flags: ignoreversi
 Source: "..\output\bin\x86\Xceed.Wpf.Toolkit.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\codecs\*"; DestDir: "{app}\codecs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\output\bin\x86\Themes\*"; DestDir: "{app}\Themes"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\InstallerResources\dotnetfx35setup.exe"; DestDir: {tmp}; Flags: deleteafterinstall; Check: not IsRequiredDotNetDetected 
+Source: "..\InstallerResources\Splash.jpg"; DestDir: {tmp}; Flags: ignoreversion dontcopy nocompression
+Source: "..\InstallerResources\isgsg.dll"; DestDir: {tmp}; Flags: ignoreversion dontcopy nocompression
+
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -83,4 +166,5 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{tmp}\dotnetfx35setup.exe"; Parameters: "/q:a /c:""install /l /q"""; Check: not IsRequiredDotNetDetected; StatusMsg: Microsoft Framework 3.5 SP1 is being installed. Please wait... 
 
