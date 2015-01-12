@@ -1542,12 +1542,13 @@ HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pNam
 
 				if(fVideoInputPin)
 				{
-					CComPtr<IBaseFilter> pDVS;
+					// TODO removed because of clash with original vobsub
+					/*CComPtr<IBaseFilter> pDVS;
 					if(ShouldWeAutoload(pGraph) && SUCCEEDED(pDVS.CoCreateInstance(__uuidof(CDirectVobSubFilter2))))
 					{
 						CComQIPtr<IDirectVobSub2>(pDVS)->put_Forced(true);
 						CComQIPtr<IGraphConfig>(pGraph)->AddFilterToCache(pDVS);
-					}
+					}*/
 
 					break;
 				}

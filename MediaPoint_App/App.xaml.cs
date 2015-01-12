@@ -127,8 +127,14 @@ namespace MediaPoint.App
                 {
                     _application.Run();
                 }
-                catch
+                catch (Exception ex)
                 {
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
+                    MessageBox.Show(Application.Current.MainWindow, ex.Message + Environment.NewLine + ex.StackTrace, "Serious problem occured - App may crash!", MessageBoxButton.OK, MessageBoxImage.Error);
+                
                     return false;
                 }
                 return false;

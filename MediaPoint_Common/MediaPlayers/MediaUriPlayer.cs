@@ -728,12 +728,16 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
                 if (vobSub != null)
                 {
-                    hr = m_graph.AddFilter(vobSub, "VobSub");
-                    DsError.ThrowExceptionForHR(hr);
-                    IDirectVobSub vss = vobSub as IDirectVobSub;
-                    if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
-                    _vobsub = vss;
-                    InitSubSettings();
+                    try
+                    {
+                        hr = m_graph.AddFilter(vobSub, "VobSub");
+                        DsError.ThrowExceptionForHR(hr);
+                        IDirectVobSub vss = vobSub as IDirectVobSub;
+                        if (_vobsub != null) Marshal.ReleaseComObject(_vobsub);
+                        _vobsub = vss;
+                        InitSubSettings();
+                    }
+                    catch { }
                 }
 
                 hr = m_graph.Connect(DsFindPin.ByName((IBaseFilter)splitter, "Audio"), DsFindPin.ByDirection(_audio, PinDirection.Input, 0));

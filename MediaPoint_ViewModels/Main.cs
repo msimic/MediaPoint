@@ -55,13 +55,14 @@ namespace MediaPoint.VM
             SubtitleMinScore = 0.55;
             PreferenceToHashMatchedSubtitle = true;
 
-            Observable.Interval(TimeSpan.FromSeconds(1.5)).Subscribe(i =>
-            {
-                if (ShowPlate == true)
-                {
-                    ShowPlate = false;
-                }
-            });
+            // ALPR
+            //Observable.Interval(TimeSpan.FromSeconds(1.5)).Subscribe(i =>
+            //{
+            //    if (ShowPlate == true)
+            //    {
+            //        ShowPlate = false;
+            //    }
+            //});
 
             ServiceLocator.RegisterOverrideService<IKeyboardHandler>((IKeyboardHandler)this);
             Equalizer = new Equalizer();

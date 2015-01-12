@@ -748,7 +748,12 @@ namespace MediaPoint.VM
                 if (args.Result is string && Source != null)
                 {
                     FillSubs(Source);
-                    var loadSub = (DownloadedSubtitle = SubtitleStreams.FirstOrDefault(s => s.Path.ToLowerInvariant() == ((string)args.Result).ToLowerInvariant()));
+                    string resultSub = (string)args.Result;
+                    if (SubtitleStreams.Any(s => s.Path.ToLowerInvariant() == resultSub.ToLowerInvariant()) == false)
+                    {
+                        SubtitleStreams.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Srt, resultSub, "Subtitle"));
+                    }
+                    var loadSub = (DownloadedSubtitle = SubtitleStreams.FirstOrDefault(s => s.Path.ToLowerInvariant() == (resultSub).ToLowerInvariant()));
                     ServiceLocator.GetService<IMainView>().DelayedInvoke(() => { SelectedSubtitle = loadSub; }, 200);
                 }
             };
@@ -827,9 +832,15 @@ namespace MediaPoint.VM
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
-                if (args.Result != null)
+                object r = null;
+                try
                 {
-                    IMDb = (IMDb)args.Result;
+                    r = args.Result;
+                }
+                catch { }
+                if (r != null)
+                {
+                    IMDb = (IMDb)r;
                 }
                 else
                 {
@@ -933,6 +944,12 @@ namespace MediaPoint.VM
                 Main.ShowOsdMessage(string.Format("{0} subtitles found.", OnlineSubtitleChoices.Count));
             }
             FillSubs(uri);
+
+            if (SubtitleStreams.Any(s => s.Path.ToLowerInvariant() == resultSub.ToLowerInvariant()) == false)
+            {
+                SubtitleStreams.Add(new SubtitleItem(SubtitleItem.SubtitleType.File, SubtitleItem.SubtitleSubType.Srt, resultSub, "Subtitle"));
+            }
+
             var loadSub = (DownloadedSubtitle = SubtitleStreams.FirstOrDefault(s => s.Path.ToLowerInvariant() == resultSub.ToLowerInvariant()));
             ServiceLocator.GetService<IMainView>().DelayedInvoke(() => { SelectedSubtitle = loadSub; }, 200);
         }
