@@ -724,6 +724,7 @@ namespace MediaPoint.VM
             BackgroundWorker b = new BackgroundWorker();
             b.DoWork += (sender, args) =>
             {
+                DateTime start = DateTime.Now;
                 Monitor.Enter(_subtitleSearchLocker);
 
                 try
@@ -741,11 +742,15 @@ namespace MediaPoint.VM
                 finally
                 {
                     Monitor.Exit(_subtitleSearchLocker);
+                    if (DateTime.Now - start > TimeSpan.FromSeconds(15))
+                    {
+                        args.Cancel = true;
+                    }
                 }
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
-                if (args.Result is string && Source != null)
+                if (!args.Cancelled && args.Result is string && Source != null)
                 {
                     FillSubs(Source);
                     string resultSub = (string)args.Result;
@@ -826,12 +831,29 @@ namespace MediaPoint.VM
 
             b.DoWork += (sender, args) =>
             {
+                DateTime start = DateTime.Now;
                 string strTitle, strYear, strTitleAndYear; int season, episode;
                 SubtitleDownloader.Core.Subtitle bestGuessSubtitle = null;
-                args.Result = SubtitleUtil.GetIMDbFromFilename(uri.LocalPath, Path.GetDirectoryName(uri.LocalPath), out strTitle, out strTitleAndYear, out strYear, out season, out episode, MessageCallback, out bestGuessSubtitle);
+                try
+                {
+                    args.Result = SubtitleUtil.GetIMDbFromFilename(uri.LocalPath, Path.GetDirectoryName(uri.LocalPath), out strTitle, out strTitleAndYear, out strYear, out season, out episode, MessageCallback, out bestGuessSubtitle);
+                }
+                catch
+                {
+                    args.Cancel = true;
+                }
+                if (DateTime.Now - start > TimeSpan.FromSeconds(15))
+                {
+                    args.Cancel = true;
+                }
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
+                if (args.Cancelled)
+                {
+                    IMDb = null;
+                    return;
+                }
                 object r = null;
                 try
                 {
@@ -865,6 +887,8 @@ namespace MediaPoint.VM
             IsSubtitleSearchInProgress = true;
             b.DoWork += (sender, args) =>
             {
+                DateTime start = DateTime.Now;
+                
                 Monitor.Enter(_subtitleSearchLocker);
 
                 IMDb imdb;
@@ -890,13 +914,17 @@ namespace MediaPoint.VM
                 finally
                 {
                     Monitor.Exit(_subtitleSearchLocker);
+                    if (DateTime.Now - start > TimeSpan.FromSeconds(15))
+                    {
+                        args.Cancel = true;
+                    }
                 }
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
                 try
                 {
-                    if (HasVideo == false) return;
+                    if (args.Cancelled || HasVideo == false) return;
 
                     if (args.Result != null)
                     {
@@ -961,6 +989,8 @@ namespace MediaPoint.VM
             BackgroundWorker b = new BackgroundWorker();
             b.DoWork += (sender, args) =>
             {
+                DateTime start = DateTime.Now;
+                
                 IMDb imdb;
                 List<SubtitleMatch> otherChoices;
                 try
@@ -973,11 +1003,20 @@ namespace MediaPoint.VM
                     Main.ShowOsdMessage("Internet connection unavailable.");
                     args.Result = null;
                 }
+                finally
+                {
+                    if (DateTime.Now - start > TimeSpan.FromSeconds(15))
+                    {
+                        args.Cancel = true;
+                    }
+                }
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
                 try
                 {
+                    if (args.Cancelled) return;
+
                     SetupDownloadedSubtitleAndIMDbInfo(Source, SelectedSubtitle != null ? SelectedSubtitle.Path : "", IMDb, args.Result);
                 }
                 catch (Exception)

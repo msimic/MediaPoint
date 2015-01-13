@@ -1676,7 +1676,7 @@
                                 <RowDefinition Height="Auto"></RowDefinition>
                                 <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
-                        <Button Grid.Column="2" Grid.Row="1" 
+                        <!--<Button Grid.Column="2" Grid.Row="1" 
                             Margin="15"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
@@ -1685,7 +1685,7 @@
                             Style="{StaticResource ImageButton}"
                             Behaviors:Buttons.Image="/Themes/default/Images/close.png"
                             Behaviors:Buttons.NormalImage="/Themes/default/Images/close.png"
-                            Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png"/>
+                            Behaviors:Buttons.HoverImage="/Themes/default/Images/close_hover.png"/>-->
 
                         <Border Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center">
                           <StackPanel Orientation="Horizontal" Margin="10">
