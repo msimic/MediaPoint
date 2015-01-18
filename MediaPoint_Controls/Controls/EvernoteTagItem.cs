@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using MediaPoint.Common.Interfaces;
+using System.Windows.Data;
+using MediaPoint.Converters;
 
 namespace MediaPoint.Controls
 {

@@ -89,7 +89,7 @@ namespace MediaPoint.App.Behaviors
 			AssociatedObject.MouseLeftButtonDown += new MouseButtonEventHandler(AssociatedObject_MouseLeftButtonDown);
 			AssociatedObject.MouseMove += new MouseEventHandler(AssociatedObject_MouseMove);
 			AssociatedObject.PreviewMouseLeftButtonUp += new MouseButtonEventHandler(AssociatedObject_MouseLeftButtonUp);
-
+            AssociatedObject.MouseLeftButtonUp += AssociatedObject_MouseLeftButtonUp;
 		}
 
 		/// <summary>
@@ -102,6 +102,7 @@ namespace MediaPoint.App.Behaviors
 			AssociatedObject.MouseLeftButtonDown -= AssociatedObject_MouseLeftButtonDown;
 			AssociatedObject.MouseMove -= new MouseEventHandler(AssociatedObject_MouseMove);
 			AssociatedObject.PreviewMouseLeftButtonUp -= AssociatedObject_MouseLeftButtonUp;
+            AssociatedObject.MouseLeftButtonUp -= AssociatedObject_MouseLeftButtonUp;
 			base.OnDetaching();
 
 		}
@@ -118,6 +119,7 @@ namespace MediaPoint.App.Behaviors
 			if (AssociatedObject == null) return;
 
 			_isMouseDown = true;
+            _wasDragging = false;
 		}
 
 		void AssociatedObject_MouseMove(object sender, MouseEventArgs e)
@@ -129,6 +131,7 @@ namespace MediaPoint.App.Behaviors
 				if (e.LeftButton == MouseButtonState.Pressed)
 				{
 					_wasDragging = true;
+                    _isMouseDown = false;
 					wnd.DragMove();
 				}
 			}
@@ -136,14 +139,14 @@ namespace MediaPoint.App.Behaviors
 
 		void AssociatedObject_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
 		{
-			if (AssociatedObject == null) return;
+            //if (AssociatedObject == null) return;
 
-			if (_wasDragging)
-			{
-				e.Handled = true;
-				_wasDragging = false;
-			}
-			_isMouseDown = false;
+            //if (_wasDragging)
+            //{
+            //    e.Handled = true;
+            //    _wasDragging = false;
+            //}
+            _isMouseDown = false;
 		}
 		#endregion
 

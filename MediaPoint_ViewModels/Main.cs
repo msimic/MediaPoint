@@ -26,6 +26,7 @@ using MediaPoint.Helpers;
 using MediaPoint.Common.TaskbarNotification.Interop;
 using System.Windows.Media.Imaging;
 using MediaPoint.VM.Services.Model;
+using System.Globalization;
 
 namespace MediaPoint.VM
 {
@@ -46,6 +47,7 @@ namespace MediaPoint.VM
 		private IDialogService _dlg;
 		private IEnumerable<MediaPoint.Subtitles.Logic.Paragraph> _currentSubs = new Paragraph[0];
         private readonly uint _previousExecutionState;
+        private FontEnum _fontEnum = null;
 		#endregion
 
 		#region Ctor
@@ -134,10 +136,18 @@ namespace MediaPoint.VM
 		    var enc = allEnc[allEnc.FindIndex(e => e.CodePage == Encoding.Default.CodePage)];
             allEnc.Remove(enc);
 			allEnc.Insert(0, enc);
-			var fonts = new List<FontFamily>(Fonts.SystemFontFamilies);
+			var fonts = new List<System.Windows.Media.FontFamily>(System.Windows.Media.Fonts.SystemFontFamilies);
+
+            _fontEnum = new FontEnum();
+            _fontEnum.GetFonts();
+
+            var uniqueNames = _fontEnum.FontFamilies.GroupBy(f => f.FontName).Select(g => g.First().FontName).OrderBy(f => f).ToArray();
+
+            fonts = fonts.Where(f => uniqueNames.Contains(f.Source)).ToList();
+
 			if (!fonts.Any(f => f.ToString().ToLowerInvariant().Contains("buxton sketch")))
 			{
-				fonts.Add(new FontFamily(new Uri("pack://application:,,,/MediaPoint;component/Resources/BuxtonSketch.ttf", UriKind.RelativeOrAbsolute), "Buxton Sketch"));
+				fonts.Add(new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/MediaPoint;component/Resources/BuxtonSketch.ttf", UriKind.RelativeOrAbsolute), "Buxton Sketch"));
 			}
 
 		    string fontCacheFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -197,6 +207,16 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
+                ActionId = "Play/Pause",
+                Key = Key.MediaPlayPause,
+                Control = false,
+                Shift = false,
+                Alt = false,
+                External = true
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
                 ActionId = "Subs Delay +",
                 Key = Key.Right,
                 Control = true,
@@ -252,6 +272,46 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
+                ActionId = "Previous Track",
+                Key = Key.MediaPreviousTrack,
+                Control = false,
+                Shift = false,
+                Alt = false,
+                External = true
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Next Track",
+                Key = Key.MediaNextTrack,
+                Control = false,
+                Shift = false,
+                Alt = false,
+                External = true
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Seek Back 1%",
+                Key = Key.MediaPreviousTrack,
+                Control = true,
+                Shift = false,
+                Alt = false,
+                External = true
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Seek Forward 1%",
+                Key = Key.MediaNextTrack,
+                Control = true,
+                Shift = false,
+                Alt = false,
+                External = true
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
                 ActionId = "Increase Subtitle Size",
                 Key = Key.Up,
                 Control = false,
@@ -288,7 +348,25 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Go Fullscreen",
+                ActionId = "Increase Volume",
+                Key = Key.VolumeUp,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Decrease Volume",
+                Key = Key.VolumeDown,
+                Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = "Toggle Fullscreen",
                 Key = Key.F,
                 Control = false,
                 Shift = false,
@@ -318,7 +396,14 @@ namespace MediaPoint.VM
                 var ac = PlayerActions.FirstOrDefault(pa => pa.ActionId == sc.ActionId);
                 if (ac != null)
                 {
-                    ac.Shortcut = sc;
+                    if (sc.External)
+                    {
+                        ac.SystemShortcut = sc;
+                    }
+                    else
+                    {
+                        ac.Shortcut = sc;
+                    }
                 }
             }
         }
@@ -459,10 +544,17 @@ namespace MediaPoint.VM
 
             var fs = new PlayerAction
             {
-                ActionId = "Go Fullscreen",
+                ActionId = "Toggle Fullscreen",
                 Action = new Action(() =>
                 {
-                    _view.ExecuteCommand(MainViewCommand.Maximize);
+                    if (_view.GetWindow().WindowState == WindowState.Maximized)
+                    {
+                        _view.ExecuteCommand(MainViewCommand.Restore);
+                    }
+                    else
+                    {
+                        _view.ExecuteCommand(MainViewCommand.Maximize);
+                    }
                 })
             };
             PlayerActions.Add(fs);
@@ -719,7 +811,48 @@ namespace MediaPoint.VM
 		public FontObject SubtitleFont
 		{
 			get { return GetValue(() => SubtitleFont); }
-			set { SetValue(() => SubtitleFont, value); }
+			set
+            {
+                if (SetValue(() => SubtitleFont, value))
+                {
+                    FontScripts = _fontEnum.FontFamilies.Where(f => f.FontName == value.Font.Source).Select(f => f.Script).Distinct().OrderBy(s => s).ToArray();
+
+                    FontCharSet ret = (FontCharSet)FontEnum.GetDesktopFontCharset();
+
+                    FontCharSet charset;
+                    if (Encodings.Contains(ret))
+                    {
+                        charset = ret;
+                    }
+                    else if (Encodings.Contains(FontCharSet.Ansi))
+                    {
+                        charset = FontCharSet.Ansi;
+                    }
+                    else
+                    {
+                        charset = FontCharSet.Default;
+                    }
+
+                    string sCharset = Enum.GetName(typeof(FontEnum.FontCharSet), (FontEnum.FontCharSet)charset);
+                    try
+                    {
+                        FontScript = _fontEnum.FontFamilies.Where(f => f.FontName == value.Font.Source && f.Charset == sCharset).Select(f => f.Script).First();
+                        SubEncoding = charset;
+                    }
+                    catch
+                    {
+                        FontScript = FontScripts.FirstOrDefault(fs => fs == "Western") ?? FontScripts.First();
+                        if (FontScript == "Western")
+                        {
+                            SubEncoding = FontCharSet.Ansi;
+                        }
+                        else
+                        {
+                            SubEncoding = FontCharSet.Default;
+                        }
+                    }
+                }
+            }
 		}
 
         public Color SubtitleColor
@@ -728,11 +861,44 @@ namespace MediaPoint.VM
             set { SetValue(() => SubtitleColor, value); }
 		}
 
+        public bool SubtitleBold
+        {
+            get { return GetValue(() => SubtitleBold); }
+            set { SetValue(() => SubtitleBold, value); }
+        }
+
 		public FontObject[] AllFonts
 		{
 			get { return GetValue(() => AllFonts); }
 			set { SetValue(() => AllFonts, value); }
 		}
+
+        public string[] FontScripts
+        {
+            get { return GetValue(() => FontScripts); }
+            set { SetValue(() => FontScripts, value); }
+        }
+
+        public string FontScript
+        {
+            get { return GetValue(() => FontScript); }
+            set
+            {
+                if (SetValue(() => FontScript, value))
+                {
+                    string charset = _fontEnum.FontFamilies.Where(f => f.FontName == SubtitleFont.Font.Source && f.Script == value).FirstOrDefault().Charset;
+                    int index = Enum.GetNames(typeof(FontEnum.FontCharSet)).ToList().IndexOf(charset);
+                    if (index > -1)
+                    {
+                        SubEncoding = (FontCharSet)Enum.GetValues(typeof(FontEnum.FontCharSet)).Cast<FontEnum.FontCharSet>().ToArray()[index];
+                    }
+                    else
+                    {
+                        SubEncoding = FontCharSet.Default;
+                    }
+                }
+            }
+        }
 
         public FontCharSet[] Encodings
 		{
@@ -938,7 +1104,7 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
 
 		#region Methods
 		
-        private void PreBuildFonts(FontFamily[] fonts, string cacheFilePath)
+        private void PreBuildFonts(System.Windows.Media.FontFamily[] fonts, string cacheFilePath)
         {
             var b = new BackgroundWorker();
 
@@ -964,7 +1130,7 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
                 }
             
                 var okFonts = new List<FontObject>();
-                foreach (FontFamily font in fonts)
+                foreach (System.Windows.Media.FontFamily font in fonts)
                 {
                     try
                     {

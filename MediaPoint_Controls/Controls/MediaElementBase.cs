@@ -19,6 +19,7 @@ using MediaPoint.Controls.Extensions;
 using MediaPoint.MVVM.Services;
 using Application = System.Windows.Application;
 using System.Windows.Media.Imaging;
+using MediaPoint.Common.Services;
 
 namespace MediaPoint.Controls
 {
@@ -261,6 +262,8 @@ namespace MediaPoint.Controls
             int ss = 0;
 		    Color sco = Colors.White;
 		    SubtitleItem sub = null;
+            bool bold;
+
             if (SubtitleFont != null)
             {
                 sf = SubtitleFont.Source;
@@ -276,6 +279,7 @@ namespace MediaPoint.Controls
             sc = SubtitleCharset;
             ss = SubtitleSize;
 		    sco = SubtitleColor;
+            bold = SubtitleBold;
             int delay = SubtitleDelay;
 
 			MediaPlayerBase.Dispatcher.BeginInvoke((Action)delegate
@@ -287,6 +291,7 @@ namespace MediaPoint.Controls
                 mp.SubtitleSettings.Color = sco;
                 (MediaPlayerBase as MediaUriPlayer).Source = src;
                 mp.SubtitleSettings.Delay = delay;
+                mp.SubtitleSettings.Bold = bold;
                 Dispatcher.BeginInvoke((Action)delegate
 				{
 					if (IsLoaded)
@@ -498,6 +503,33 @@ namespace MediaPoint.Controls
                 MediaPlayerBase.Dispatcher.BeginInvoke((Action)delegate
                 {
                     MediaPlayerBase.SubtitleSettings.Size = ((int)e.NewValue);
+                });
+            }
+        }
+
+        public static readonly DependencyProperty SubtitleBoldProperty =
+            DependencyProperty.Register("SubtitleBold", typeof(bool), typeof(MediaElementBase),
+                new FrameworkPropertyMetadata(false,
+                    new PropertyChangedCallback(OnSubtitleBoldChanged)));
+
+        public bool SubtitleBold
+        {
+            get { return (bool)GetValue(SubtitleBoldProperty); }
+            set { SetValue(SubtitleBoldProperty, value); }
+        }
+
+        private static void OnSubtitleBoldChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MediaUriElement)d).OnSubtitleBoldChanged(e);
+        }
+
+        protected virtual void OnSubtitleBoldChanged(DependencyPropertyChangedEventArgs e)
+        {
+            if (HasInitialized && e.NewValue != null && MediaPlayerBase.SubtitleSettings.Bold != ((bool)e.NewValue))
+            {
+                MediaPlayerBase.Dispatcher.BeginInvoke((Action)delegate
+                {
+                    MediaPlayerBase.SubtitleSettings.Bold = ((bool)e.NewValue);
                 });
             }
         }
@@ -1047,6 +1079,9 @@ namespace MediaPoint.Controls
 	        {
 	            if (AutoSize && _currentWindow != null)
 	            {
+                    var mainw = ServiceLocator.GetService<IMainWindow>();
+                    mainw.SetChildWindowsFollow(false);
+
 	                InvalidateMeasure();
 	                InvalidateArrange();
 	                InvalidateVisual();
@@ -1153,6 +1188,8 @@ namespace MediaPoint.Controls
                         //_currentWindow.MinWidth = minW;
                         //_currentWindow.MinHeight = minH;
 	                }
+
+                    mainw.SetChildWindowsFollow(true);
 	            }
 	        }), DispatcherPriority.ContextIdle);
 	    }

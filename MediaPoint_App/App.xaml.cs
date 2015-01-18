@@ -46,6 +46,7 @@ namespace MediaPoint.App
             ServiceLocator.RegisterService<IStyleLoader>(sl);
             ServiceLocator.RegisterService<IMainView>(w);
             ServiceLocator.RegisterService<IFramePictureProvider>(w);
+            ServiceLocator.RegisterService<IInputTeller>(w);
             ServiceLocator.RegisterService<IDialogService>(dlgsrv);
             var vm = new Main { Themes = new ObservableCollection<string>(StyleLoader.GetAllStyles()) };
             ServiceLocator.RegisterService<IPlateProcessor>(vm);

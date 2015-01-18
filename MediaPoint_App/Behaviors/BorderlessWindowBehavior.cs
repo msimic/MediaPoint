@@ -13,6 +13,8 @@ using System.Reflection;
 using System.Runtime.ConstrainedExecution;
 using MediaPoint.Controls;
 using Microsoft.Win32.SafeHandles;
+using MediaPoint.MVVM.Services;
+using MediaPoint.Common.Services;
 
 namespace MediaPoint.App.Behaviors
 {
@@ -1425,8 +1427,13 @@ namespace MediaPoint.App.Behaviors
 			//AssociatedObject.WindowStyle = WindowStyle.None;
 			AssociatedObject.ResizeMode = ResizeWithGrip ? ResizeMode.CanResizeWithGrip : ResizeMode.CanResize;
 
-			base.OnAttached();
-
+            try
+            {
+                base.OnAttached();
+            }
+            catch
+            { 
+            }
 		}
 
 		private void _OnWindowPropertyChangedThatRequiresTemplateFixup(object sender, EventArgs e)
@@ -1579,7 +1586,9 @@ namespace MediaPoint.App.Behaviors
 		/// <returns></returns>
 		private IntPtr HwndHook(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
-			IntPtr returnval = IntPtr.Zero;
+            if (AssociatedObject == null) return IntPtr.Zero;
+
+            IntPtr returnval = IntPtr.Zero;
             //const int SC_SCREENSAVE = 0xF140;
             //const int SC_MONITORPOWER = 0xF170;
             //const int WM_SYSCOMMAND = 0x0112;
@@ -1640,13 +1649,22 @@ namespace MediaPoint.App.Behaviors
 
                                 Marshal.StructureToPtr(pos, lParam, true);
                                 handled = true;
+                                
                             }
                         }
 					}
 					break;
 				case WM_NCCALCSIZE:
 					{
-                        if (AssociatedObject != null && AssociatedObject.WindowStyle == WindowStyle.None) handled = true;
+                        if (AssociatedObject != null && AssociatedObject.WindowStyle == WindowStyle.None)
+                        {
+                            ServiceLocator.GetService<IMainWindow>().SetChildWindowsFollow(false);
+                            handled = true;
+                            AssociatedObject.Dispatcher.BeginInvoke((Action)(() =>
+                            {
+                                ServiceLocator.GetService<IMainWindow>().SetChildWindowsFollow(true);
+                            }));
+                        }
 					}
 					break;
 				case WM_NCPAINT:
@@ -1679,7 +1697,6 @@ namespace MediaPoint.App.Behaviors
                             /* From Lester's Blog (thanks @aeoth):  
                              * http://blogs.msdn.com/b/llobo/archive/2006/08/01/maximizing-window-_2800_with-windowstyle_3d00_none_2900_-considering-taskbar.aspx */
                             WmGetMinMaxInfo(hWnd, lParam);
-
                         };
                         handled = true;
 					}
@@ -1700,7 +1717,7 @@ namespace MediaPoint.App.Behaviors
 
 		private static void OnGripChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			(d as BorderlessWindowBehavior).OnAttached();
+            d.Dispatcher.BeginInvoke((Action)(() => { (d as BorderlessWindowBehavior).OnAttached(); }), DispatcherPriority.Loaded);
 		}
 
 

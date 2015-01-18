@@ -11,5 +11,6 @@ namespace MediaPoint.Common.Services
     {
         Window GetWindow();
         IntPtr GetWindowHandle();
+        void SetChildWindowsFollow(bool value);
     }
 }

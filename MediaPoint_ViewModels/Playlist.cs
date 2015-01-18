@@ -282,18 +282,34 @@ namespace MediaPoint.VM
 
         public Track TrackForUri(Uri uri)
         {
-            return Tracks.FirstOrDefault(t => t.Uri.AbsolutePath == uri.AbsolutePath);
+            return Tracks.FirstOrDefault(t => {
+                if (uri.IsFile)
+                {
+                    return t.Uri.AbsolutePath == uri.AbsolutePath;
+                }
+                else
+                {
+                    return t.Uri.AbsoluteUri == uri.AbsoluteUri;
+                }
+            });
         }
 
         string GetTitleForTrack(Uri uri)
         {
             try
             {
-                return Path.GetFileNameWithoutExtension(uri.LocalPath);
+                if (uri.IsFile)
+                {
+                    return Path.GetFileNameWithoutExtension(uri.LocalPath);
+                }
+                else
+                {
+                    return Uri.UnescapeDataString(uri.AbsoluteUri);
+                }
             }
             catch
             {
-                return uri.AbsolutePath;
+                return Uri.UnescapeDataString(uri.AbsoluteUri);
             }
         }
 

@@ -10,5 +10,6 @@ namespace MediaPoint.VM.Model
         public string ActionId { get; set; }
         public Action Action { get; set; }
         public KeyboardShortcut Shortcut { get; set; }
+        public KeyboardShortcut SystemShortcut { get; set; }
     }
 }

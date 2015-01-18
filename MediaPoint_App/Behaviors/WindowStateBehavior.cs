@@ -8,7 +8,7 @@ namespace MediaPoint.App.Behaviors
 	{
 		#region _____Fields_____________________
 
-		private WindowStateSettings windowStateSettings;
+		public WindowStateSettings WindowStateSettings;
 
 		#endregion
 
@@ -26,20 +26,20 @@ namespace MediaPoint.App.Behaviors
 
 		void SaveSettings()
 		{
-			if (this.AssociatedObject == null || this.windowStateSettings == null) return;
+			if (this.AssociatedObject == null || this.WindowStateSettings == null) return;
 
 			if (this.AssociatedObject.WindowState == WindowState.Normal)
 			{
-				this.windowStateSettings.Width = this.AssociatedObject.Width;
-				this.windowStateSettings.Height = this.AssociatedObject.Height;
-				this.windowStateSettings.Top = this.AssociatedObject.Top;
-				this.windowStateSettings.Left = this.AssociatedObject.Left;
+				this.WindowStateSettings.Width = this.AssociatedObject.Width;
+				this.WindowStateSettings.Height = this.AssociatedObject.Height;
+				this.WindowStateSettings.Top = this.AssociatedObject.Top;
+				this.WindowStateSettings.Left = this.AssociatedObject.Left;
 			}
 
-			this.windowStateSettings.WindowState = this.AssociatedObject.WindowState;
-			this.windowStateSettings.RestoreBounds = this.AssociatedObject.RestoreBounds;
+			this.WindowStateSettings.WindowState = this.AssociatedObject.WindowState;
+			this.WindowStateSettings.RestoreBounds = this.AssociatedObject.RestoreBounds;
 
-			this.windowStateSettings.Save();
+			this.WindowStateSettings.Save();
 		}
 
 		void ApplySettings()
@@ -52,19 +52,19 @@ namespace MediaPoint.App.Behaviors
 			double height;
 
 			// If window was maximized, restore the size of the window in normal state
-			if (this.windowStateSettings.WindowState == WindowState.Maximized)
+			if (this.WindowStateSettings.WindowState == WindowState.Maximized)
 			{
-				left = this.windowStateSettings.RestoreBounds.Left;
-				top = this.windowStateSettings.RestoreBounds.Top;
-				width = this.windowStateSettings.RestoreBounds.Width;
-				height = this.windowStateSettings.RestoreBounds.Height;
+				left = this.WindowStateSettings.RestoreBounds.Left;
+				top = this.WindowStateSettings.RestoreBounds.Top;
+				width = this.WindowStateSettings.RestoreBounds.Width;
+				height = this.WindowStateSettings.RestoreBounds.Height;
 			}
 			else
 			{
-				left = this.windowStateSettings.Left;
-				top = this.windowStateSettings.Top;
-				width = this.windowStateSettings.Width;
-				height = this.windowStateSettings.Height;
+				left = this.WindowStateSettings.Left;
+				top = this.WindowStateSettings.Top;
+				width = this.WindowStateSettings.Width;
+				height = this.WindowStateSettings.Height;
 			}
 
 			var r = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop, SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
@@ -81,13 +81,19 @@ namespace MediaPoint.App.Behaviors
 			//restore size
 			if (this.AssociatedObject.ResizeMode != ResizeMode.NoResize)
 			{
-				this.AssociatedObject.Width = width;
-				this.AssociatedObject.Height = height;
+                try
+                {
+                    this.AssociatedObject.Width = width;
+                    this.AssociatedObject.Height = height;
+                }
+                catch
+                {
+                }
 			}
 
 			// restore window state for the window
-			if (this.windowStateSettings.WindowState != WindowState.Minimized)
-				this.AssociatedObject.WindowState = this.windowStateSettings.WindowState;
+			if (this.WindowStateSettings.WindowState != WindowState.Minimized)
+				this.AssociatedObject.WindowState = this.WindowStateSettings.WindowState;
 		}
 
 		#endregion
@@ -98,7 +104,7 @@ namespace MediaPoint.App.Behaviors
 		{
 			this.AssociatedObject.Loaded += AssociatedObject_Loaded;
 			this.AssociatedObject.Closing += AssociatedObject_Closing;
-			this.windowStateSettings = new WindowStateSettings(this.AssociatedObject.GetType().FullName);
+            this.WindowStateSettings = new WindowStateSettings(this.AssociatedObject.Name ?? this.AssociatedObject.GetType().FullName);
 			base.OnAttached();
 		}
 
@@ -112,7 +118,7 @@ namespace MediaPoint.App.Behaviors
 		#endregion
 	}
 
-	internal class WindowStateSettings : ApplicationSettingsBase
+	public class WindowStateSettings : ApplicationSettingsBase
 	{
 		public WindowStateSettings(string settingsKey) : base(settingsKey) { }
 

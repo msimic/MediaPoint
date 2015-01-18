@@ -11,6 +11,20 @@ namespace MediaPoint.Converters
 	{
 		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
 		{
+            bool invert = parameter != null ? bool.Parse(parameter.ToString()) : false;
+
+            if (invert)
+            {
+                if (value != null)
+                {
+                    value = null;
+                }
+                else
+                {
+                    value = new object();
+                }
+            }
+
 		    return value != null ? Visibility.Visible : Visibility.Collapsed;
 		}
 

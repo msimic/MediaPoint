@@ -48,11 +48,13 @@ namespace MediaPoint.App
         private DateTime _timeToDelayReShowing = DateTime.Now;
         private Point _lastpoint;
         private IntPtr _hwnd;
+        private bool _childWindowsFollow = true;
 
         public string StartupFile
         {
             get { return _startFile; }
-            set {
+            set
+            {
                 _startFile = value;
 
                 Action<string> load = (s =>
@@ -74,26 +76,59 @@ namespace MediaPoint.App
             }
         }
 
-        private void OnGotFocus(object sender, RoutedEventArgs e)
+        public enum HookType : int
         {
-            IsInInputControl = IsInInput(e);
+            WH_JOURNALRECORD = 0,
+            WH_JOURNALPLAYBACK = 1,
+            WH_KEYBOARD = 2,
+            WH_GETMESSAGE = 3,
+            WH_CALLWNDPROC = 4,
+            WH_CBT = 5,
+            WH_SYSMSGFILTER = 6,
+            WH_MOUSE = 7,
+            WH_HARDWARE = 8,
+            WH_DEBUG = 9,
+            WH_SHELL = 10,
+            WH_FOREGROUNDIDLE = 11,
+            WH_CALLWNDPROCRET = 12,
+            WH_KEYBOARD_LL = 13,
+            WH_MOUSE_LL = 14
         }
 
-        private bool IsInInput(RoutedEventArgs e)
-        {
-            return e.OriginalSource is System.Windows.Controls.Control && e.OriginalSource != mediaControls;
-        }
+        delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
+        private HookProc myCallbackDelegate = null;
 
-        private void OnLostFocus(object sender, RoutedEventArgs e)
-        {
-            IsInInputControl = false;
-        }
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowsHookEx(HookType code, HookProc func, IntPtr hInstance, int threadID);
 
+        [DllImport("user32.dll")]
+        static extern int CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        private IntPtr MyCallbackFunction(int code, IntPtr wParam, IntPtr lParam)
+        {
+            Debug.WriteLine("Hook " + code + " wP: " + (int)wParam + " lP: " + (int)lParam);
+            switch ((int)code)
+            {
+                case HSHELL_APPCOMMAND:
+                    if ((int)lParam == APPCOMMAND_LAUNCH_MEDIA_SELECT || (int)lParam == APPCOMMAND_LAUNCH_MEDIA_SELECT2)
+                    {
+                        return IntPtr.Zero;
+                    }
+                    break;
+            }
+            return new IntPtr(CallNextHookEx(IntPtr.Zero, code, wParam, lParam));
+        }
 
         public Window1()
         {
             InitializeComponent();
 
+            this.myCallbackDelegate = new HookProc(this.MyCallbackFunction);
+
+            // setup a keyboard hook
+            //SetWindowsHookEx(HookType.WH_SHELL, this.myCallbackDelegate, IntPtr.Zero, AppDomain.GetCurrentThreadId());
+
+            LocationChanged += Window1_LocationChanged;
             Visibility = Visibility.Collapsed;
 
             var ih = new WindowInteropHelper(this);
@@ -117,18 +152,6 @@ namespace MediaPoint.App
             Layout.PreviewDragOver += Layout_PreviewDragOver;
             Layout.PreviewDrop += Window1_PreviewDrop;
 
-            AddHandler(
-                UIElement.GotFocusEvent,
-                new RoutedEventHandler(OnGotFocus),
-                true
-            );
-
-            AddHandler(
-                UIElement.LostFocusEvent,
-                new RoutedEventHandler(OnLostFocus),
-                true
-            );
-
             //MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
             
             //foreach (MMDevice device in enumerator.EnumerateAudioEndPoints(DataFlow.All, DeviceState.All))
@@ -136,6 +159,27 @@ namespace MediaPoint.App
             //    Console.WriteLine("*** {0}, {1}, {2}", device.FriendlyName, device.DeviceFriendlyName, device.State);
             //    if (device.State == DeviceState.Active) Console.WriteLine("   {0}", device.AudioEndpointVolume.Channels.Count);
             //}
+        }
+
+        void Window1_LocationChanged(object sender, EventArgs e)
+        {
+            ParentWndMove(this, this.OwnedWindows.OfType<Window>().ToArray());
+        }
+
+        Point parentWindowPosition;
+        public void ParentWndMove(Window parentWindow, Window[] windowsToMove)
+        {
+            if (_childWindowsFollow) for (int i = 0; i < windowsToMove.Length; i++)
+                {
+                    if (windowsToMove[i] != null)
+                    {
+                        windowsToMove[i].Top += -(parentWindowPosition.Y - (parentWindow.ActualHeight / 2) - parentWindow.Top);
+                        windowsToMove[i].Left += -(parentWindowPosition.X - (parentWindow.ActualWidth / 2) - parentWindow.Left);
+                    }
+                }
+
+            parentWindowPosition.X = parentWindow.Left + (parentWindow.ActualWidth / 2);
+            parentWindowPosition.Y = parentWindow.Top + (parentWindow.ActualHeight / 2);
         }
 
         void Layout_PreviewDragOver(object sender, DragEventArgs e)
@@ -180,6 +224,30 @@ namespace MediaPoint.App
                     StartupFile = data[0];
                 }
             }
+            else
+            {
+                bool isText = e.Data.GetDataPresent(DataFormats.Text);
+
+                if (isText)
+                {
+                    string text = (string)e.Data.GetData(DataFormats.Text);
+                    if (Uri.IsWellFormedUriString(text, UriKind.Absolute))
+                    {
+                        var uri = new Uri(text, UriKind.Absolute);
+
+                        dc.Playlist.AddTrackIfNotExisting(uri);
+
+                        if (dc.Playlist.Tracks.Count > 1)
+                        {
+                            dc.ShowPlaylist = true;
+                        }
+                        else if (dc.Playlist.Tracks.Count == 1)
+                        {
+                            dc.Player.Open(uri);
+                        }
+                    }
+                }
+            }
         }
 
         void Window1_PreviewDragLeave(object sender, DragEventArgs e)
@@ -195,6 +263,19 @@ namespace MediaPoint.App
 
         private static void CheckDragDrop(DragEventArgs e)
         {
+            bool isText = e.Data.GetDataPresent(DataFormats.Text);
+
+            if (isText)
+            {
+                string text = (string)e.Data.GetData(DataFormats.Text);
+                if (Uri.IsWellFormedUriString(text, UriKind.Absolute))
+                {
+                    e.Effects = DragDropEffects.Link;
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (!e.Data.GetDataPresent("FileDrop"))
             {
                 e.Effects = DragDropEffects.None;
@@ -351,10 +432,10 @@ namespace MediaPoint.App
                     //    (window.DataContext as Main).IsMaximized = true;
                     //}
                     window.WindowStyle = WindowStyle.None;
-					window.Topmost = true;
-				    window.MaxHeight = Int32.MaxValue;
+                    window.Topmost = true;
+                    window.MaxHeight = Int32.MaxValue;
                     window.MaxWidth = Int32.MaxValue;
-					window.WindowState = WindowState.Maximized;
+                    window.WindowState = WindowState.Maximized;
                     if (window.DataContext is Main)
                     {
                         (window.DataContext as Main).IsMaximized = true;
@@ -374,8 +455,8 @@ namespace MediaPoint.App
                     //Show();
                     //this.Topmost = false;
                     window.Topmost = false;
-					window.WindowStyle = (WindowStyle)window.Tag; //WindowStyle.SingleBorderWindow;
-					window.WindowState = WindowState.Normal;
+                    window.WindowStyle = (WindowStyle)window.Tag; //WindowStyle.SingleBorderWindow;
+                    window.WindowState = WindowState.Normal;
                     if (window.DataContext is Main)
                     {
                         (window.DataContext as Main).IsMaximized = false;
@@ -410,8 +491,14 @@ namespace MediaPoint.App
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        static extern bool IntersectRect(out RECT lprcDst, [In] ref RECT lprcSrc1,
+           [In] ref RECT lprcSrc2);
+
         void HideUi()
         {
+            mediaControls.Focus();
+
             bool hideControls = true;
             bool hideOverlay = true;
             if (WindowState == WindowState.Normal)
@@ -425,15 +512,45 @@ namespace MediaPoint.App
                 hideOverlay = Autohide.GetFullScreen(windowControls);
             }
 
-            if (hideControls) FadeTo(mediaControls, 0);
             if (hideOverlay) FadeTo(windowControls, 0);
             IsUiVisible = false;
+
+            if (hideControls)
+            {
+                var va = mediaControls.FindCommonVisualAncestor(this);
+                if (WindowState == System.Windows.WindowState.Maximized || va != null)
+                {
+                    IsControlsVisible = false;
+                    FadeTo(mediaControls, 0);
+                }
+                else
+                {
+                    Window w2 = mediaControls.TryFindParent<Window>();
+                    RECT r1;
+                    GetWindowRect(new HandleRef(this, _hwnd), out r1);
+                    RECT r2;
+                    GetWindowRect(new HandleRef(this, new WindowInteropHelper(w2).Handle), out r2);
+                    RECT intersection;
+                    if (IntersectRect(out intersection, ref r1, ref r2))
+                    {
+                        var width = intersection.Right - intersection.Left;
+                        var height = intersection.Bottom - intersection.Top;
+                        if (width > 0 &&
+                            height > 0)
+                        {
+                            IsControlsVisible = false;
+                            FadeTo(mediaControls, 0);
+                        }
+                    }
+                }
+            }
         }
 
         void ShowUi()
         {
             FadeTo(mediaControls, 1);
             FadeTo(windowControls, 1);
+            IsControlsVisible = true;
             IsUiVisible = true;
         }
 
@@ -469,7 +586,7 @@ namespace MediaPoint.App
 
             mediaControls.MouseEnter += MediaControlsOnMouseEnter;
             mediaControls.MouseLeave += MediaControlsOnMouseLeave;
-            
+
             windowControls.MouseEnter += MediaControlsOnMouseEnter;
             windowControls.MouseLeave += MediaControlsOnMouseLeave;
             windowControls.IsVisibleChanged += uiPanel_IsVisibleChanged;
@@ -493,7 +610,7 @@ namespace MediaPoint.App
 
         void uiPanel_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if ((bool)e.NewValue != true) mediaControls.Focus();
+            //if ((bool)e.NewValue != true) mediaControls.Focus();
         }
 
         public override void OnApplyTemplate()
@@ -534,7 +651,7 @@ namespace MediaPoint.App
             _isOverUiControl = false;
             if (DataContext == null) return;
             var dc = DataContext as Main;
-            if (dc != null && dc.Player.HasVideo) HideUi();
+            if (dc != null && dc.Player.HasVideo && !dc.IsOptionsVisible) HideUi();
         }
 
         private void MediaControlsOnMouseEnter(object sender, MouseEventArgs mouseEventArgs)
@@ -554,7 +671,7 @@ namespace MediaPoint.App
 
             if (diff >= TimeoutToHide && (IsUiVisible || Cursor != Cursors.None))
             {
-                if (dc != null && (!_isOverUiControl && dc.Player.HasVideo))
+                if (dc != null && (!_isOverUiControl && dc.Player.HasVideo && !dc.IsOptionsVisible))
                 {
                     Cursor = Cursors.None;
                     HideUi();
@@ -575,6 +692,17 @@ namespace MediaPoint.App
         // Using a DependencyProperty as the backing store for IsUIVIsible.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty IsUiVisibleProperty =
             DependencyProperty.Register("IsUiVisible", typeof(bool), typeof(Window1), new PropertyMetadata(true));
+
+        public bool IsControlsVisible
+        {
+            get { return (bool)GetValue(IsControlsVisibleProperty); }
+            set { SetValue(IsControlsVisibleProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for IsUIVIsible.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty IsControlsVisibleProperty =
+            DependencyProperty.Register("IsControlsVisible", typeof(bool), typeof(Window1), new PropertyMetadata(true));
+
 
         private TimeSpan TimeoutToHide
         {
@@ -605,7 +733,7 @@ namespace MediaPoint.App
 
             var delta = Math.Sqrt(2) * (Math.Abs(_lastpoint.X - p.X) + Math.Abs(_lastpoint.Y - p.Y));
             _lastpoint = p;
-            
+
             if (DateTime.Now < _timeToDelayReShowing)
             {
                 return;
@@ -699,25 +827,34 @@ namespace MediaPoint.App
 
         private void MediaPlayer_MediaFailed(object sender, MediaFailedEventArgs e)
         {
-            if (e.Exception is COMException)
+            Dispatcher.BeginInvoke((Action)(() =>
             {
-                switch (((COMException)e.Exception).ErrorCode)
+                if (e.Exception is COMException)
                 {
-                    case -2147220877:
-                        MessageBox.Show(@"It seems that your graphic card does not have the required capabilities to play movies using DirectShow.
+                    switch (((COMException)e.Exception).ErrorCode)
+                    {
+                        case -2147220877:
+                            MessageBox.Show(@"It seems that your graphic card does not have the required capabilities to play movies using DirectShow.
 Ensure that the latest graphic drivers and DirectX are installed and try again.
 
 If you are not running a 'virtual machine' (which is unsupported) ensure that you have at least Windows Vista and a graphics card fully capable of DirectX 9.0c.", "Media failed", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
+                            return;
+                    }
+                    MessageBox.Show(@"Com exception", "Media failed - error code: " + ((COMException)e.Exception).ErrorCode, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-                MessageBox.Show(@"Com exception", "Media failed - error code: " + ((COMException)e.Exception).ErrorCode, MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            MessageBox.Show(String.Format("Media failed: {0}\r\nStacktrace:\r\n {1}", e.Exception.Message, e.Exception.StackTrace));
+
+                if (DataContext is Main)
+                {
+                    (DataContext as Main).ShowOsdMessage("Media failed: " + e.Exception.Message);
+                }
+            }));
         }
 
         private bool _animating;
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            ParentWndMove(this, this.OwnedWindows.OfType<Window>().ToArray());
+
             var mc = FindName("mediaControls") as MediaControls;
             if (mc != null && (!(mc.RenderTransform is MatrixTransform) && !(mc.RenderTransform is TranslateTransform))) return;
             if (_animating) return;
@@ -808,7 +945,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         {
             if (DataContext == null) return;
             var dc = DataContext as Main;
-            if (dc != null && dc.Player.HasVideo) HideUi();
+            if (dc != null && dc.Player.HasVideo && !dc.IsOptionsVisible) HideUi();
         }
 
         private void MediaPlayer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -829,7 +966,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         {
             //Timer t = new Timer((o) =>
             //{
-                Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, action);
+            Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, action);
             //}, null, millisenconds, 0);
         }
 
@@ -859,13 +996,26 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                     }
 
                     Visibility = Visibility.Visible;
-                    
+
 
                     _onceDone = true;
                 }), DispatcherPriority.ApplicationIdle);
 
             RefreshBorderlessBehavior();
+            RefreshChildWindows();
+        }
 
+        unsafe private void RefreshChildWindows()
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                foreach (Window w in OwnedWindows)
+                {
+                    w.Activate();
+                    w.Focus();
+                }
+                Activate();
+            }), DispatcherPriority.ApplicationIdle);
         }
 
         public void RefreshBorderlessBehavior()
@@ -900,6 +1050,16 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         private const Int32 SIZE_MAXIMIZED = 0x0002;
         private const Int32 SIZE_MAXSHOW = 0x0003;
         private const Int32 SIZE_MAXHIDE = 0x0004;
+        private const Int32 WM_APPCOMMAND = 0x0319;
+        private const Int32 HSHELL_APPCOMMAND = 12;
+        private const Int32 APPCOMMAND_LAUNCH_MEDIA_SELECT = 17;
+        private const Int32 APPCOMMAND_LAUNCH_MEDIA_SELECT2 = 1048576;
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr DefWindowProc(
+            IntPtr hWnd,
+            int msg,
+            IntPtr wParam,
+            IntPtr lParam);
 
         private IntPtr WndProc(IntPtr hwnd, Int32 msg, IntPtr wParam, IntPtr lParam, ref Boolean handled)
         {
@@ -911,7 +1071,12 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                     //OnResizing();
                     //if (_shadower != null) _shadower.SetShadowSize(0);
                     break;
-
+                case WM_APPCOMMAND:
+                    if ((int)lParam == APPCOMMAND_LAUNCH_MEDIA_SELECT || (int)lParam == APPCOMMAND_LAUNCH_MEDIA_SELECT2)
+                    {
+                        handled = true;
+                    }
+                    break;
                 case WM_SIZE:               // size gets minimize/maximize as well as final size
                     {
                         int param = wParam.ToInt32();
@@ -1026,7 +1191,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             float f, ac0;
 
             f = value * data[0];
-            for (i = 1; i < data.Length; i++ )
+            for (i = 1; i < data.Length; i++)
             {
                 ac0 = value * data[i];
                 data[i] = data[i] - f;
@@ -1065,7 +1230,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                 maxFrequency = _frequency / 2.0d;
             else
                 maxFrequency = 22050; // Assume a default 44.1 kHz sample rate./2
-            return (int)((frequency / maxFrequency) * ((int)FFTDataSize.FFT2048/2)); // only real
+            return (int)((frequency / maxFrequency) * ((int)FFTDataSize.FFT2048 / 2)); // only real
         }
 
         public bool IsPlaying
@@ -1102,7 +1267,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             _bits = bits;
             _frequency = frequency;
             var sa = visualizations.TryFindSpectrumAnalyzer();
-            foreach(var s in sa) s.RegisterSoundPlayer(this);
+            foreach (var s in sa) s.RegisterSoundPlayer(this);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -1118,13 +1283,44 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             //    v.Owner = this;
             //    v.Show();
             //}
+
+            parentWindowPosition.X = Left + (ActualWidth / 2);
+            parentWindowPosition.Y = Top + (ActualHeight / 2);
         }
 
+        [DllImport("user32.dll")]
+        static extern IntPtr GetActiveWindow();
 
         public bool IsInInputControl
         {
-            get;
-            set;
+            get
+            {
+                IntPtr active = GetActiveWindow();
+
+                var activeWindow = Application.Current.Windows.OfType<Window>()
+                    .FirstOrDefault(window => new WindowInteropHelper(window).Handle == active);
+
+                if (activeWindow == null) return false;
+
+                var focusedControl = FocusManager.GetFocusedElement(activeWindow);
+
+                if (focusedControl == null) return false;
+
+                if (IsInInput(focusedControl))
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        private bool IsInInput(IInputElement e)
+        {
+            return (e is System.Windows.Controls.TextBox ||
+            e is System.Windows.Controls.ComboBox ||
+            e is System.Windows.Controls.ListBox ||
+            e is System.Windows.Controls.ListView) && e != mediaControls;
         }
 
         public System.Windows.Media.Imaging.BitmapSource GetBitmapOfVideoElement()
@@ -1132,10 +1328,23 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             return mediaPlayer.GetBitmapOfVideoElement();
         }
 
+        public void SetChildWindowsFollow(bool value)
+        {
+            _childWindowsFollow = value;
+            RefreshChildWindows();
+        }
 
         public IntPtr GetWindowHandle()
         {
             return _hwnd;
+        }
+
+        private void window_Closed(object sender, CancelEventArgs e)
+        {
+            foreach (Window w in OwnedWindows)
+            {
+                w.Close();
+            }
         }
     }
 }

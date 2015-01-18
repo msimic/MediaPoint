@@ -162,6 +162,7 @@ namespace WPFSpark
         protected virtual void OnIsActiveChanged(bool oldIsActive, bool newIsActive)
         {
             this.Foreground = newIsActive ? ActiveForeground : InactiveForeground;
+            this.SetValue(TextBlock.ForegroundProperty, this.Foreground);
         }
 
         #endregion

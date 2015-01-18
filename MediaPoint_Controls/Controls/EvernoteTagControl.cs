@@ -6,6 +6,8 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using MediaPoint.Common.Interfaces;
+using System.Windows.Data;
+using MediaPoint.Converters;
 
 namespace MediaPoint.Controls
 {
@@ -29,6 +31,8 @@ namespace MediaPoint.Controls
             //// some dummy data, this needs to be provided by user
             //this.ItemsSource = new List<EvernoteTagItem>() { new EvernoteTagItem("receipt"), new EvernoteTagItem("restaurant") };
             //this.AllTags = new List<string>() { "recipe", "red" };
+
+            Resources.Add("converter", new NoConvert());
         }
 
         // AllTags
@@ -61,8 +65,49 @@ namespace MediaPoint.Controls
 
             foreach (var v in e.NewValue as List<ITag>)
             {
-                (me.ItemsSource as List<EvernoteTagItem>).Add(new EvernoteTagItem() {DataContext = v, Text = v.Id});
+                if ((me.ItemsSource as List<EvernoteTagItem>).Any(t => t.DataContext == v) == false)
+                {
+                    ControlTemplate template;
+                    template = me.TryFindResource("EvernoteTagItem") as ControlTemplate;
+                    var tc = me.CreateTagItem(v);
+                    (me.ItemsSource as List<EvernoteTagItem>).Add(tc);
+                }
             }
+        }
+
+        // ConverterType
+        public string ConverterType { get { return (string)GetValue(ConverterTypeProperty); } set { SetValue(ConverterTypeProperty, value); } }
+        public static readonly DependencyProperty ConverterTypeProperty = DependencyProperty.Register("ConverterType", typeof(string), typeof(EvernoteTagControl), new PropertyMetadata(null, OnConverter));
+
+        private static void OnConverter(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var me = d as EvernoteTagControl;
+            if (e.NewValue == null)
+            {
+                me.ConverterInstance = new NoConvert();
+            }
+            else
+            {
+                Type c = Type.GetType((string)e.NewValue);
+                var converter = Activator.CreateInstance(c) as IValueConverter;
+                me.ConverterInstance = converter;
+            }
+
+            me.Resources.Remove("converter");
+            me.Resources.Add("converter", me.ConverterInstance);
+        }
+
+        // ConverterInstance, readonly
+        public IValueConverter ConverterInstance { get { return (IValueConverter)GetValue(ConverterInstanceProperty); } internal set { SetValue(ConverterInstancePropertyKey, value); } }
+        private static readonly DependencyPropertyKey ConverterInstancePropertyKey = DependencyProperty.RegisterReadOnly("ConverterInstance", typeof(IValueConverter), typeof(EvernoteTagControl), new FrameworkPropertyMetadata(new NoConvert()));
+        public static readonly DependencyProperty ConverterInstanceProperty = ConverterInstancePropertyKey.DependencyProperty;
+
+
+        private EvernoteTagItem CreateTagItem(ITag v)
+        {
+            var ret = new EvernoteTagItem() { DataContext = v, Text = v.Id };
+            ret.Resources.Add("converter", ConverterInstance);
+            return ret;
         }
 
         private static void PropertyChangedCallback(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
@@ -107,7 +152,8 @@ namespace MediaPoint.Controls
             }
 
             if (AllTags.Count == 0) return;
-            var newItem = new EvernoteTagItem() { IsEditing = true, DataContext = new Tag()};
+            var newItem = CreateTagItem(new Tag());
+            newItem.IsEditing = true;
             AddTag(newItem);
             this.SelectedItem = newItem;
             this.IsEditing = true;

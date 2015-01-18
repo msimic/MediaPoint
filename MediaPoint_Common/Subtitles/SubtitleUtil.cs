@@ -341,6 +341,23 @@ namespace MediaPoint.Common.Subtitles
                 return sep.ToLowerInvariant();
             }
 
+            regex = new Regex(@"(?<seasonandepisode>S(?<season>\d{1,2}).E(?<episode>\d{1,2}))", RegexOptions.IgnoreCase);
+
+            match = regex.Match(text);
+            if (match.Success)
+            {
+                string sep = "S" + match.Groups["season"].Value + "E" + match.Groups["episode"].Value;
+                return sep.ToLowerInvariant();
+            }
+
+            regex = new Regex(@"(?<seasonandepisode>(?<season>\d{1,2})x(?<episode>\d{2}))", RegexOptions.IgnoreCase);
+
+            match = regex.Match(text);
+            if (match.Success)
+            {
+                string sep = "S" + match.Groups["season"].Value + "E" + match.Groups["episode"].Value;
+                return sep.ToLowerInvariant();
+            }
             return "";
         }
 

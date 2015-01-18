@@ -1,7 +1,7 @@
 ﻿<Window x:Class="MediaPoint.App.Window1"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MediaPoint"
+        Title="MediaPoint" Closing="window_Closed"
         Icon="/Images/app.ico" Name="window" 
         Style="{DynamicResource WindowStyle}" Background="Black"
         xmlns:controls="clr-namespace:MediaPoint.Controls;assembly=MediaPoint.Controls"
@@ -38,7 +38,7 @@
                 <controls:ToolTip InfoText="{Binding Player.Status}" Style="{DynamicResource TrayTooltip}"  />
             </tb:TaskbarIcon.TrayToolTip>
         </tb:TaskbarIcon>
-        <controls:MainWindowContent Focusable="False" Style="{DynamicResource MainWindowContent}">
+        <controls:MainWindowContent Name="mainWindowContent" Focusable="False" Style="{DynamicResource MainWindowContent}">
                 <Grid>
                     <controls:HidingOverlay x:Name="windowControls" Style="{DynamicResource HidingOverlay}">
                     </controls:HidingOverlay>
@@ -82,6 +82,7 @@
                                                     SubtitleSize="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleSize}"
                                                     SubtitleColor="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleColor}"
                                                     SubtitleDelay="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleDelay}"
+                                                    SubtitleBold="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleBold}"
                                                     Subtitle="{Binding SelectedSubtitle}"
                                                     Loop="{Binding Loop}">
                             </controls:MediaUriElement>

@@ -40,7 +40,7 @@ namespace MediaPoint.VM
             MediaPosition = 0;
 		    MediaDuration = 0;
 			Status = "Stopped";
-			SourceFileName = "<no file loaded>";
+			SourceFileName = "<nothing loaded>";
 			Volume = 1;
 			Rate = 1;
 			IsDeeperColor = true;
@@ -89,7 +89,7 @@ namespace MediaPoint.VM
 			get { return GetValue<bool>(() => HasVideo); }
 			set
             {
-                if (SetValue<bool>(() => HasVideo, value))
+                if (SetValue<bool>(() => HasVideo, value) && Source != null)
                 {
                     if (value)
                     {
@@ -145,13 +145,21 @@ namespace MediaPoint.VM
 				if (value != null)
 				{
                     Main.Playlist.SetPlaying(value);
-					SourceFileName = Path.GetFileNameWithoutExtension(value.LocalPath);
-                    Main.ShowOsdMessage(string.Format("Opening '{0}'", Path.GetFileName(SourceFileName)));
+                    if (value.IsFile)
+                    {
+                        SourceFileName = Path.GetFileNameWithoutExtension(value.LocalPath);
+                        Main.ShowOsdMessage(string.Format("Opening '{0}'", Path.GetFileName(SourceFileName)));
+                    }
+                    else
+                    {
+                        SourceFileName = Uri.UnescapeDataString(value.AbsoluteUri);
+                        Main.ShowOsdMessage(string.Format("Opening '{0}'", SourceFileName));
+                    }
 				}
 				else
 				{
                     Main.Playlist.SetPlaying(null);
-					SourceFileName = "<no file loaded>";
+					SourceFileName = "<nothing loaded>";
 				}
 			}
 		}
@@ -522,7 +530,7 @@ namespace MediaPoint.VM
 					Stop();
 				}, can =>
 				{
-					return true;
+					return Source != null;
 				});
 			}
 		}
@@ -640,13 +648,14 @@ namespace MediaPoint.VM
 			Status = "Stopped";
             ServiceLocator.GetService<IMainView>().UpdateTaskbarButtons();
             Main.ShowOsdMessage("Stopped");
+            Source = null;
             HasVideo = false;
 		}
 
         public void LoadMediaInfo()
         {
             var src = Source;
-            if (src == null) return;
+            if (src == null || src.IsFile == false) return;
 
             BackgroundWorker b = new BackgroundWorker();
 
@@ -688,6 +697,7 @@ namespace MediaPoint.VM
 				IsStopped = false;
 				Status = "Playing";
                 Main.ShowOsdMessage("Playing");
+                Main.Equalizer.Update();
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Normal, ServiceLocator.GetService<IMainView>().GetWindow());
 			}
 
@@ -750,7 +760,7 @@ namespace MediaPoint.VM
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
-                if (!args.Cancelled && args.Result is string && Source != null)
+                if (!args.Cancelled && args.Error == null && args.Result is string && Source != null)
                 {
                     FillSubs(Source);
                     string resultSub = (string)args.Result;
@@ -783,17 +793,20 @@ namespace MediaPoint.VM
 			IsPaused = true;
 			IsStopped = false;		
 			Source = null;
-			SubtitleItem sub;
-		    
-            if (null == (sub = FillSubs(uri)) && Main.AutoLoadSubtitles)
+			SubtitleItem sub = null;
+
+            if (uri.IsFile)
             {
-                // no subs found
-                DownloadSubtitleForUriAndQueryIMDB(uri);
-            }
-            else
-            {
-                // we have subs
-                QueryIMDBForUri(uri);
+                if (null == (sub = FillSubs(uri)) && Main.AutoLoadSubtitles)
+                {
+                    // no subs found
+                    DownloadSubtitleForUriAndQueryIMDB(uri);
+                }
+                else
+                {
+                    // we have subs
+                    QueryIMDBForUri(uri);
+                }
             }
 
             Main.ShowVisualizations = false;
@@ -815,11 +828,20 @@ namespace MediaPoint.VM
 
             if (Source != null)
             {
-                Main.ShowOsdMessage(string.Format("Opening '{0}'", Path.GetFileName(SourceFileName)));
+                if (Source.IsFile)
+                {
+                    var sourceFileName = Path.GetFileNameWithoutExtension(Source.LocalPath);
+                    Main.ShowOsdMessage(string.Format("Opening '{0}'", Path.GetFileName(sourceFileName)));
+                }
+                else
+                {
+                    var sourceFileName = Uri.UnescapeDataString(Source.AbsoluteUri);
+                    Main.ShowOsdMessage(string.Format("Opening '{0}'", sourceFileName));
+                }
             }
             else
             {
-                Main.ShowOsdMessage("No file loaded");
+                Main.ShowOsdMessage("Nothing loaded");
             }
 
 			return true;
@@ -849,7 +871,7 @@ namespace MediaPoint.VM
             };
             b.RunWorkerCompleted += (sender, args) =>
             {
-                if (args.Cancelled)
+                if (args.Cancelled || args.Error != null)
                 {
                     IMDb = null;
                     return;
@@ -924,21 +946,27 @@ namespace MediaPoint.VM
             {
                 try
                 {
-                    if (args.Cancelled || HasVideo == false) return;
-
-                    if (args.Result != null)
+                    if (args.Cancelled || args.Error != null || HasVideo == false) return;
+                    var result = (object)null;
+                    try
                     {
-                        if (args.Result is IMDb)
+                        result = args.Result;
+                    }
+                    catch { /* bad request etc */ }
+
+                    if (result != null)
+                    {
+                        if (result is IMDb)
                         {
                             // we got no subtitle but have IMDb
-                            IMDb = args.Result as IMDb;
+                            IMDb = result as IMDb;
                         }
                         else
                         {
                             // both subtitle and IMDB
-                            string resultSub = (string)((object[])args.Result)[0];
-                            IMDb imdb = (IMDb)((object[])args.Result)[1];
-                            var param2 = ((object[])args.Result)[2];
+                            string resultSub = (string)((object[])result)[0];
+                            IMDb imdb = (IMDb)((object[])result)[1];
+                            var param2 = ((object[])result)[2];
                             SetupDownloadedSubtitleAndIMDbInfo(uri, resultSub, imdb, param2);
                         }
                     }
@@ -1015,7 +1043,7 @@ namespace MediaPoint.VM
             {
                 try
                 {
-                    if (args.Cancelled) return;
+                    if (args.Cancelled || args.Error != null) return;
 
                     SetupDownloadedSubtitleAndIMDbInfo(Source, SelectedSubtitle != null ? SelectedSubtitle.Path : "", IMDb, args.Result);
                 }

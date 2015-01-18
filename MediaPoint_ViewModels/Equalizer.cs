@@ -55,6 +55,14 @@ namespace MediaPoint.VM
             }
         }
 
+        public void Update()
+        {
+            foreach (var item in _values)
+            {
+                OnEqualizerChanged(item.Key, item.Value);
+            }
+        }
+
         void GetFrequencyRange(int index, out int f1, out int f2)
         {
             f1 = 0;

@@ -20,6 +20,8 @@
             <converters:MultiplyWithConverter x:Key="MultiplyWithConverter"/>
             <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
             <converters:PixelToPointConverter x:Key="PixelToPointConverter"/>
+            <converters:MultiplyConverter x:Key="MultiplyConverter" />
+            <converters:BoolToIntConverter x:Key="BoolToIntConverter" />
         </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

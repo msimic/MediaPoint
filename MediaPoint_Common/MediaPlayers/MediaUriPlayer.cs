@@ -651,6 +651,10 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
                 
                     hr = splitterSettings.SetRuntimeConfig(true);
                     hr = splitter.Load(fileSource, null);
+                    if (hr != 0)
+                    {
+                        throw new Exception("Playback of this file is not supported!");
+                    }
                     hr = m_graph.AddFilter((IBaseFilter)splitter, "LavSplitter");
                     DsError.ThrowExceptionForHR(hr);
                 }

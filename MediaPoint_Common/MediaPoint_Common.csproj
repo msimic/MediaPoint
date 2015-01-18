@@ -152,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\String.cs" />
+    <Compile Include="Helpers\FontEnum.cs" />
     <Compile Include="Helpers\Imdb.cs" />
     <Compile Include="Helpers\LanguageISOTranslator.cs" />
     <Compile Include="Helpers\ReflectionHelper.cs" />

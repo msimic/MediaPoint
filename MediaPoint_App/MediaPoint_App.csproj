@@ -152,6 +152,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net" />
     <Reference Include="System.Windows.Interactivity, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\AllArchitectures\System.Windows.Interactivity.dll</HintPath>
@@ -194,7 +195,9 @@
     <Compile Include="AttachedProperties\TrackbarSlider.cs" />
     <Compile Include="Behaviors\BorderlessWindowBehavior.cs" />
     <Compile Include="Behaviors\Buttons.cs" />
+    <Compile Include="Behaviors\MouseDragElementBehavior.cs" />
     <Compile Include="Behaviors\MouseLeaveBehavior.cs" />
+    <Compile Include="Behaviors\PopupInWindowBehavior.cs" />
     <Compile Include="Behaviors\SetterAction.cs" />
     <Compile Include="Behaviors\DraggableBehavior.cs" />
     <Compile Include="Behaviors\FullScreenBehavior.cs" />
@@ -205,10 +208,12 @@
     <Compile Include="Behaviors\StylizedBehaviors.cs" />
     <Compile Include="Behaviors\WindowStateBehavior.cs" />
     <Compile Include="Converters\BooleanAndConverter.cs" />
+    <Compile Include="Converters\BoolToIntConverter.cs" />
     <Compile Include="Converters\LastStringIfNull.cs" />
     <Compile Include="Converters\LanguageToFlagConverter.cs" />
     <Compile Include="Converters\FullscreenPaddingConverter.cs" />
     <Compile Include="AttachedProperties\ListBoxAutoScroll.cs" />
+    <Compile Include="Converters\MultiplyConverter.cs" />
     <Compile Include="Converters\MultiplyWithConverter.cs" />
     <Compile Include="Converters\IntegerBiggerThanToVisibilityConverter.cs" />
     <Compile Include="Converters\PixelToPointConverter.cs" />
@@ -224,7 +229,8 @@
     <Compile Include="Effects\WaterEffect.cs" />
     <Compile Include="Extensions\AnimationExtensions.cs" />
     <Compile Include="Extensions\AssemblyExtensions.cs" />
-    <Compile Include="Extensions\SetPropertyAction.cs" />
+    <Compile Include="Behaviors\SetPropertyAction.cs" />
+    <Compile Include="Extensions\VisualTreeHelpers.cs" />
     <Compile Include="Extensions\WindowInteropExtensions.cs" />
     <Compile Include="InterceptKeys.cs" />
     <Compile Include="Plates.xaml.cs">
@@ -353,6 +359,7 @@
     <Content Include="Themes\default\Images\close_hover.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Themes\default\Images\dock.png" />
     <Content Include="Themes\default\Images\loading.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

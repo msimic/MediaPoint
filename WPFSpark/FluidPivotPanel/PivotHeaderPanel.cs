@@ -287,12 +287,17 @@ namespace WPFSpark
         /// <param name="index">Index at where insertion should be performed</param>
         private void InsertChild(UIElement child, int index)
         {
+            double maxH = 0;
             // Move all the children after the 'index' to the right to accommodate the new child
             for (int i = index; i < headerCollection.Count; i++)
             {
                 double oldTranslationX = ((TranslateTransform)(((TransformGroup)headerCollection[i].RenderTransform).Children[0])).X;
                 double newTranslationX = oldTranslationX + child.DesiredSize.Width;
                 headerCollection[i].RenderTransform = CreateTransform(new Point(newTranslationX, 0.0));
+                if (maxH < headerCollection[i].DesiredSize.Height)
+                {
+                    maxH = headerCollection[i].DesiredSize.Height;
+                }
             }
 
             addFadeInSB.Begin((FrameworkElement)child);
@@ -315,6 +320,14 @@ namespace WPFSpark
                 else
                     headerCollection.Insert(0, child);
 
+                double maxH = 0;
+                for (int i = 0; i < headerCollection.Count; i++)
+                {
+                    if (maxH < headerCollection[i].DesiredSize.Height)
+                    {
+                        maxH = headerCollection[i].DesiredSize.Height;
+                    }
+                }
                 updateFadeInSB.Begin((FrameworkElement)child);
             }));
         }

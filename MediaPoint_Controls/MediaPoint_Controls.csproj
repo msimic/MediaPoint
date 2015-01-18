@@ -194,6 +194,9 @@
       <DependentUpon>ToolTip.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ValueConverters.cs" />
+    <Compile Include="Converters\DefaultConverter.cs" />
+    <Compile Include="Converters\NoConvert.cs" />
+    <Compile Include="Converters\LanguageToFlagConverter.cs" />
     <Compile Include="Effects\DeeperColor.cs" />
     <Compile Include="Extensions\UIExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">

@@ -1,5 +1,6 @@
-﻿namespace MediaPoint.App.Extensions
+﻿namespace MediaPoint.App.Behaviors
 {
+    using System;
     using System.Reflection;
     using System.Windows;
     using System.Windows.Interactivity;
@@ -71,7 +72,8 @@
                 BindingFlags.Instance | BindingFlags.Public
                 | BindingFlags.NonPublic | BindingFlags.InvokeMethod);
 
-            propertyInfo.SetValue(target, PropertyValue, null);
+            var val = Convert.ChangeType(PropertyValue, propertyInfo.PropertyType);
+            propertyInfo.SetValue(target, val, null);
         }
     }
 }

@@ -28,6 +28,7 @@ OutputBaseFilename=MediaPoint_Setup
 SetupIconFile=..\MediaPoint_App\Images\app.ico
 Compression=lzma
 SolidCompression=yes
+ChangesAssociations=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -46,6 +47,9 @@ Root: HKCR; Subkey: ".mp4"; ValueType: string; ValueName: ""; ValueData: "{#MyAp
 Root: HKCR; Subkey: "{#MyAppName}"; ValueType: string; ValueName: ""; ValueData: "Media File"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "{#MyAppName}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKCR; Subkey: "{#MyAppName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mkv\UserChoice"; ValueType: none; ValueName: none; Permissions: users-full; Flags: deletekey; Tasks: mkvAssociation 
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.avi\UserChoice"; ValueType: none; ValueName: none; Permissions: users-full; Flags: deletekey; Tasks: aviAssociation 
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mp4\UserChoice"; ValueType: none; ValueName: none; Permissions: users-full; Flags: deletekey; Tasks: mp4Association 
 
 [Code]
 function IsDotNetDetected(version: string; service: cardinal): boolean;
@@ -109,7 +113,6 @@ end;
 
 function InitializeSetup(): Boolean;
 begin
-// TODO take ownership of regedit values for mkv avi mp4
     if not IsDotNetDetected('v3.5', 1) then begin
         MsgBox('{#MyAppName} requires Microsoft .NET Framework 3.5 SP1.'#13#13
           'The installer will attempt to install it at the end.'#13#13
@@ -125,6 +128,23 @@ procedure InitializeWizard;
 begin
 ExtractTemporaryFile('Splash.jpg');
 ShowSplashScreen(WizardForm.Handle,ExpandConstant('{tmp}')+'\Splash.jpg',1000,3000,1000,0,255,True,$00FF00,10);
+end;
+
+const
+  SHCNE_ASSOCCHANGED = $08000000;
+  SHCNF_IDLIST = $00000000;
+
+procedure SHChangeNotify(wEventID: integer; uFlags: cardinal; dwItem1, dwItem2: cardinal);
+external 'SHChangeNotify@shell32.dll stdcall';
+
+procedure SendChangeNotification;
+begin
+  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
+end;
+
+procedure DeinitializeSetup;
+begin
+SendChangeNotification();
 end;
 
 [Files]
