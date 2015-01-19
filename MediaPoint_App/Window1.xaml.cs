@@ -497,7 +497,7 @@ namespace MediaPoint.App
 
         void HideUi()
         {
-            mediaControls.Focus();
+            this.Focus();
 
             bool hideControls = true;
             bool hideOverlay = true;
