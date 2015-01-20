@@ -1463,16 +1463,11 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// </summary>
         public virtual void Play()
         {
-            VerifyAccess();
-
-			//if (m_basicAudio != null)
-			//{
-			//    Balance = Balance;
-			//    Volume = Volume;
-			//}
-
-			if (m_mediaControl != null)
-			    m_mediaControl.Run();
+            if (CheckAccess())
+            {
+                if (m_mediaControl != null)
+                    m_mediaControl.Run();
+            }
         }
 
         /// <summary>
@@ -1480,9 +1475,10 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// </summary>
         public virtual void Stop()
         {
-            VerifyAccess();
-
-            StopInternal();
+            if (CheckAccess())
+            {
+                StopInternal();
+            }
         }
 
         /// <summary>
@@ -1519,11 +1515,12 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         /// </summary>
         public virtual void Pause()
         {
-            VerifyAccess();
-
-            if (m_mediaControl != null)
+            if (CheckAccess())
             {
-                m_mediaControl.Pause();
+                if (m_mediaControl != null)
+                {
+                    m_mediaControl.Pause();
+                }
             }
         }
 

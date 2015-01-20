@@ -15,6 +15,7 @@ using System.Linq;
 using MediaPoint.Interfaces;
 using MediaPoint.VM.Services.Model;
 using MediaPoint.Common.Services;
+using MediaPoint.VM.Model;
 
 namespace MediaPoint.App
 {
@@ -25,39 +26,72 @@ namespace MediaPoint.App
 	{
         protected override void OnStartup(System.Windows.StartupEventArgs e)
         {
+
+            DispatcherUnhandledException += Application_DispatcherUnhandledException;
+            
             // Call the OnStartup event on our base class
             base.OnStartup(e);
+
+            var v = this.GetType().Assembly.GetName().Version;
+            
+            string preproduction = " ?";
+
+            if (v.Build == 0)
+            {
+                preproduction = "";
+            }
+            else if (v.Build % 2 != 0)
+            {
+                preproduction = " αlpha" + (v.Build + 1) / 2 + " (rev." + v.Revision + ")";
+            }
+            else if (v.Build % 2 == 0)
+            {
+                preproduction = " βeta" + v.Build / 2 + " (rev." + v.Revision + ")";
+            }
+
+            this.Properties["Version"] = string.Format("v{0}.{1}{2}", v.Major, v.Minor, preproduction);
+            this.Properties["VersionShort"] = string.Format("v{0}.{1}", v.Major, v.Minor);
 
             Exit += new ExitEventHandler(App_Exit);
             Thread preloader = new Thread(PreloadAssemblies);
             preloader.IsBackground = true;
             preloader.Priority = ThreadPriority.BelowNormal;
             preloader.Start();
-            
+
             this.Resources = Application.LoadComponent(new Uri("App.xaml", UriKind.RelativeOrAbsolute)) as ResourceDictionary;
-            this.Resources.BeginInit();
-            this.Resources.MergedDictionaries.Add(Application.LoadComponent(new Uri("/Themes/default/style.xaml", UriKind.RelativeOrAbsolute)) as ResourceDictionary);
-            this.Resources.EndInit();
-            DispatcherUnhandledException += Application_DispatcherUnhandledException;
+
             var w = new Window1();
-            var dlgsrv = new AppDialogService();
-            var b = new System.Windows.Controls.Button();
-            var sl = new StyleLoader(Resources);
-            ServiceLocator.RegisterService<IStyleLoader>(sl);
             ServiceLocator.RegisterService<IMainView>(w);
+            var dlgsrv = new AppDialogService();
+            ServiceLocator.RegisterService<IDialogService>(dlgsrv);
+            ServiceLocator.RegisterService<IMainWindow>(w);
+
+            var vm = new Main { Themes = new ObservableCollection<ThemeInfo>(StyleLoader.GetAllStyles()) };
+            w.DataContext = vm;
+            ServiceLocator.RegisterOverrideService<IKeyboardHandler>((IKeyboardHandler)vm);
+            
+            this.Resources.BeginInit();
+
+            var sl = new StyleLoader(Resources);
+            var startTheme = new ThemeInfo { Path = "default" };
+            startTheme = sl.LoadStyle(startTheme);
+            StyleLoader.CurrentStyleFolder = startTheme.Path;
+            vm.CurrentTheme = vm.Themes.FirstOrDefault(t => t.Path == startTheme.Path);
+
+            //this.Resources.MergedDictionaries.Add(Application.LoadComponent(new Uri("/Themes/default/style.xaml", UriKind.RelativeOrAbsolute)) as ResourceDictionary);
+            this.Resources.EndInit();
+
+            sl.PerformInit = true;
+
+            var b = new System.Windows.Controls.Button();
+            ServiceLocator.RegisterService<IStyleLoader>(sl);
             ServiceLocator.RegisterService<IFramePictureProvider>(w);
             ServiceLocator.RegisterService<IInputTeller>(w);
-            ServiceLocator.RegisterService<IDialogService>(dlgsrv);
-            var vm = new Main { Themes = new ObservableCollection<string>(StyleLoader.GetAllStyles()) };
             ServiceLocator.RegisterService<IPlateProcessor>(vm);
             ServiceLocator.RegisterService<ISettings>(vm);
-            ServiceLocator.RegisterService<IMainWindow>(w);
             
-            w.DataContext = vm;
             //sl.LoadStyle("default");
-            StyleLoader.CurrentStyleFolder = "default";
-            vm.CurrentTheme = StyleLoader.CurrentStyleFolder;
-
+            
             string[] args = Environment.GetCommandLineArgs();
             if (args.Length > 1)
             {

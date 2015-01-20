@@ -1,9 +1,10 @@
 ﻿using MediaPoint.MVVM.Services;
+using MediaPoint.VM.Model;
 
 namespace MediaPoint.VM.ViewInterfaces
 {
 	public interface IStyleLoader : IService
 	{
-		string LoadStyle(string name);
+		ThemeInfo LoadStyle(ThemeInfo name);
 	}
 }

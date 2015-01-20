@@ -141,6 +141,7 @@
     <Compile Include="Model\FontObject.cs" />
     <Compile Include="Model\KeyboardShortcut.cs" />
     <Compile Include="Model\PlayerAction.cs" />
+    <Compile Include="Model\ThemeInfo.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Playlist.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

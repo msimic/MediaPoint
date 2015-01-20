@@ -66,7 +66,6 @@ namespace MediaPoint.VM
             //    }
             //});
 
-            ServiceLocator.RegisterOverrideService<IKeyboardHandler>((IKeyboardHandler)this);
             Equalizer = new Equalizer();
 		    SubtitleColor = Colors.White;
 		    AutoLoadSubtitles = true;
@@ -671,7 +670,7 @@ namespace MediaPoint.VM
             set { SetValue(() => AudioRenderer, value); }
         }
 
-		public ObservableCollection<string>	Themes
+        public ObservableCollection<ThemeInfo> Themes
 		{
 			get { return GetValue(() => Themes); }
 			set { SetValue(() => Themes, value); }
@@ -725,14 +724,17 @@ namespace MediaPoint.VM
 			set { SetValue(() => IsMaximized, value); }
 		}
 
-		public string CurrentTheme
+		public ThemeInfo CurrentTheme
 		{
 			get { return GetValue(() => CurrentTheme); }
 			set {
                 if (value == null) return;
+
+                bool firstSet = CurrentTheme == null; // first set comes from the App load so avoid recursion
+
 				if (SetValue(() => CurrentTheme, value))
 				{
-					SetSkin(value);
+					if (!firstSet) SetSkin(value);
 				}
 			}
 		}
@@ -813,6 +815,12 @@ namespace MediaPoint.VM
 			get { return GetValue(() => SubtitleFont); }
 			set
             {
+                if (value == null)
+                {
+                    // ignore combobox that wants to set null at the start
+                    return;
+                }
+
                 if (SetValue(() => SubtitleFont, value))
                 {
                     FontScripts = _fontEnum.FontFamilies.Where(f => f.FontName == value.Font.Source).Select(f => f.Script).Distinct().OrderBy(s => s).ToArray();
@@ -884,6 +892,11 @@ namespace MediaPoint.VM
             get { return GetValue(() => FontScript); }
             set
             {
+                if (value == null)
+                {
+                    // ignore combobox that wants to set null at the start
+                    return;
+                }
                 if (SetValue(() => FontScript, value))
                 {
                     string charset = _fontEnum.FontFamilies.Where(f => f.FontName == SubtitleFont.Font.Source && f.Script == value).FirstOrDefault().Charset;
@@ -916,7 +929,7 @@ namespace MediaPoint.VM
 
 		#region Commands
 
-		public void SetSkin(string skin)
+		public void SetSkin(ThemeInfo skin)
 		{
 			try
 			{

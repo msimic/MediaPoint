@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace MediaPoint.Converters
 {
-	public class ExtendedBooleanToVisibility : IValueConverter
+    public class StringToBooleanConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
 		{
@@ -20,6 +20,7 @@ namespace MediaPoint.Converters
             }
             catch
             {
+                if (value == null) value = "";
                 bool.TryParse(value.ToString(), out val);
             }
 
@@ -27,20 +28,13 @@ namespace MediaPoint.Converters
 
 			if (invert) val = !val;
 
-			if (val)
-			{
-				return Visibility.Visible;
-			}
-			else
-			{
-				return Visibility.Collapsed;
-			}
+            return val;
 
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
 		{
-			return null;
+			return value.ToString();
 		}
 	}
 }

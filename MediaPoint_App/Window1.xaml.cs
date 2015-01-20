@@ -123,6 +123,8 @@ namespace MediaPoint.App
         {
             InitializeComponent();
 
+            AddHandler(FrameworkElement.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(On_MouseLeftButtonDown), true);
+            
             this.myCallbackDelegate = new HookProc(this.MyCallbackFunction);
 
             // setup a keyboard hook
@@ -159,6 +161,14 @@ namespace MediaPoint.App
             //    Console.WriteLine("*** {0}, {1}, {2}", device.FriendlyName, device.DeviceFriendlyName, device.State);
             //    if (device.State == DeviceState.Active) Console.WriteLine("   {0}", device.AudioEndpointVolume.Channels.Count);
             //}
+        }
+
+        private void On_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (Mouse.Captured != null)
+            {
+                Debug.WriteLine("Captured: " + Mouse.Captured.GetType().Name);
+            }
         }
 
         void Window1_LocationChanged(object sender, EventArgs e)
@@ -305,7 +315,9 @@ namespace MediaPoint.App
 
         void Window1_PreviewGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            Debug.WriteLine("Focus " + e.NewFocus.GetType().Name + ": " + ((e.NewFocus is FrameworkElement) ? (e.NewFocus as FrameworkElement).Name : ""));
+            if (e.OldFocus == null) return;
+
+            Debug.WriteLine("Focus " + e.NewFocus.GetType().Name + ": " + ((e.OldFocus is FrameworkElement) ? (e.OldFocus as FrameworkElement).Name : ""));
         }
 
         void OnStateChanged(object sender, EventArgs args)
@@ -457,10 +469,31 @@ namespace MediaPoint.App
                     window.Topmost = false;
                     window.WindowStyle = (WindowStyle)window.Tag; //WindowStyle.SingleBorderWindow;
                     window.WindowState = WindowState.Normal;
+                    window.Left = window.RestoreBounds.Left;
+                    window.Top = window.RestoreBounds.Top;
+                    window.Width = window.RestoreBounds.Width;
+                    window.Height = window.RestoreBounds.Height;
+                    window.Visibility = System.Windows.Visibility.Visible;
+                    ShowInTaskbar = true;
+                    ShowWindow(winHelp.Handle, 1);
+
                     if (window.DataContext is Main)
                     {
                         (window.DataContext as Main).IsMaximized = false;
                     }
+
+                    Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        foreach (Window w in OwnedWindows)
+                        {
+                            if (w.IsLoaded && w.Content != null)
+                            {
+                                //w.Hide();
+                                w.Show();
+                            }
+                        }
+                    }), DispatcherPriority.ApplicationIdle);
+
                     break;
             }
 
@@ -643,6 +676,16 @@ namespace MediaPoint.App
             {
                 _elementsToRefresh.Add(element);
             }
+
+            foreach (var wnd in this.OwnedWindows.OfType<Window>())
+            {
+                var el2 = VisualHelper.FindChildren<ToggleButton>(wnd);
+                foreach (var element in el2)
+                {
+                    _elementsToRefresh.Add(element);
+                }                
+            }
+
         }
 
         private void MediaControlsOnMouseLeave(object sender, MouseEventArgs e)
@@ -894,6 +937,13 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                                         };
                 storyboard.Begin();
             }
+
+
+            if (Mouse.Captured != null)
+            {
+                Mouse.Captured.ReleaseMouseCapture();
+            }
+
             //Dispatcher.BeginInvoke((Action)(() => {
             //    if (_shadower != null) _shadower.SetShadowSize(6);
             //}), DispatcherPriority.Normal);
@@ -927,15 +977,20 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
                 }
 
                 TwoClick = false;
-                Dispatcher.BeginInvoke((Action)(() =>
+
+                var now = DateTime.Now;
+                if (now - LastDragTime() > TimeSpan.FromMilliseconds(300))
                 {
-                    if (mediaPlayer.IsPlaying)
-                        mediaPlayer.Pause();
-                    else
+                    Dispatcher.BeginInvoke((Action)(() =>
                     {
-                        mediaPlayer.Play();
-                    }
-                }));
+                        if (mediaPlayer.IsPlaying)
+                            mediaPlayer.Pause();
+                        else
+                        {
+                            mediaPlayer.Play();
+                        }
+                    }));
+                }
             });
             t.IsBackground = true;
             t.Start();
@@ -1011,8 +1066,11 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             {
                 foreach (Window w in OwnedWindows)
                 {
-                    w.Activate();
-                    w.Focus();
+                    if (w.IsLoaded && w.IsInitialized)
+                    {
+                        w.Activate();
+                        w.Focus();
+                    }
                 }
                 Activate();
             }), DispatcherPriority.ApplicationIdle);
@@ -1284,6 +1342,10 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             //    v.Show();
             //}
 
+            if (Mouse.Captured != null)
+            {
+                Mouse.Captured.ReleaseMouseCapture();
+            }
             parentWindowPosition.X = Left + (ActualWidth / 2);
             parentWindowPosition.Y = Top + (ActualHeight / 2);
         }
@@ -1345,6 +1407,17 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
             {
                 w.Close();
             }
+        }
+
+        DateTime _lastDrag = DateTime.Now;
+        public void NotifyDragged()
+        {
+            _lastDrag = DateTime.Now;
+        }
+
+        public DateTime LastDragTime()
+        {
+            return _lastDrag;
         }
     }
 }

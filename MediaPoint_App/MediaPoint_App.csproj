@@ -24,7 +24,7 @@
     <Optimize>false</Optimize>
     <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\bin\x86\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;ALPHA</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>1607</NoWarn>
@@ -36,7 +36,7 @@
     <Optimize>true</Optimize>
     <BaseIntermediateOutputPath>..\output\obj\</BaseIntermediateOutputPath>
     <OutputPath>..\output\bin\x86\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;ALPHA</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>1607</NoWarn>
@@ -209,6 +209,7 @@
     <Compile Include="Behaviors\WindowStateBehavior.cs" />
     <Compile Include="Converters\BooleanAndConverter.cs" />
     <Compile Include="Converters\BoolToIntConverter.cs" />
+    <Compile Include="Converters\StringToBooleanConverter.cs" />
     <Compile Include="Converters\LastStringIfNull.cs" />
     <Compile Include="Converters\LanguageToFlagConverter.cs" />
     <Compile Include="Converters\FullscreenPaddingConverter.cs" />

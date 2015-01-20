@@ -126,8 +126,8 @@ procedure ShowSplashScreen(p1:HWND;p2:string;p3,p4,p5,p6,p7:integer;p8:boolean;p
 
 procedure InitializeWizard;
 begin
-ExtractTemporaryFile('Splash.jpg');
-ShowSplashScreen(WizardForm.Handle,ExpandConstant('{tmp}')+'\Splash.jpg',1000,3000,1000,0,255,True,$00FF00,10);
+ExtractTemporaryFile('Splash.png');
+ShowSplashScreen(WizardForm.Handle,ExpandConstant('{tmp}')+'\Splash.png',1000,1000,1000,0,255,True,$00FF00,10);
 end;
 
 const
@@ -184,7 +184,7 @@ Source: "..\output\bin\x86\Xceed.Wpf.Toolkit.dll"; DestDir: "{app}"; Flags: igno
 Source: "..\output\bin\x86\codecs\*"; DestDir: "{app}\codecs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\output\bin\x86\Themes\*"; DestDir: "{app}\Themes"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\InstallerResources\dotnetfx35setup.exe"; DestDir: {tmp}; Flags: deleteafterinstall; Check: not IsRequiredDotNetDetected 
-Source: "..\InstallerResources\Splash.jpg"; DestDir: {tmp}; Flags: ignoreversion dontcopy nocompression
+Source: "..\InstallerResources\Splash.png"; DestDir: {tmp}; Flags: ignoreversion dontcopy nocompression
 Source: "..\InstallerResources\isgsg.dll"; DestDir: {tmp}; Flags: ignoreversion dontcopy nocompression
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

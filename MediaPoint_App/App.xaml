@@ -22,6 +22,7 @@
             <converters:PixelToPointConverter x:Key="PixelToPointConverter"/>
             <converters:MultiplyConverter x:Key="MultiplyConverter" />
             <converters:BoolToIntConverter x:Key="BoolToIntConverter" />
+            <converters:StringToBooleanConverter x:Key="StringToBooleanConverter" />
         </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

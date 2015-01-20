@@ -11,6 +11,7 @@ using System.Reflection;
 using MediaPoint.App.Extensions;
 using System.Security.AccessControl;
 using MediaPoint.VM.ViewInterfaces;
+using MediaPoint.VM.Model;
 
 namespace MediaPoint.App.Themes
 {
@@ -28,6 +29,8 @@ namespace MediaPoint.App.Themes
 			get;
 			set;
 		}
+
+        public bool PerformInit { get; set; }
 
 		public static readonly string THEME_PREFIX = "Theme";
 
@@ -93,21 +96,20 @@ namespace MediaPoint.App.Themes
 			public ThemeException(string message) : base(message) { }
 		}
 
-		public string LoadStyle(string name)
+		public ThemeInfo LoadStyle(ThemeInfo name)
 		{
-			if (CurrentStyleFolder != name)
-				return LoadStyles("MediaPoint", name, _dic);
+			if (CurrentStyleFolder != name.Path)
+				return LoadStyles(Application.Current.GetType().Assembly.GetName().Name, name.Path, _dic);
 			else
-				return CurrentStyleFolder;
+				return name;
 		}
 
-		public static string[] GetAllStyles()
+        public static ThemeInfo[] GetAllStyles()
 		{
 			string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MediaPoint");
 			string fileName = Path.Combine(path, @"Themes\");
 
             List<string> dirs = new List<string>();
-
 
 			if (Directory.Exists(fileName) && HasPermission(fileName, FileSystemRights.Read))
 			{
@@ -122,25 +124,38 @@ namespace MediaPoint.App.Themes
                 dirs.AddRange(Directory.GetDirectories(fileName).Select(d => new DirectoryInfo(d).Name).ToArray());
 			}
 
-            return dirs.Distinct().ToArray();
+            dirs = dirs.Distinct().ToList();
+
+            List<ThemeInfo> ret = new List<ThemeInfo>();
+
+            foreach (var themePath in dirs)
+            {
+                string themeFullPath;
+                string themeFile;
+                GetFullPath(Application.Current.GetType().Assembly.GetName().Name, themePath, out themeFullPath, out themeFile);
+
+                string themeName;
+                using (FileStream fs = new FileStream(themeFile, FileMode.Open, FileAccess.Read))
+				{
+					ResourceDictionary dic = (ResourceDictionary)XamlReader.Load(fs);
+					if (!dic.Contains(THEME_PREFIX))
+						throw new ThemeException("A theme for MediaPoint needs to have a TextBlock marked with x:Name=\"Theme\" while the text should be the name of the theme.");
+					themeName = ((TextBlock)dic[THEME_PREFIX]).Text;
+                }
+
+                ret.Add(new ThemeInfo { Name = themeName, Path = themePath });
+            }
+
+            return ret.ToArray();
 		}
 
-		public string LoadStyles(string appname, string styleName, ResourceDictionary appDic)
+		public ThemeInfo LoadStyles(string appname, string styleName, ResourceDictionary appDic)
 		{
 
-            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appname);
-			string fileName = Path.Combine(path, @"Themes\" + styleName + @"\style.xaml");
+            string path;
+            string fileName;
 
-			if (!File.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))
-			{
-				path = Assembly.GetExecutingAssembly().GetPath();
-				fileName = Path.Combine(path, @"Themes\" + styleName + @"\style.xaml");
-
-				if (!File.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))
-				{
-					throw new ThemeException("Style: " + styleName + " does not exist or cannot be accessed.");
-				}
-			}
+            GetFullPath(appname, styleName, out path, out fileName);
 
 			try
 			{
@@ -151,17 +166,17 @@ namespace MediaPoint.App.Themes
 					if (!dic.Contains(THEME_PREFIX))
 						throw new ThemeException("A theme for MediaPoint needs to have a TextBlock marked with x:Name=\"Theme\" while the text should be the name of the theme.");
 					themeName = ((TextBlock)dic[THEME_PREFIX]).Text;
-					appDic.BeginInit();
+                    if (PerformInit) appDic.BeginInit();
 					var theme = Application.Current.Resources.MergedDictionaries.FirstOrDefault(rd =>
 					                                                                   	{
 					                                                                   		return rd.Contains(THEME_PREFIX);
 					                                                                   	});
 					if (theme != null) appDic.MergedDictionaries.Remove(theme);
 					appDic.MergedDictionaries.Add(dic);
-					appDic.EndInit();
+                    if (PerformInit) appDic.EndInit();
 					CurrentStyleFolder = Path.Combine(path, @"Themes\" + styleName);
                     
-					return themeName;
+					return new ThemeInfo{ Name = themeName, Path = styleName };
 				}
 			}
 			catch (Exception ex)
@@ -169,6 +184,23 @@ namespace MediaPoint.App.Themes
 				throw new ThemeException("Style: " + styleName + " contains an invalid WPF ResourceDictionary.\r\n\r\n" + ex.Message + "\r\n\r\n" + ex.StackTrace);
 			}
 		}
+
+        private static void GetFullPath(string appname, string styleName, out string path, out string fileName)
+        {
+            path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appname);
+            fileName = Path.Combine(path, @"Themes\" + styleName + @"\style.xaml");
+
+            if (!File.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))
+            {
+                path = Assembly.GetExecutingAssembly().GetPath();
+                fileName = Path.Combine(path, @"Themes\" + styleName + @"\style.xaml");
+
+                if (!File.Exists(fileName) || !HasPermission(fileName, FileSystemRights.Read))
+                {
+                    throw new ThemeException("Style: " + styleName + " does not exist or cannot be accessed.");
+                }
+            }
+        }
 
 		public string Name
 		{

@@ -28,6 +28,8 @@ namespace MediaPoint.VM.ViewInterfaces
 
 	public interface IMainView : IService
 	{
+        void NotifyDragged();
+        DateTime LastDragTime();
 		void Hide();
 		void Show();
 		void Invoke(Action action);

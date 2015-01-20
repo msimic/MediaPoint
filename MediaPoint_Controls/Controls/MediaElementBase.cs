@@ -807,11 +807,19 @@ namespace MediaPoint.Controls
             
 	    }
 
+        bool _isInitialized = false;
 	    private void InitializeMediaPlayerPrivate()
 		{
-			InitializeMediaPlayer();
-			PlayerSetAudioRenderer();
-			PlayerSetVideoRenderer();
+            lock (this)
+            {
+                if (!_isInitialized)
+                {
+                    _isInitialized = true;
+                    InitializeMediaPlayer();
+                    PlayerSetAudioRenderer();
+                    PlayerSetVideoRenderer();
+                }
+            }
 		}
 
 		public MediaPlayerBase MediaPlayerBase

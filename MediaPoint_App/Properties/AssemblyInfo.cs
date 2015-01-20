@@ -9,7 +9,7 @@ using System.Windows.Media;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("MediaPoint")]
-[assembly: AssemblyDescription("Your media files like it!")]
+[assembly: AssemblyDescription("A Media Player with integrated codecs and automatic subtitles made by Mars.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("MarsMedia")]
 [assembly: AssemblyProduct("MediaPoint")]
@@ -52,5 +52,5 @@ using System.Windows.Media;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("0.9.7.*")]
+[assembly: AssemblyFileVersion("0.9.7.*")]

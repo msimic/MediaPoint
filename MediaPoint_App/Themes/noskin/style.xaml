@@ -5,7 +5,7 @@
                     xmlns:Attached="clr-namespace:MediaPoint.App.AttachedProperties;assembly=MediaPoint"
                     xmlns:Behaviors="clr-namespace:MediaPoint.App.Behaviors;assembly=MediaPoint"
                     xmlns:Interactivity="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity">
-        <TextBlock x:Key="Theme">No Skin</TextBlock>
+        <TextBlock x:Key="Theme">Simple</TextBlock>
 
     <Style TargetType="Window" x:Key="WindowStyle">
         <Setter Property="Width" Value="600"/>

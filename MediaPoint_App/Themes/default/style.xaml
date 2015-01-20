@@ -17,7 +17,7 @@
 		xmlns:vm="clr-namespace:MediaPoint.VM;assembly=MediaPoint.ViewModels"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
 		xmlns:Interactivity="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity">
-    <TextBlock x:Key="Theme">Default</TextBlock>
+    <TextBlock x:Key="Theme">MediaPoint</TextBlock>
 
     <Converters:PlayingToVisibilityConverter x:Key="stoppedToVis" />
     <Converters:FullscreenPaddingConverter x:Key="FullscreenPaddingConverter"/>
@@ -47,6 +47,14 @@
         <GradientStop Color="#10FFFFFF" Offset="0.475" />
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="MediaButtonBorder" EndPoint="0.5,0.971" StartPoint="0.5,0.042">
+        <GradientStop Color="#4CFFFFFF" Offset="0" />
+        <GradientStop Color="#26FFFFFF" Offset="1" />
+        <GradientStop Color="#26FFFFFF" Offset="0.467" />
+        <GradientStop Color="#10FFFFFF" Offset="0.475" />
+        <GradientStop Color="#10FFFFFF" Offset="0.856" />
+    </LinearGradientBrush>
+    
     <LinearGradientBrush x:Key="ShineBrushReverse" EndPoint="0.5,0.971" StartPoint="0.5,0.042">
         <GradientStop Color="#10FFFFFF" Offset="0" />
         <GradientStop Color="#26FFFFFF" Offset="1" />
@@ -125,12 +133,13 @@
         <Setter Property="Padding" Value="5"/>
         <Setter Property="Margin" Value="2,2,2,5"/>
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Tag" Value="False"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type GroupBox}">
                     <Border CornerRadius="3" Background="#00000000" BorderBrush="{DynamicResource HoverShineBrush}" BorderThickness="2">
                         <StackPanel Orientation="Vertical">
-                            <CheckBox Name="chk" Padding="0">
+                            <CheckBox Name="chk" Padding="0" IsChecked="{TemplateBinding Tag, Converter={StaticResource StringToBooleanConverter}}">
                                 <CheckBox.Template>
                                     <ControlTemplate TargetType="{x:Type CheckBox}">
                                         <ContentPresenter/>
@@ -218,21 +227,27 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type RadioButton}">
-                    <Border x:Name="Border" CornerRadius="2" BorderBrush="{DynamicResource TextBrush}">
-                        <ContentPresenter TextBlock.Foreground="{DynamicResource TextBrush}"
-								Margin="4,0,0,0" x:Name="presenter"
-								VerticalAlignment="Center"
-								HorizontalAlignment="Stretch"
-								RecognizesAccessKey="True"/>
+                    <Border x:Name="Border" CornerRadius="2" BorderBrush="Transparent" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <Grid>
+                                <Border Height="12" Width="12" Margin="2" VerticalAlignment="Center" Opacity="0.9" CornerRadius="3" BorderBrush="Black" BorderThickness="1" Background="#FFFFFFFF" Visibility="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource Boolean2VisibilityConverter}}"/>
+                                <Border Height="12" Width="12" Margin="2" VerticalAlignment="Center" Opacity="0.5" CornerRadius="3" BorderBrush="Black" BorderThickness="1" Background="DarkGray" Visibility="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ExtraBoolToVisibilityConverter}, ConverterParameter=True}"/>
+                            </Grid>
+                            <ContentPresenter TextBlock.Foreground="DarkGray"
+								    Margin="4,0,0,0" x:Name="presenter"
+								    VerticalAlignment="Center"
+								    HorizontalAlignment="Stretch"
+								    RecognizesAccessKey="True"/>
+                        </StackPanel>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="true">
                             <Setter TargetName="Border" Property="Background" Value="{DynamicResource ShineBrush}"/>
-                            <Setter TargetName="Border" Property="BorderThickness" Value="1"/>
+                            <!--<Setter TargetName="Border" Property="BorderThickness" Value="1"/>-->
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
                             <Setter TargetName="Border" Property="Background" Value="{DynamicResource ShineBrush}" />
-                            <Setter TargetName="presenter" Property="TextBlock.Foreground" Value="#FFAAAAFF"/>
+                            <Setter TargetName="presenter" Property="TextBlock.Foreground" Value="#FFFFFFFF"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="true">
                             <Setter TargetName="Border" Property="Background" Value="{DynamicResource PressedBrush}" />
@@ -875,13 +890,8 @@
                                         <!--<DropShadowEffect Color="LightBlue" ShadowDepth="0" Direction="120" BlurRadius="10" ></DropShadowEffect>-->
                                         <ShaderEffects:LightStreakEffect Scale="0.3" x:Name="zb" />
                                     </StackPanel.Effect>
-                                    <TextBlock FontSize="20" FontFamily="{Binding Path=[0], Source={x:Static Resources:EmbeddedFonts.Fonts}}">
-										<Run Foreground="#3A7CFF">M</Run>
-										<Run Foreground="#35B1FF">edia</Run>
-										<Run Foreground="#3A7CFF">P</Run>
-										<Run Foreground="#35B1FF">oint</Run>
-                                    </TextBlock>
-                                    <TextBlock FontSize="10" FontFamily="{Binding Path=[0], Source={x:Static Resources:EmbeddedFonts.Fonts}}" Foreground="DarkGray" Text="version 0.1a">
+                                    <TextBlock  xml:space="preserve" FontSize="20" FontFamily="{Binding Path=[0], Source={x:Static Resources:EmbeddedFonts.Fonts}}"><Run Foreground="#3A7CFF">M</Run><Run Foreground="#35B1FF">edia</Run> <Run Foreground="#3A7CFF">P</Run><Run Foreground="#35B1FF">oint</Run></TextBlock>
+                                    <TextBlock FontSize="10" FontFamily="{Binding Path=[0], Source={x:Static Resources:EmbeddedFonts.Fonts}}" Foreground="DarkGray" Text="{Binding Path=Properties[Version], Source={x:Static Application.Current}}">
                                     </TextBlock>
                                     <StackPanel.Triggers>
                                         <EventTrigger RoutedEvent="FrameworkElement.Loaded">
@@ -1123,7 +1133,7 @@
                                                                 </ListBox.Resources>
                                                                 <ListBox.ItemTemplate>
                                                                     <DataTemplate DataType="{x:Type Subtitles:SubtitleItem}">
-                                                                        <RadioButton GroupName="substreams" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding DisplayName}">
+                                                                        <RadioButton GroupName="substreams" Padding="3"  Margin="3" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding DisplayName}">
                                                                             <RadioButton.IsChecked>
                                                                                 <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}" Mode="TwoWay" />
                                                                             </RadioButton.IsChecked>
@@ -2144,7 +2154,7 @@
                                                                         <!-- hack to get the datacontext in mouse bindings since they are not part of the visual tree -->
                                                                         <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
                                                                     </StackPanel.Resources>
-                                                                    <GroupBox Header="Video effects" Style="{DynamicResource Heading}">
+                                                                    <GroupBox Header="Video effects" Style="{DynamicResource Heading}" Tag="True">
                                                                         <StackPanel Orientation="Vertical">
                                                                             <CheckBox IsChecked="{Binding Player.IsDeeperColor}" Margin="5">
                                                                                 <TextBlock Margin="0,3,0,0" VerticalAlignment="Center" FontFamily="Segoe UI Mono" FontWeight="Bold" FontSize="10" Foreground="DarkGray">OUTPUT COLOR RANGE 16-236 (DEEPER COLOR)</TextBlock>
@@ -2160,19 +2170,31 @@
                                             <WPFSpark:PivotItem>
                                                 <WPFSpark:PivotItem.PivotHeader>
                                                     <WPFSpark:PivotHeaderControl Focusable="False" ActiveForeground="White" InactiveForeground="DarkGray">
-                                                        <Label Style="{DynamicResource LinkText}" Margin="4">Audio output</Label>
+                                                        <Label Style="{DynamicResource LinkText}" Margin="4">Audio settings</Label>
                                                     </WPFSpark:PivotHeaderControl>
                                                 </WPFSpark:PivotItem.PivotHeader>
                                                 <WPFSpark:PivotItem.PivotContent>
                                                     <WPFSpark:PivotContentControl Focusable="False" AnimateContent="True">
                                                         <Border CornerRadius="2" Padding="5,5,0,5" BorderBrush="{DynamicResource HoverShineBrush}" BorderThickness="2">
-                                                            <ItemsControl Name="audiodevices" Focusable="False" ItemsSource="{Binding AudioRenderers}">
-                                                                <ItemsControl.ItemTemplate>
-                                                                    <DataTemplate>
-                                                                        <RadioButton GroupName="audiodevices" Padding="3"  Margin="3" Opacity="0.5" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}" Command="{Binding Path=DataContext.SetAudioRendererCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" CommandParameter="{Binding .}"/>
-                                                                    </DataTemplate>
-                                                                </ItemsControl.ItemTemplate>
-                                                            </ItemsControl>
+                                                            <ScrollViewer Padding="0,0,5,0" VerticalAlignment="Stretch" Focusable="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                                                <StackPanel>
+                                                                    <StackPanel.Resources>
+                                                                        <!-- hack to get the datacontext in mouse bindings since they are not part of the visual tree -->
+                                                                        <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
+                                                                    </StackPanel.Resources>
+                                                                    <GroupBox Header="Output device" Style="{DynamicResource Heading}" Tag="True">
+                                                                        <StackPanel Orientation="Vertical">
+                                                                            <ItemsControl Name="audiodevices" Focusable="False" ItemsSource="{Binding AudioRenderers}">
+                                                                                <ItemsControl.ItemTemplate>
+                                                                                    <DataTemplate>
+                                                                                        <RadioButton GroupName="audiodevices" Padding="3"  Margin="3" Foreground="White" Background="Black" BorderBrush="Transparent" BorderThickness="0" Content="{Binding .}" Command="{Binding Path=DataContext.SetAudioRendererCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" CommandParameter="{Binding .}"/>
+                                                                                    </DataTemplate>
+                                                                                </ItemsControl.ItemTemplate>
+                                                                            </ItemsControl>
+                                                                        </StackPanel>
+                                                                    </GroupBox>
+                                                                </StackPanel>
+                                                            </ScrollViewer>
                                                         </Border>
                                                     </WPFSpark:PivotContentControl>
                                                 </WPFSpark:PivotItem.PivotContent>
@@ -2194,7 +2216,7 @@
                                                                     </StackPanel.Resources>
                                                                     <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
                                                                     <StackPanel Orientation="Vertical">
-                                                                        <GroupBox Header="Downloader" Style="{DynamicResource Heading}">
+                                                                        <GroupBox Header="Downloader" Style="{DynamicResource Heading}" Tag="True">
                                                                             <StackPanel Orientation="Vertical">
                                                                                 <Grid>
                                                                                     <Grid.ColumnDefinitions>
@@ -2359,14 +2381,24 @@
                                                 <WPFSpark:PivotItem.PivotContent>
                                                     <WPFSpark:PivotContentControl Focusable="False" AnimateContent="True">
                                                         <Border CornerRadius="2" Padding="5,5,0,5" BorderBrush="{DynamicResource HoverShineBrush}" BorderThickness="2">
-                                                            <ScrollViewer Padding="0,0,5,0" Focusable="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                                                <ComboBox x:Name="themeCombo" Background="Black"  Width="200" VerticalAlignment="Top" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
-                                                                    <ComboBox.ItemTemplate>
-                                                                        <DataTemplate>
-                                                                            <TextBlock Text="{Binding .}" FontSize="15" Height="20"/>
-                                                                        </DataTemplate>
-                                                                    </ComboBox.ItemTemplate>
-                                                                </ComboBox>
+                                                            <ScrollViewer Padding="0,0,5,0" VerticalAlignment="Stretch" Focusable="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                                                <StackPanel>
+                                                                    <StackPanel.Resources>
+                                                                        <!-- hack to get the datacontext in mouse bindings since they are not part of the visual tree -->
+                                                                        <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
+                                                                    </StackPanel.Resources>
+                                                                    <GroupBox Header="Skin" Style="{DynamicResource Heading}" Tag="True">
+                                                                        <StackPanel Orientation="Vertical">
+                                                                            <ComboBox x:Name="themeCombo" Background="Black" VerticalAlignment="Stretch" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
+                                                                                <ComboBox.ItemTemplate>
+                                                                                    <DataTemplate>
+                                                                                        <TextBlock Text="{Binding Name}" FontSize="15" Height="20"/>
+                                                                                    </DataTemplate>
+                                                                                </ComboBox.ItemTemplate>
+                                                                            </ComboBox>
+                                                                        </StackPanel>
+                                                                    </GroupBox>
+                                                                </StackPanel>
                                                             </ScrollViewer>
                                                         </Border>
                                                     </WPFSpark:PivotContentControl>
@@ -2497,7 +2529,7 @@
 												Behaviors:Buttons.NormalImage="/Themes/default/Images/settings.png"
 												Behaviors:Buttons.HoverImage="/Themes/default/Images/settings_hover.png">
                                         </Button>
-                                        <TextBlock Grid.Column="1" Margin="8,-4,10,-3" VerticalAlignment="Center" HorizontalAlignment="Left" Style="{DynamicResource DefaultFontStyle}">MEDIAPOINT v0.1a</TextBlock>
+                                        <TextBlock Grid.Column="1" Margin="8,-4,10,-3" VerticalAlignment="Center" HorizontalAlignment="Left" Style="{DynamicResource DefaultFontStyle}">MEDIAPOINT <TextBlock Text="{Binding Path=Properties[VersionShort], Source={x:Static Application.Current}}"></TextBlock></TextBlock>
                                         <TextBlock TextAlignment="Right" Grid.Column="2" Margin="8,-4,15,-3" VerticalAlignment="Center" HorizontalAlignment="Right" Style="{DynamicResource DefaultFontStyle}" Text="{Binding Player.SourceFileName}"/>
                                         <TextBlock Grid.Column="3" Margin="8,-4,15,-3" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" Text="{Binding Time, StringFormat='Time: {0}'}"/>
                                     </Grid>
@@ -3672,7 +3704,7 @@
         <GradientStop Color="#00000000"
 				Offset="0.736" />
     </LinearGradientBrush>
-    <LinearGradientBrush x:Key="MediaButtonBorder"
+    <!--<LinearGradientBrush x:Key="MediaButtonBorder"
 			EndPoint="0.5,1"
 			StartPoint="0.5,0">
         <GradientStop Color="#FFB8B8B8"
@@ -3683,7 +3715,7 @@
 				Offset="0.523" />
         <GradientStop Color="#FFFFFFFF"
 				Offset="0.514" />
-    </LinearGradientBrush>
+    </LinearGradientBrush>-->
     <LinearGradientBrush x:Key="MediaButtonSymbolFill"
 			StartPoint="0.500057,0.0153321"
 			EndPoint="0.500057,0.980196">
@@ -5122,7 +5154,7 @@
         <Setter Property="Background"
 				Value="{StaticResource ButtonNormalBackground}" />
         <Setter Property="BorderBrush"
-				Value="{StaticResource ButtonNormalBorder}" />
+				Value="{StaticResource ShineBrush}" />
         <Setter Property="BorderThickness"
 				Value="1" />
         <Setter Property="Foreground"
@@ -5236,6 +5268,9 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ShowImdbButton}"/>
+        
     <Style x:Key="AudioSliderStyle"
 			TargetType="{x:Type Slider}">
         <Setter Property="Stylus.IsPressAndHoldEnabled"
@@ -6035,20 +6070,31 @@
                     </ControlTemplate.Resources>
                     <Grid SnapsToDevicePixels="true" Margin="1,1,1,1">
                         <Rectangle x:Name="Background" IsHitTestVisible="False" Opacity="0.25" Fill="{StaticResource NormalBrush}" RadiusX="1" RadiusY="1" />
-                        <Rectangle x:Name="HoverRectangle" IsHitTestVisible="False" Opacity="0" Fill="{StaticResource NormalBrush}" RadiusX="1" RadiusY="1" />
-                        <Rectangle x:Name="SelectedRectangle" IsHitTestVisible="False" Opacity="0" Fill="{StaticResource SelectedBackgroundBrush}" RadiusX="1" RadiusY="1" />
+                        <Rectangle x:Name="HoverRectangle" IsHitTestVisible="False" Opacity="0" Fill="{DynamicResource HoverShineBrush}" RadiusX="1" RadiusY="1" />
+                        <Rectangle x:Name="SelectedRectangle" IsHitTestVisible="False" Opacity="0" Fill="{DynamicResource ShineBrush}" RadiusX="1" RadiusY="1" />
                         <ContentPresenter Margin="5,2,0,2" x:Name="contentPresenter" VerticalAlignment="Center" />
-                        <Rectangle x:Name="FocusVisualElement" Visibility="Collapsed" Stroke="{StaticResource HoverShineBrush}" StrokeThickness="1" RadiusX="1" RadiusY="1" />
+                        <Rectangle x:Name="FocusVisualElement" Visibility="Collapsed" Stroke="{DynamicResource HoverShineBrush}" StrokeThickness="1" RadiusX="1" RadiusY="1" />
                     </Grid>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsHighlighted" Value="true">
-                            <Trigger.ExitActions>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsHighlighted" Value="True" />
+                                <Condition Property="IsSelected" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.ExitActions>
                                 <BeginStoryboard Storyboard="{StaticResource SelectedOff}" x:Name="SelectedOff_BeginStoryboard"/>
+                            </MultiTrigger.ExitActions>
+                                <MultiTrigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource SelectedOn}" x:Name="SelectedOn_BeginStoryboard"/>
+                            </MultiTrigger.EnterActions>
+                        </MultiTrigger>
+                        <Trigger Property="IsSelected" Value="true">
+                            <Trigger.ExitActions>
+                                <BeginStoryboard Storyboard="{StaticResource SelectedOff}"/>
                             </Trigger.ExitActions>
                             <Trigger.EnterActions>
-                                <BeginStoryboard Storyboard="{StaticResource SelectedOn}" x:Name="SelectedOn_BeginStoryboard"/>
+                                <BeginStoryboard Storyboard="{StaticResource SelectedOn}"/>
                             </Trigger.EnterActions>
-
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Trigger.ExitActions>

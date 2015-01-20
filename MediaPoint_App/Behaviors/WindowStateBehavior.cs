@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 using System.Windows;
 using System.Windows.Interactivity;
 
@@ -14,7 +15,7 @@ namespace MediaPoint.App.Behaviors
 
 		#region _____Private Implementation_____
 
-		void AssociatedObject_Loaded(object sender, RoutedEventArgs e)
+		void AssociatedObject_Loaded(object sender, EventArgs e)
 		{
 			ApplySettings();
 		}
@@ -102,15 +103,23 @@ namespace MediaPoint.App.Behaviors
 
 		protected override void OnAttached()
 		{
-			this.AssociatedObject.Loaded += AssociatedObject_Loaded;
+			this.AssociatedObject.Initialized += AssociatedObject_Loaded;
+
 			this.AssociatedObject.Closing += AssociatedObject_Closing;
             this.WindowStateSettings = new WindowStateSettings(this.AssociatedObject.Name ?? this.AssociatedObject.GetType().FullName);
-			base.OnAttached();
+
+
+            if (this.AssociatedObject.IsInitialized)
+            {
+                AssociatedObject_Loaded(AssociatedObject, null);
+            }
+            
+            base.OnAttached();
 		}
 
 		protected override void OnDetaching()
 		{
-			this.AssociatedObject.Loaded -= AssociatedObject_Loaded;
+			this.AssociatedObject.Initialized -= AssociatedObject_Loaded;
 			this.AssociatedObject.Closing -= AssociatedObject_Closing;
 			base.OnDetaching();
 		}
