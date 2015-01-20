@@ -183,12 +183,24 @@ namespace MediaPoint.Common.Helpers
                         var episode = match(@"\(Season \d*, Episode (\d*)\)", html);
                         string episodeName = match(@"tn15title\""><h1>[^<]*?<span><em>(.*?)<", html);
                         string episodeExtra = match(@"tn15title\""><h1>[^<]*?<span><em>[^<]*?</em>(.*?)<", html);
-                        IsSeries = true;
-                        SeriesSeason = Convert.ToInt32(season);
-                        SeriesEpisode = Convert.ToInt32(episode);
-                        SeriesSubtitle = episodeName + " " + episodeExtra + "\r\n" + "Season " + SeriesSeason + ", Episode " + SeriesEpisode;
+                        IsSeries = !string.IsNullOrEmpty(season);
+                        if (IsSeries)
+                        {
+                            SeriesSeason = Convert.ToInt32(season);
+                            SeriesEpisode = Convert.ToInt32(episode);
+                            SeriesSubtitle = episodeName + " " + episodeExtra + "\r\n" + "Season " + SeriesSeason + ", Episode " + SeriesEpisode;
+                        }
+                        else
+                        {
+                            SeriesSeason = 0;
+                            SeriesEpisode = 0;
+                            SeriesSubtitle = "";
+                        }
                     }
-                    catch { }
+                    catch
+                    {
+                        IsSeries = false;
+                    }
                 }
 
                 if (OriginalTitle == "")

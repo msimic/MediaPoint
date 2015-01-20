@@ -636,7 +636,7 @@ namespace MediaPoint.Common.Subtitles
                 {
                     try
                     {
-                        var bestGuess = ret.GroupBy(g => g.ImdbCode).OrderByDescending(g => g.Count()).First().First();
+                        var bestGuess = ret.GroupBy(g => g.ImdbCode).OrderByDescending(g => g.Count()).First().OrderBy(s => Levenshtein.Compare(Path.GetFileNameWithoutExtension(strFileName), Path.GetFileNameWithoutExtension(s.FileName))).First();
 
                         string sep2 = FindSeasonAndEpisode(bestGuess.FileName);
                         int tmpSeason = 0; int tmpEpisode = 0;
@@ -673,7 +673,7 @@ namespace MediaPoint.Common.Subtitles
                                 episode = imdb.SeriesEpisode;
                             }
 
-                            var ordered = ret.Where(s => s.ImdbCode == bestGuess.ImdbCode).OrderBy(s => langs.ToList().IndexOf(s.LanguageCode)).First();
+                            var ordered = ret.Where(s => s.ImdbCode == bestGuess.ImdbCode).OrderBy(s => langs.ToList().IndexOf(s.LanguageCode)).ThenBy(s => Levenshtein.Compare(Path.GetFileNameWithoutExtension(strFileName), Path.GetFileNameWithoutExtension(s.FileName))).First();
                             bestSubtitleGuess = new Subtitle(ordered.Id, ordered.ProgramName, ordered.FileName, ordered.LanguageCode);
                             return imdb;
                         }
