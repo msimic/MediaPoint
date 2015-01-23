@@ -27,10 +27,11 @@ using MediaPoint.Common.TaskbarNotification.Interop;
 using System.Windows.Media.Imaging;
 using MediaPoint.VM.Services.Model;
 using System.Globalization;
+using MediaPoint.VM.Config;
 
 namespace MediaPoint.VM
 {
-    public class Main : ViewModel, IKeyboardHandler, IPlateProcessor, ISettings
+    public class Main : ViewModel, IKeyboardHandler, IPlateProcessor, ISettings, IActionExecutor
 	{
         internal static class NativeMethods
         {
@@ -188,7 +189,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Framestep",
+                ActionId = PlayerActionEnum.Framestep,
                 Key = Key.Decimal,
                 Control = false,
                 Shift = false,
@@ -197,7 +198,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Play/Pause",
+                ActionId = PlayerActionEnum.PlayPause,
                 Key = Key.Space,
                 Control = false,
                 Shift = false,
@@ -206,7 +207,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Play/Pause",
+                ActionId = PlayerActionEnum.PlayPause,
                 Key = Key.MediaPlayPause,
                 Control = false,
                 Shift = false,
@@ -216,7 +217,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Subs Delay +",
+                ActionId = PlayerActionEnum.SubsDelayForward,
                 Key = Key.Right,
                 Control = true,
                 Shift = false,
@@ -225,7 +226,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Subs Delay -",
+                ActionId = PlayerActionEnum.SubsDelayBackward,
                 Key = Key.Left,
                 Control = true,
                 Shift = false,
@@ -235,7 +236,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Previous Track",
+                ActionId = PlayerActionEnum.PreviousTrack,
                 Key = Key.PageUp,
                 Control = false,
                 Shift = false,
@@ -244,7 +245,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Next Track",
+                ActionId = PlayerActionEnum.NextTrack,
                 Key = Key.PageDown,
                 Control = false,
                 Shift = false,
@@ -253,7 +254,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Seek Back 1%",
+                ActionId = PlayerActionEnum.SeekBackward,
                 Key = Key.Left,
                 Control = false,
                 Shift = false,
@@ -262,7 +263,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Seek Forward 1%",
+                ActionId = PlayerActionEnum.SeekForward,
                 Key = Key.Right,
                 Control = false,
                 Shift = false,
@@ -271,7 +272,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Previous Track",
+                ActionId = PlayerActionEnum.PreviousTrack,
                 Key = Key.MediaPreviousTrack,
                 Control = false,
                 Shift = false,
@@ -281,7 +282,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Next Track",
+                ActionId = PlayerActionEnum.NextTrack,
                 Key = Key.MediaNextTrack,
                 Control = false,
                 Shift = false,
@@ -291,7 +292,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Seek Back 1%",
+                ActionId = PlayerActionEnum.SeekBackward,
                 Key = Key.MediaPreviousTrack,
                 Control = true,
                 Shift = false,
@@ -301,7 +302,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Seek Forward 1%",
+                ActionId = PlayerActionEnum.SeekForward,
                 Key = Key.MediaNextTrack,
                 Control = true,
                 Shift = false,
@@ -311,7 +312,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Increase Subtitle Size",
+                ActionId = PlayerActionEnum.IncreaseSubsSize,
                 Key = Key.Up,
                 Control = false,
                 Shift = true,
@@ -320,7 +321,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Decrease Subtitle Size",
+                ActionId = PlayerActionEnum.DecreaseSubsSize,
                 Key = Key.Down,
                 Control = false,
                 Shift = true,
@@ -329,7 +330,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Increase Volume",
+                ActionId = PlayerActionEnum.IncreaseVolume,
                 Key = Key.Up,
                 Control = false,
                 Shift = false,
@@ -338,7 +339,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Decrease Volume",
+                ActionId = PlayerActionEnum.DecreaseVolume,
                 Key = Key.Down,
                 Control = false,
                 Shift = false,
@@ -347,7 +348,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Increase Volume",
+                ActionId = PlayerActionEnum.IncreaseVolume,
                 Key = Key.VolumeUp,
                 Control = false,
                 Shift = false,
@@ -356,7 +357,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Decrease Volume",
+                ActionId = PlayerActionEnum.DecreaseVolume,
                 Key = Key.VolumeDown,
                 Control = false,
                 Shift = false,
@@ -365,7 +366,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Toggle Fullscreen",
+                ActionId = PlayerActionEnum.ToggleFullscreen,
                 Key = Key.F,
                 Control = false,
                 Shift = false,
@@ -374,7 +375,7 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Exit Fullscreen",
+                ActionId = PlayerActionEnum.ExitFullscreen,
                 Key = Key.Escape,
                 Control = false,
                 Shift = false,
@@ -383,9 +384,27 @@ namespace MediaPoint.VM
 
             KeyboardShortcuts.Add(new KeyboardShortcut
             {
-                ActionId = "Save Video Screenshot",
+                ActionId = PlayerActionEnum.SaveScreenshot,
                 Key = Key.PrintScreen,
                 Control = false,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = PlayerActionEnum.IncreasePanScan,
+                Key = Key.Up,
+                Control = true,
+                Shift = false,
+                Alt = false
+            });
+
+            KeyboardShortcuts.Add(new KeyboardShortcut
+            {
+                ActionId = PlayerActionEnum.DecreasePanScan,
+                Key = Key.Down,
+                Control = true,
                 Shift = false,
                 Alt = false
             });
@@ -413,7 +432,7 @@ namespace MediaPoint.VM
 
             var frameStep = new PlayerAction
             {
-                ActionId = "Framestep",
+                ActionId = PlayerActionEnum.Framestep,
                 Action = new Action(() =>
                 {
                     if (Player.IsPlaying == false && Player.IsPaused == false)
@@ -428,7 +447,7 @@ namespace MediaPoint.VM
 
             var playPause = new PlayerAction
             {
-                ActionId = "Play/Pause",
+                ActionId = PlayerActionEnum.PlayPause,
                 Action = new Action(() =>
                 {
                     if (Player.IsPaused || Player.Source == null)
@@ -441,7 +460,7 @@ namespace MediaPoint.VM
 
             var subDelayRight = new PlayerAction
             {
-                ActionId = "Subs Delay +",
+                ActionId = PlayerActionEnum.SubsDelayForward,
                 Action = new Action(() =>
                 {
                     SubtitleDelay += 200;
@@ -451,7 +470,7 @@ namespace MediaPoint.VM
 
             var subDelayLeft = new PlayerAction
             {
-                ActionId = "Subs Delay -",
+                ActionId = PlayerActionEnum.SubsDelayBackward,
                 Action = new Action(() =>
                 {
                     SubtitleDelay -= 200;
@@ -461,7 +480,7 @@ namespace MediaPoint.VM
 
             var seekLeft = new PlayerAction
             {
-                ActionId = "Seek Back 1%",
+                ActionId = PlayerActionEnum.SeekBackward,
                 Action = new Action(() =>
                 {
                     Player.MediaPosition = Math.Max(0, Player.MediaPosition - (Player.MediaDuration / 100));
@@ -472,7 +491,7 @@ namespace MediaPoint.VM
 
             var seekRigth = new PlayerAction
             {
-                ActionId = "Seek Forward 1%",
+                ActionId = PlayerActionEnum.SeekForward,
                 Action = new Action(() =>
                 {
                     Player.MediaPosition = Math.Min(Player.MediaDuration, Player.MediaPosition + (Player.MediaDuration / 100));
@@ -483,7 +502,7 @@ namespace MediaPoint.VM
 
             var incSub = new PlayerAction
             {
-                ActionId = "Increase Subtitle Size",
+                ActionId = PlayerActionEnum.IncreaseSubsSize,
                 Action = new Action(() =>
                 {
                     if (SubtitleSize < 150) SubtitleSize += 2;
@@ -493,7 +512,7 @@ namespace MediaPoint.VM
 
             var decSub = new PlayerAction
             {
-                ActionId = "Decrease Subtitle Size",
+                ActionId = PlayerActionEnum.DecreaseSubsSize,
                 Action = new Action(() =>
                 {
                     if (SubtitleSize > 6) SubtitleSize -= 2;
@@ -503,7 +522,7 @@ namespace MediaPoint.VM
 
             var incVol = new PlayerAction
             {
-                ActionId = "Increase Volume",
+                ActionId = PlayerActionEnum.IncreaseVolume,
                 Action = new Action(() =>
                 {
                     Player.Volume = Math.Min(1, Player.Volume + .1);
@@ -513,7 +532,7 @@ namespace MediaPoint.VM
 
             var decVol = new PlayerAction
             {
-                ActionId = "Decrease Volume",
+                ActionId = PlayerActionEnum.DecreaseVolume,
                 Action = new Action(() =>
                 {
                     Player.Volume = Math.Max(0, Player.Volume - .1);
@@ -523,7 +542,7 @@ namespace MediaPoint.VM
 
             var nextTrack = new PlayerAction
             {
-                ActionId = "Next Track",
+                ActionId = PlayerActionEnum.NextTrack,
                 Action = new Action(() =>
                 {
                     if (Playlist.NextCommand.CanExecute(null)) Playlist.NextCommand.Execute(null);
@@ -533,7 +552,7 @@ namespace MediaPoint.VM
 
             var prevTrack = new PlayerAction
             {
-                ActionId = "Previous Track",
+                ActionId = PlayerActionEnum.PreviousTrack,
                 Action = new Action(() =>
                 {
                     if (Playlist.PreviousCommand.CanExecute(null)) Playlist.PreviousCommand.Execute(null);
@@ -543,7 +562,7 @@ namespace MediaPoint.VM
 
             var fs = new PlayerAction
             {
-                ActionId = "Toggle Fullscreen",
+                ActionId = PlayerActionEnum.ToggleFullscreen,
                 Action = new Action(() =>
                 {
                     if (_view.GetWindow().WindowState == WindowState.Maximized)
@@ -560,7 +579,7 @@ namespace MediaPoint.VM
 
             var exFs = new PlayerAction
             {
-                ActionId = "Exit Fullscreen",
+                ActionId = PlayerActionEnum.ExitFullscreen,
                 Action = new Action(() =>
                 {
                     _view.ExecuteCommand(MainViewCommand.Restore);
@@ -570,7 +589,7 @@ namespace MediaPoint.VM
 
             var ss = new PlayerAction
             {
-                ActionId = "Save Video Screenshot",
+                ActionId = PlayerActionEnum.SaveScreenshot,
                 Action = new Action(() =>
                 {
                     var bs = ServiceLocator.GetService<IFramePictureProvider>().GetBitmapOfVideoElement();
@@ -590,8 +609,26 @@ namespace MediaPoint.VM
                 })
             };
             PlayerActions.Add(ss);
-            
-            
+
+            var panScanplus = new PlayerAction
+            {
+                ActionId = PlayerActionEnum.IncreasePanScan,
+                Action = new Action(() =>
+                {
+                    ServiceLocator.GetService<IMainView>().ExecuteCommand(MainViewCommand.IncreasePanScan);
+                })
+            };
+            PlayerActions.Add(panScanplus);
+
+            var panScanMinus = new PlayerAction
+            {
+                ActionId = PlayerActionEnum.DecreasePanScan,
+                Action = new Action(() =>
+                {
+                    ServiceLocator.GetService<IMainView>().ExecuteCommand(MainViewCommand.DecreasePanScan);
+                })
+            };
+            PlayerActions.Add(panScanMinus);
         }
 
         public static void SaveImageToFile(BitmapSource image, string filePath)
@@ -614,7 +651,7 @@ namespace MediaPoint.VM
             set { SetValue(() => KeyboardShortcuts, value); }
         }
 
-        public List<string> PlayerActionNames
+        public List<PlayerActionEnum> PlayerActionNames
         {
             get
             {
@@ -1404,6 +1441,15 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
             PlateAngle = angle;
 
             ShowPlate = true;
+        }
+
+        public void ExecuteAction(Config.PlayerActionEnum actionId)
+        {
+            var action = PlayerActions.FirstOrDefault(pa => pa.ActionId == actionId);
+            if (action != null)
+            {
+                action.Action();
+            }
         }
     }
 }

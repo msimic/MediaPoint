@@ -69,6 +69,7 @@ namespace MediaPoint.App
             var vm = new Main { Themes = new ObservableCollection<ThemeInfo>(StyleLoader.GetAllStyles()) };
             w.DataContext = vm;
             ServiceLocator.RegisterOverrideService<IKeyboardHandler>((IKeyboardHandler)vm);
+            ServiceLocator.RegisterOverrideService<IActionExecutor>((IActionExecutor)vm);
             
             this.Resources.BeginInit();
 

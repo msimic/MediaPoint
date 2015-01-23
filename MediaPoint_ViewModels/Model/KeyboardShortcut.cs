@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MediaPoint.VM.Config;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,7 @@ namespace MediaPoint.VM.Model
         public bool Alt { get; set; }
         public bool Shift { get; set; }
         public Key Key { get; set; }
-        public string ActionId { get; set; }
+        public PlayerActionEnum ActionId { get; set; }
         public bool External { get; set; }
 
         public string AsString

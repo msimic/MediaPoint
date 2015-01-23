@@ -628,59 +628,7 @@ namespace MediaPoint.Common.Subtitles
                 }
             }
 
-            if (tryHash && File.Exists(strFileName))
-            {
-                var langs = ServiceLocator.GetService<ISettings>().SubtitleLanguagesCodes.ToArray();
-                var ret = HashMatcher.HashMatcher.Match(strFileName, langs);
-                if (ret.Any(r => !string.IsNullOrEmpty(r.ImdbCode)))
-                {
-                    try
-                    {
-                        var bestGuess = ret.GroupBy(g => g.ImdbCode).OrderByDescending(g => g.Count()).First().OrderBy(s => Levenshtein.Compare(Path.GetFileNameWithoutExtension(strFileName), Path.GetFileNameWithoutExtension(s.FileName))).First();
-
-                        string sep2 = FindSeasonAndEpisode(bestGuess.FileName);
-                        int tmpSeason = 0; int tmpEpisode = 0;
-                        if (sep2 != "")
-                        {
-                            var sepx = sep1.ToLowerInvariant().Split('s', 'e');
-                            if (sepx.Length == 3)
-                            {
-                                tmpSeason = int.Parse(sepx[1]);
-                                tmpEpisode = int.Parse(sepx[2]);
-                            }
-                        }
-
-
-                        var imdb = new IMDb(Convert.ToInt32(bestGuess.ImdbCode));
-
-                        if (imdb.IsSeries == false && tmpSeason > 0)
-                        {
-                            imdb.SeriesSeason = tmpSeason;
-                            imdb.SeriesEpisode = tmpEpisode;
-                            imdb.IsSeries = true;
-                        }
-
-                        if (imdb.status && (season == 0 || (imdb.SeriesSeason == season && imdb.SeriesEpisode == episode)))
-                        {
-                            strTitle = imdb.Title;
-                            strTitleAndYear = imdb.Title + " (" + imdb.Year + ")";
-                            strYear = imdb.Year;
-                            season = 0;
-                            episode = 0;
-                            if (imdb.IsSeries)
-                            {
-                                season = imdb.SeriesSeason;
-                                episode = imdb.SeriesEpisode;
-                            }
-
-                            var ordered = ret.Where(s => s.ImdbCode == bestGuess.ImdbCode).OrderBy(s => langs.ToList().IndexOf(s.LanguageCode)).ThenBy(s => Levenshtein.Compare(Path.GetFileNameWithoutExtension(strFileName), Path.GetFileNameWithoutExtension(s.FileName))).First();
-                            bestSubtitleGuess = new Subtitle(ordered.Id, ordered.ProgramName, ordered.FileName, ordered.LanguageCode);
-                            return imdb;
-                        }
-                    }
-                    catch { }
-                }
-            }
+            string originalFilename = strFileName;
 
             if (strFileName.ToLowerInvariant().Contains(Path.GetDirectoryName(strFileName).ToLowerInvariant()))
             {
@@ -765,6 +713,75 @@ namespace MediaPoint.Common.Subtitles
             if (!string.IsNullOrEmpty(strYear))
             {
                 strTitleAndYear = strTitle + " (" + strYear + ")";
+            }
+
+
+            if (tryHash && File.Exists(originalFilename))
+            {
+                var langs = ServiceLocator.GetService<ISettings>().SubtitleLanguagesCodes.ToArray();
+                var ret = HashMatcher.HashMatcher.Match(originalFilename, langs);
+                if (ret.Any(r => !string.IsNullOrEmpty(r.ImdbCode)))
+                {
+                    try
+                    {
+                        var bestGuess = ret.GroupBy(g => g.ImdbCode).OrderByDescending(g => g.Count()).First().OrderBy(s => Levenshtein.Compare(Path.GetFileNameWithoutExtension(strFileName), Path.GetFileNameWithoutExtension(s.FileName))).First();
+
+                        string sep2 = FindSeasonAndEpisode(bestGuess.FileName);
+                        int tmpSeason = 0; int tmpEpisode = 0;
+                        if (sep2 != "")
+                        {
+                            var sepx = sep1.ToLowerInvariant().Split('s', 'e');
+                            if (sepx.Length == 3)
+                            {
+                                tmpSeason = int.Parse(sepx[1]);
+                                tmpEpisode = int.Parse(sepx[2]);
+                            }
+                        }
+
+
+                        var imdb = new IMDb(Convert.ToInt32(bestGuess.ImdbCode));
+
+                        int imdbYear;
+                        if (int.TryParse(imdb.Year, out imdbYear))
+                        {
+                            int fileYear;
+                            if (int.TryParse(strYear, out fileYear))
+                            {
+                                if (imdbYear != fileYear)
+                                {
+                                    bestSubtitleGuess = null;
+                                    return null;
+                                }
+                            }
+                        }
+
+                        if (imdb.IsSeries == false && tmpSeason > 0)
+                        {
+                            imdb.SeriesSeason = tmpSeason;
+                            imdb.SeriesEpisode = tmpEpisode;
+                            imdb.IsSeries = true;
+                        }
+
+                        if (imdb.status && (season == 0 || (imdb.SeriesSeason == season && imdb.SeriesEpisode == episode)))
+                        {
+                            strTitle = imdb.Title;
+                            strTitleAndYear = imdb.Title + " (" + imdb.Year + ")";
+                            strYear = imdb.Year;
+                            season = 0;
+                            episode = 0;
+                            if (imdb.IsSeries)
+                            {
+                                season = imdb.SeriesSeason;
+                                episode = imdb.SeriesEpisode;
+                            }
+
+                            var ordered = ret.Where(s => s.ImdbCode == bestGuess.ImdbCode).OrderBy(s => langs.ToList().IndexOf(s.LanguageCode)).ThenBy(s => Levenshtein.Compare(Path.GetFileNameWithoutExtension(strFileName), Path.GetFileNameWithoutExtension(s.FileName))).First();
+                            bestSubtitleGuess = new Subtitle(ordered.Id, ordered.ProgramName, ordered.FileName, ordered.LanguageCode);
+                            return imdb;
+                        }
+                    }
+                    catch { }
+                }
             }
 
             return null;

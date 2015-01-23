@@ -30,6 +30,7 @@ using System.IO;
 using System.Windows.Interactivity;
 using MediaPoint.App.Behaviors;
 using MediaPoint.Common.Services;
+using MediaPoint.VM.Services.Model;
 
 namespace MediaPoint.App
 {
@@ -424,25 +425,6 @@ namespace MediaPoint.App
                     break;
                 case MainViewCommand.Maximize:
                     didSomething = true;
-                    //ShowInTaskbar = true;
-                    //Visibility = Visibility.Visible;
-                    //MaxWidth = Int32.MaxValue;
-                    //MaxHeight = Int32.MaxValue;
-                    //WindowState = WindowState.Maximized;
-                    //Tag = WindowStyle;
-                    ////WindowStyle = System.Windows.WindowStyle.None;
-                    //ShowWindow(winHelp.Handle, (uint)WindowShowStyle.ShowMaximized);
-                    //window.Tag = window.WindowStyle;
-                    //window.WindowStyle = WindowStyle.None;
-                    //SetForegroundWindow(winHelp.Handle);
-                    //window.Topmost = true;
-                    //window.MaxHeight = Int32.MaxValue;
-                    //window.MaxWidth = Int32.MaxValue;
-                    //window.WindowState = WindowState.Maximized;
-                    //if (window.DataContext is Main)
-                    //{
-                    //    (window.DataContext as Main).IsMaximized = true;
-                    //}
                     window.WindowStyle = WindowStyle.None;
                     window.Topmost = true;
                     window.MaxHeight = Int32.MaxValue;
@@ -455,19 +437,10 @@ namespace MediaPoint.App
                     break;
                 case MainViewCommand.Restore:
                     didSomething = true;
-                    //WindowStartupLocation = WindowStartupLocation.CenterScreen;
                     MinWidth = _lastMinSize.Width;
                     MinHeight = _lastMinSize.Height;
-                    ////SetForegroundWindow(winHelp.Handle);
-                    //WindowState = WindowState.Normal;
-                    //ShowWindow(winHelp.Handle, (uint)WindowShowStyle.Restore);
-                    //WindowStyle = (WindowStyle)this.Tag;
-                    //ShowInTaskbar = true;
-                    //Hide();
-                    //Show();
-                    //this.Topmost = false;
                     window.Topmost = false;
-                    window.WindowStyle = (WindowStyle)window.Tag; //WindowStyle.SingleBorderWindow;
+                    window.WindowStyle = (WindowStyle)window.Tag;
                     window.WindowState = WindowState.Normal;
                     window.Left = window.RestoreBounds.Left;
                     window.Top = window.RestoreBounds.Top;
@@ -495,9 +468,32 @@ namespace MediaPoint.App
                     }), DispatcherPriority.ApplicationIdle);
 
                     break;
+                case MainViewCommand.DecreasePanScan:
+                    Dispatcher.BeginInvoke((Action)(()=>
+                    {
+                        PanScan(-1 * _scaleX / 10);
+                    }), DispatcherPriority.ApplicationIdle);
+                    break;
+                case MainViewCommand.IncreasePanScan:
+                    Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        PanScan(_scaleX / 10);
+                    }), DispatcherPriority.ApplicationIdle);
+                    break;
             }
 
             return didSomething;
+        }
+
+        void PanScan(double delta)
+        {
+            if (scale.ScaleX + delta > 0.2 && scale.ScaleX + delta < 3)
+            {
+                _scaleX = scale.ScaleX + delta;
+                _scaleY = scale.ScaleY + delta;
+                scale.AnimatePropertyTo(s => s.ScaleX, scale.ScaleX + delta, 0.1);
+                scale.AnimatePropertyTo(s => s.ScaleY, scale.ScaleY + delta, 0.1);
+            }
         }
 
         /// <summary>Enumeration of the different ways of showing a window using
@@ -795,13 +791,13 @@ namespace MediaPoint.App
 
         private void MediaPlayer_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (WindowState != WindowState.Maximized) return;
             var delta = (double)e.Delta / 1200;
             if (((Keyboard.GetKeyStates(Key.LeftCtrl) == KeyStates.Down ||
                 Keyboard.GetKeyStates(Key.RightCtrl) == KeyStates.Down)
                 && (Keyboard.GetKeyStates(Key.LeftShift) != KeyStates.Down && Keyboard.GetKeyStates(Key.RightShift) != KeyStates.Down)) ||
                 (e.LeftButton != MouseButtonState.Pressed && e.RightButton == MouseButtonState.Pressed && Keyboard.GetKeyStates(Key.LeftShift) != KeyStates.Down && Keyboard.GetKeyStates(Key.RightShift) != KeyStates.Down))
             {
+                if (WindowState != WindowState.Maximized) return;
                 _rotation = rotation.Angle + delta * 30;
                 rotation.AnimatePropertyTo(s => s.Angle, rotation.Angle + delta * 30, 0.3);
             }
@@ -809,6 +805,7 @@ namespace MediaPoint.App
                             Keyboard.GetKeyStates(Key.RightShift) == KeyStates.Down) &&
                             (e.RightButton == MouseButtonState.Pressed))
             {
+                if (WindowState != WindowState.Maximized) return;
                 _skewX = skew.AngleX + delta * 30;
                 skew.AnimatePropertyTo(s => s.AngleX, skew.AngleX + delta * 30, 0.3);
             }
@@ -816,18 +813,16 @@ namespace MediaPoint.App
                             Keyboard.GetKeyStates(Key.RightShift) == KeyStates.Down) &&
                             (e.RightButton != MouseButtonState.Pressed))
             {
+                if (WindowState != WindowState.Maximized) return;
                 _skewY = skew.AngleY + delta * 30;
                 skew.AnimatePropertyTo(s => s.AngleY, skew.AngleY + delta * 30, 0.3);
             }
             else
             {
-                if (scale.ScaleX + delta > 0.2 && scale.ScaleX + delta < 3)
-                {
-                    _scaleX = scale.ScaleX + delta;
-                    _scaleY = scale.ScaleY + delta;
-                    scale.AnimatePropertyTo(s => s.ScaleX, scale.ScaleX + delta, 0.3);
-                    scale.AnimatePropertyTo(s => s.ScaleY, scale.ScaleY + delta, 0.3);
-                }
+                if (delta > 0)
+                    ServiceLocator.GetService<IActionExecutor>().ExecuteAction(PlayerActionEnum.IncreaseVolume);
+                else
+                    ServiceLocator.GetService<IActionExecutor>().ExecuteAction(PlayerActionEnum.DecreaseVolume);
             }
         }
 

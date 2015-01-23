@@ -23,7 +23,9 @@ namespace MediaPoint.VM.ViewInterfaces
 		Close,
 		Minimize,
 		Maximize,
-		Restore
+		Restore,
+        IncreasePanScan,
+        DecreasePanScan
 	}
 
 	public interface IMainView : IService
