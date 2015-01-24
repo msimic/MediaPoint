@@ -103,13 +103,13 @@ namespace MediaPoint.App.Behaviors
 
 		protected override void OnAttached()
 		{
-			this.AssociatedObject.Initialized += AssociatedObject_Loaded;
+			this.AssociatedObject.Loaded += AssociatedObject_Loaded;
 
 			this.AssociatedObject.Closing += AssociatedObject_Closing;
             this.WindowStateSettings = new WindowStateSettings(this.AssociatedObject.Name ?? this.AssociatedObject.GetType().FullName);
 
 
-            if (this.AssociatedObject.IsInitialized)
+            if (this.AssociatedObject.IsLoaded)
             {
                 AssociatedObject_Loaded(AssociatedObject, null);
             }

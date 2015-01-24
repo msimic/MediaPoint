@@ -692,24 +692,32 @@
                 <DataTrigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeIn"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeIn"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeInVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeInVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.EnterActions>
                 <DataTrigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOut"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOut"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOutVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.ExitActions>
@@ -985,16 +993,24 @@
                     </DiscreteObjectKeyFrame>
                 </ObjectAnimationUsingKeyFrames>
                 <Storyboard x:Key="FadeInSB">
-                    <StaticResource ResourceKey="FadeIn"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeIn"/>
+                    </TimelineCollection>
                 </Storyboard>
                 <Storyboard x:Key="FadeOutSB">
-                    <StaticResource ResourceKey="FadeOut"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeOut"/>
+                    </TimelineCollection>
                 </Storyboard>
                 <Storyboard x:Key="FadeInVisibilitySB">
-                    <StaticResource ResourceKey="FadeInVisibility"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeInVisibility"/>
+                    </TimelineCollection>
                 </Storyboard>
                 <Storyboard x:Key="FadeOutVisibilitySB">
-                    <StaticResource ResourceKey="FadeOutVisibility"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeOutVisibility"/>
+                    </TimelineCollection>
                 </Storyboard>
             </ResourceDictionary>
         </Style.Resources>
@@ -1465,24 +1481,32 @@
                 <DataTrigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeIn"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeIn"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeInVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeInVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.EnterActions>
                 <DataTrigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOut"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOut"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOutVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.ExitActions>
@@ -1512,16 +1536,24 @@
                     </DiscreteObjectKeyFrame>
                 </ObjectAnimationUsingKeyFrames>
                 <Storyboard x:Key="FadeInSB">
-                    <StaticResource ResourceKey="FadeIn"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeIn"/>
+                    </TimelineCollection>
                 </Storyboard>
                 <Storyboard x:Key="FadeOutSB">
-                    <StaticResource ResourceKey="FadeOut"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeOut"/>
+                    </TimelineCollection>
                 </Storyboard>
                 <Storyboard x:Key="FadeInVisibilitySB">
-                    <StaticResource ResourceKey="FadeInVisibility"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeInVisibility"/>
+                    </TimelineCollection>
                 </Storyboard>
                 <Storyboard x:Key="FadeOutVisibilitySB">
-                    <StaticResource ResourceKey="FadeOutVisibility"/>
+                    <TimelineCollection>
+                        <StaticResource ResourceKey="FadeOutVisibility"/>
+                    </TimelineCollection>
                 </Storyboard>
             </ResourceDictionary>
         </Style.Resources>
@@ -1784,24 +1816,32 @@
                 <DataTrigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeIn"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeIn"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeInVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeInVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.EnterActions>
                 <DataTrigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOut"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOut"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOutVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.ExitActions>
@@ -1858,24 +1898,32 @@
                 <DataTrigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeIn"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeIn"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeInVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeInVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.EnterActions>
                 <DataTrigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOut"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOut"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOutVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.ExitActions>
@@ -2046,24 +2094,32 @@
                 <DataTrigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeIn"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeIn"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeInVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeInVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.EnterActions>
                 <DataTrigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOut"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOut"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOutVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.ExitActions>
@@ -2472,24 +2528,32 @@
                 <DataTrigger.EnterActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeIn"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeIn"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeInVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeInVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.EnterActions>
                 <DataTrigger.ExitActions>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOut"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOut"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                     <BeginStoryboard>
                         <Storyboard>
-                            <StaticResource ResourceKey="FadeOutVisibility"/>
+                            <TimelineCollection>
+                                <StaticResource ResourceKey="FadeOutVisibility"/>
+                            </TimelineCollection>
                         </Storyboard>
                     </BeginStoryboard>
                 </DataTrigger.ExitActions>

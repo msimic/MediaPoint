@@ -21,7 +21,7 @@ namespace MediaPoint.MVVM
         /// The source fo this binding (final object in path that
         /// the binding attaches to and uses some of its property to provide the new value)
         /// </summary>
-        WeakReference<ViewModel> Source { get; set; }
+        MediaPoint.MVVM.Helpers.WeakReference<ViewModel> Source { get; set; }
         /// <summary>
         /// Constructor for a simple binding X.Y -> A.B which gives B as path
         /// </summary>
@@ -192,9 +192,9 @@ namespace MediaPoint.MVVM
         where SOURCE : ViewModel
         where TARGET : ViewModel
     {
-        private WeakReference<ViewModel> root;
-        private WeakReference<ViewModel> source;
-        private WeakReference<TARGET> target;
+        private MediaPoint.MVVM.Helpers.WeakReference<ViewModel> root;
+        private MediaPoint.MVVM.Helpers.WeakReference<ViewModel> source;
+        private MediaPoint.MVVM.Helpers.WeakReference<TARGET> target;
         private string srcProperty;
         private string targetProperty;
         private List<string> fullPath;
@@ -222,7 +222,7 @@ namespace MediaPoint.MVVM
         /// The source fo this binding (final object in path that
         /// the binding attaches to and uses some of its property to provide the new value)
         /// </summary>
-        public WeakReference<ViewModel> Source
+        public MediaPoint.MVVM.Helpers.WeakReference<ViewModel> Source
         {
             get { return source; }
             set { source = value; }
@@ -245,7 +245,7 @@ namespace MediaPoint.MVVM
         public Binder(ViewModel root, List<string> path)
             : this(path)
         {
-            this.root = new WeakReference<ViewModel>(root);
+            this.root = new MediaPoint.MVVM.Helpers.WeakReference<ViewModel>(root);
         }
 
         /// <summary>
@@ -297,8 +297,8 @@ namespace MediaPoint.MVVM
         /// <param name="targetProperty">The property on target we will be updating</param>
         public void Bind(ViewModel source, TARGET target, string srcProperty, string targetProperty)
         {
-            this.source = source == null ? null : new WeakReference<ViewModel>(source);
-            this.target = new WeakReference<TARGET>(target);
+            this.source = source == null ? null : new MediaPoint.MVVM.Helpers.WeakReference<ViewModel>(source);
+            this.target = new MediaPoint.MVVM.Helpers.WeakReference<TARGET>(target);
             this.srcProperty = srcProperty;
             this.targetProperty = targetProperty;
 
@@ -350,7 +350,7 @@ namespace MediaPoint.MVVM
                     // deep bindings change the source of this binding when something in the hierarchy changes
                     if (!sourceSet)
                     {
-                        this.Source = new WeakReference<ViewModel>((ViewModel)GetPathObject(root.Target, new List<string>(fullPath), 1));
+                        this.Source = new MediaPoint.MVVM.Helpers.WeakReference<ViewModel>((ViewModel)GetPathObject(root.Target, new List<string>(fullPath), 1));
                         sourceSet = true;
                     }
                     // middle path eventwrapper

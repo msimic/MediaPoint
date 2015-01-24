@@ -409,15 +409,15 @@ namespace MediaPoint.Controls
              * lose the device and our Surface is invalid. The
              * try/catch may not be needed, but testing needs
              * to take place before it's removed */
-            try
-            {
+            //try
+            //{
                 D3DImage.Lock();
                 D3DImage.SetBackBuffer(D3DResourceType.IDirect3DSurface9, backBuffer);
                 D3DImage.Unlock();
                 SetNaturalWidthHeight();
-            }
-            catch 
-            { }
+            //}
+            //catch 
+            //{ }
 
             /* Clear our flag, so this won't be ran again
              * until a new surface is sent */
@@ -576,6 +576,8 @@ namespace MediaPoint.Controls
         /// </summary>
         protected void InternalInvalidateVideoImage()
         {
+            if (D3DImage.Dispatcher.HasShutdownStarted) return;
+
 			/* Ensure we run on the correct Dispatcher */
 			if (!D3DImage.Dispatcher.CheckAccess())
 			{
