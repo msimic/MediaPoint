@@ -158,6 +158,7 @@ Source: "..\output\bin\x86\fxc32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\GoogleSearchAPI.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\HashMatcher.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\ICSharpCode.SharpZipLib.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\output\bin\x86\FileDlgExtenders.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\MediaInfo.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\MediaPoint.Common.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\MediaPoint.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
