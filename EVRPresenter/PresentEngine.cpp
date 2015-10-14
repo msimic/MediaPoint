@@ -48,6 +48,17 @@ D3DPresentEngine::D3DPresentEngine(HRESULT& hr, IDeviceResetCallback *drC) :
 	m_pDeviceResetCallback = drC;
 	vertexBuffer = NULL;
 	tex = NULL;
+
+#ifdef ALPR
+
+	_pProcessor = CreateProcessor(L"Sample License", L"Skilja GmbH", L"2016-07-12", L"qkyckptvsjfxjgchughothxnjbykfokgyrdquxgg", L"4f754a4372868e8c230c971597c18dfa8849eb06", Nationality_Norway, L"", 1);
+	if (_pProcessor == NULL)
+	{
+		throw std::exception("ALPR License expired");
+	}
+
+#endif
+
 	/*transparentYellow = new unsigned char[4];
 	transparentYellow[0] = 127;
 	transparentYellow[1] = 255;
@@ -182,6 +193,12 @@ D3DPresentEngine::~D3DPresentEngine()
     if (m_hEVRLib) {
         FreeLibrary(m_hEVRLib);
     }
+#ifdef ALPR
+
+	_pProcessor->Release();
+
+#endif
+
 }
 
 
@@ -1143,184 +1160,6 @@ void SaveBitmapToFile( BYTE* pBitmapBits, LONG lWidth, LONG lHeight,WORD wBitsPe
     CloseHandle( hFile );
 }
 
-void D3DPresentEngine::GetBytesFromSurface(IDirect3DSurface9* pD3DSurface)
-{
-	if (framesRendered % 3 != 0) return;
-
-	D3DSURFACE_DESC surfaceDesc;
-	pD3DSurface->GetDesc(&surfaceDesc);
-	D3DLOCKED_RECT d3dlr;
-	BYTE  *pSurfaceBuffer;
-	HRESULT hr;
-
-	IDirect3DSurface9* offscreenSurface;
-
-    hr = m_pDevice->CreateOffscreenPlainSurface( surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurface, NULL );
-    if( FAILED(hr) )
-        return;
-		
-    hr = m_pDevice->GetRenderTargetData( pD3DSurface, offscreenSurface );
-	
-	if( FAILED(hr) )
-	{
-		offscreenSurface->Release();
-	}
-
-	hr = offscreenSurface->LockRect(&d3dlr, 0, D3DLOCK_DONOTWAIT);
-
-	if (hr == D3DERR_INVALIDCALL || hr == D3DERR_WASSTILLDRAWING)
-	{
-		offscreenSurface->Release();
-		return;
-	}
-
-	BYTE* pData = new BYTE[surfaceDesc.Width*surfaceDesc.Height];
-	BYTE* pOriginal = pData;
-
-                //avoiding vertical fli
-	pSurfaceBuffer = (BYTE *) d3dlr.pBits; // + d3dlr.Pitch*(surfaceDesc.Height - 1);
-
-                //forcing ARGB3
-	int m_lVidPitch  = (surfaceDesc.Width * 4 + 4) & ~(4);
-
-	for (int i=0;i<(int)surfaceDesc.Height;i++) 
-	{
-	
-		BYTE *pDataOld = pData;
-		BYTE *pSurfaceBufferOld = pSurfaceBuffer;
-
-		for (int j=0;j<	(int)surfaceDesc.Width;j++)
-		{
-		
-			pData[0] = (pSurfaceBuffer[0] + pSurfaceBuffer[1] + pSurfaceBuffer[2]) / 3;
-			//pData[1] = pSurfaceBuffer[1];
-			//pData[2] = pSurfaceBuffer[2];
-			//pData[3] = pSurfaceBuffer[3];
-
-                                                //Trying to set green color transparen
-			//if ((pData[0]==0x00) && (pData[1]==0xFF) && (pData[2]==0x00)) pData[3] = 0x00
-
-			pData+=1; pSurfaceBuffer+=4;
-		}
-                                //next video sample ro
-		pData = pDataOld + surfaceDesc.Width /**3*/;
-                                //previous surface ro
-		pSurfaceBuffer = pSurfaceBufferOld + d3dlr.Pitch;
-	}
-	
-	offscreenSurface->UnlockRect();
-
-	//if (m_frame % 100 == 0)
-	/*{
-		SaveBitmapToFile(pOriginal, surfaceDesc.Width, surfaceDesc.Height, 24, (std::wstring(L"d:\\test") + std::to_wstring(m_frame) + L".bmp").c_str());
-	}*/
-
-	//hr = offscreenSurface->LockRect(&d3dlr, 0, D3DLOCK_DONOTWAIT);
-
-	//pData = pOriginal;
-	//pSurfaceBuffer = (BYTE *) d3dlr.pBits + d3dlr.Pitch*(surfaceDesc.Height - 1);
-
-	//for (int i=0;i<(int)surfaceDesc.Height;i++) 
-	//{
-	//
-	//	BYTE *pDataOld = pData;
-	//	BYTE *pSurfaceBufferOld = pSurfaceBuffer;
-
-	//	for (int j=0;j<	(int)surfaceDesc.Width;j++)
-	//	{
-	//	
-	//		int c = 0;
-	//		c += pData[0];
-	//		c += pData[1];
-	//		c += pData[2];
-	//		c += pData[3];
-	//		c /= 4;
-
-	//		pSurfaceBuffer[0] = (BYTE)c;
-	//		pSurfaceBuffer[2] = (BYTE)c;
-	//		pSurfaceBuffer[1] = (BYTE)c;
-	//		pSurfaceBuffer[3] = (BYTE)c;
-
-	//		pData+=3; pSurfaceBuffer+=4;
-	//	}
- //                               //next video sample ro
-	//	pData = pDataOld + surfaceDesc.Width*3;
- //                               //previous surface ro
-	//	pSurfaceBuffer = pSurfaceBufferOld - d3dlr.Pitch;
-	//}
-	//
-	//offscreenSurface->UnlockRect();
-
-	/*RECT r;
-	r.top = 0;
-	r.left = 0;
-	r.bottom = surfaceDesc.Height;
-	r.right = surfaceDesc.Width;
-	POINT p;
-	p.x = 0;
-	p.y = 0;
-	hr = m_pDevice->UpdateSurface(offscreenSurface, &r, pD3DSurface, &p);
-	*/
-	offscreenSurface->Release();
-
-	ProcessorHandle pProcessor = CreateProcessor(L"Otto Milvang", L"Axicon", L"2015-02-15", L"tmetmdbaaeeerkvauitwqmrjamsbhxnfqcwzmhdp", L"9700dbb263c32dac9248bfa769275da0a8623d4a", Nationality_Sweden);
-	ImageHandle img = CreateImage();
-	img->Initialize(pOriginal, surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Width);
-
-	AutoLock lock(m_ObjectLock);
-	if (true /*framesRendered % 2 == 0*/) 
-	{
-		if (res != NULL)
-		{
-			res->Release();
-			res = NULL;
-		}
-
-		bool failed = false;
-		try
-		{
-			auto dp = CreateLicencePlateDetectionParameters();
-			auto rp = CreateLicencePlateRecognitionParameters();
-			dp->Initialize(0, 10, 35,300, 50, 50, false, false);
-			auto r = pProcessor->DetectAndRecognizePlate(img, dp, rp);
-
-			if (r != NULL && r->GetConfidence() > 200 && (std::wstring(r->GetText()).size() >= 7 && std::wstring(r->GetText()).size() <= 8 ))
-			{
-				res = r;
-				Shape s = r->GetPlatePosition().Shape;
-				const wchar_t* txt = r->GetText();
-				int l = s.Left;
-				int t = s.Top;
-				int r = s.Right;
-				int b = s.Bottom;
-				int c = res->GetConfidence();
-				float a = s.AngleDetectedVertical;
-				if (m_pCallback != NULL) m_pCallback->FoundPlate(txt, l, t, r, b, a, c); 
-			}
-			else
-			{
-				r->Release();
-			}
-			dp->Release();
-			rp->Release();
-		}
-		catch (std::exception& e)
-		{
-			std::cout << e.what() << std::endl;
-		}
-		catch (...)
-		{
-			res = NULL;
-		}
-	}
-	lock.Unlock();
-		
-	img->Release();
-	pProcessor->Release();
-
-	delete[] pOriginal;
-}
-
 //-----------------------------------------------------------------------------
 // PresentSwapChain
 //
@@ -1647,6 +1486,8 @@ HRESULT GetD3DSurfaceFromSample(IMFSample *pSample, IDirect3DSurface9 **ppSurfac
     return hr;
 }
 
+#ifdef ALPR
+
 void D3DPresentEngine::AlprProcess(IMFSample *pSample)
 {
 	IDirect3DSurface9* pSurface;
@@ -1656,7 +1497,7 @@ void D3DPresentEngine::AlprProcess(IMFSample *pSample)
 
 void D3DPresentEngine::ALPR(IDirect3DSurface9* pD3DSurface)
 {
-	return; 
+	//return; 
 
 	D3DSURFACE_DESC surfaceDesc;
 	pD3DSurface->GetDesc(&surfaceDesc);
@@ -1664,56 +1505,104 @@ void D3DPresentEngine::ALPR(IDirect3DSurface9* pD3DSurface)
 	BYTE  *pSurfaceBuffer;
 	HRESULT hr;
 
-	IDirect3DSurface9* offscreenSurface;
-
-    hr = m_pDevice->CreateOffscreenPlainSurface( surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurface, NULL );
-    if( FAILED(hr) )
-        return;
-		
-    hr = m_pDevice->GetRenderTargetData( pD3DSurface, offscreenSurface );
-	
-	if( FAILED(hr) )
+	IDirect3DSurface9* offscreenSurfaceOrig;
+	hr = m_pDevice->CreateOffscreenPlainSurface(surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurfaceOrig, NULL);
+	if (FAILED(hr))
 	{
-		offscreenSurface->Release();
-	}
-
-	hr = offscreenSurface->LockRect(&d3dlr, 0, D3DLOCK_DONOTWAIT);
-
-	if (hr == D3DERR_INVALIDCALL || hr == D3DERR_WASSTILLDRAWING)
-	{
-		offscreenSurface->Release();
 		return;
 	}
 
-	BYTE* pData = new BYTE[surfaceDesc.Width*surfaceDesc.Height];
+	hr = m_pDevice->GetRenderTargetData(pD3DSurface, offscreenSurfaceOrig);
+
+	int newHeight = surfaceDesc.Height;
+	int newWidth = surfaceDesc.Width;
+
+	//int newHeight = min(surfaceDesc.Height, 440);
+	//float ratio = (float)newHeight / surfaceDesc.Height;
+	//int newWidth = (int)(surfaceDesc.Width * ratio);
+
+	//IDirect3DSurface9* resizedRenderTarget;
+
+	////hr = m_pDevice->CreateRenderTarget(newWidth, newHeight, surfaceDesc.Format, D3DMULTISAMPLE_NONE, 0, true, &resizedRenderTarget, NULL);
+	//hr = m_pDevice->CreateOffscreenPlainSurface(newWidth, newHeight, surfaceDesc.Format, D3DPOOL_SYSTEMMEM, &resizedRenderTarget, NULL);
+	//if (FAILED(hr))
+	//{
+	//	return;
+	//}
+
+	//IDirect3DSurface9* offscreenSurface;
+
+	//hr = m_pDevice->CreateOffscreenPlainSurface(newWidth, newHeight, surfaceDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurface, NULL);
+	//if (FAILED(hr))
+	//{
+	//	resizedRenderTarget->Release();
+	//	return;
+	//}
+
+	//RECT r1; r1.left = 0; r1.top = 0; r1.right = surfaceDesc.Width; r1.bottom = surfaceDesc.Height;
+	//RECT r2; r2.left = 0; r2.top = 0; r2.right = newWidth; r2.bottom = newHeight;
+
+	//m_pDevice->SetRenderTarget(0, offscreenSurfaceOrig);
+	//hr = m_pDevice->StretchRect(offscreenSurfaceOrig, NULL, resizedRenderTarget, NULL, D3DTEXF_NONE);
+
+	//if (FAILED(hr))
+	//{
+	//	offscreenSurfaceOrig->Release();
+	//	resizedRenderTarget->Release();
+	//	offscreenSurface->Release();
+	//	return;
+	//}
+
+	//hr = m_pDevice->GetRenderTargetData(resizedRenderTarget, offscreenSurface);
+
+	//if (FAILED(hr))
+	//{
+	//	resizedRenderTarget->Release();
+	//	offscreenSurface->Release();
+	//	return;
+	//}
+
+	//if (hr == D3DERR_INVALIDCALL || hr == D3DERR_WASSTILLDRAWING)
+	//{
+	//	offscreenSurface->Release();
+	//	return;
+	//}
+
+	hr = offscreenSurfaceOrig->LockRect(&d3dlr, 0, D3DLOCK_DONOTWAIT);
+
+	if (FAILED(hr))
+	{
+		offscreenSurfaceOrig->Release();
+		return;
+	}
+
+	BYTE* pData = new BYTE[newWidth*newHeight];
 	BYTE* pOriginal = pData;
 
 	pSurfaceBuffer = (BYTE *) d3dlr.pBits;
-	int m_lVidPitch  = (surfaceDesc.Width * 4 + 4) & ~(4);
+	int m_lVidPitch = (newWidth * 4 + 4) & ~(4);
 
-	for (int i=0;i<(int)surfaceDesc.Height;i++) 
+	for (int i=0;i<(int)newHeight;i++) 
 	{
 	
 		BYTE *pDataOld = pData;
 		BYTE *pSurfaceBufferOld = pSurfaceBuffer;
 
-		for (int j=0;j<	(int)surfaceDesc.Width;j++)
+		for (int j = 0; j< (int)newWidth; j++)
 		{
 		
 			pData[0] = (pSurfaceBuffer[0] + pSurfaceBuffer[1] + pSurfaceBuffer[2]) / 3;
 
 			pData+=1; pSurfaceBuffer+=4;
 		}
-		pData = pDataOld + surfaceDesc.Width /**3*/;
+		pData = pDataOld + newWidth /**3*/;
 		pSurfaceBuffer = pSurfaceBufferOld + d3dlr.Pitch;
 	}
 	
-	offscreenSurface->UnlockRect();
-	offscreenSurface->Release();
+	offscreenSurfaceOrig->UnlockRect();
 
-	ProcessorHandle pProcessor = CreateProcessor(L"Otto Milvang", L"Axicon", L"2015-02-15", L"tmetmdbaaeeerkvauitwqmrjamsbhxnfqcwzmhdp", L"9700dbb263c32dac9248bfa769275da0a8623d4a", Nationality_Sweden);
 	ImageHandle img = CreateImage();
-	img->Initialize(pOriginal, surfaceDesc.Width, surfaceDesc.Height, surfaceDesc.Width);
+	img->Initialize(pOriginal, newWidth, newHeight, newWidth);
 
 	AutoLock lock(m_ObjectLock);
 
@@ -1722,10 +1611,17 @@ void D3DPresentEngine::ALPR(IDirect3DSurface9* pD3DSurface)
 		{
 			auto dp = CreateLicencePlateDetectionParameters();
 			auto rp = CreateLicencePlateRecognitionParameters();
-			dp->Initialize(0, 10, 30, 500, 50, 50, false, false);
-			auto r = pProcessor->DetectAndRecognizePlate(img, dp, rp);
+			dp->Initialize(0, 10, 40, 300, newHeight / 3, newHeight / 10, newWidth / 10, newWidth / 10);
+			dp->SetEnableRetryMechanism(false);
+			dp->SetIncreasedPrecision(false);
+			rp->SetEnableDebug(false);
+			rp->SetIncreasedPrecision(false);
+			rp->SetEnableOCRThreshold(false);
+			rp->SetEnableRuleThreshold(false);
+			rp->SetEnablePatternMatching(false);
+			auto r = _pProcessor->DetectAndRecognizePlate(img, dp, rp);
 
-			if (r != NULL && r->GetConfidence() > 500 && (std::wstring(r->GetText()).size() >= 7 && std::wstring(r->GetText()).size() <= 8 ))
+			if (r != NULL && r->GetConfidence() >= 887 && (std::wstring(r->GetText()).size() >= 6 && std::wstring(r->GetText()).size() <= 8))
 			{
 				Shape s = r->GetPlatePosition().Shape;
 				const wchar_t* txt = r->GetText();
@@ -1735,7 +1631,21 @@ void D3DPresentEngine::ALPR(IDirect3DSurface9* pD3DSurface)
 				int b = s.Bottom;
 				int c = r->GetConfidence();
 				float a = s.AngleDetectedVertical;
-				if (m_pCallback != NULL) m_pCallback->FoundPlate(txt, l, t, rr, b, a, c); 
+				const wchar_t nonat[] = L"";
+				int natconf = 0;
+				const wchar_t* nat = nonat;
+				const wchar_t* natplate = nonat;
+				if (r->GetNationalities().Count > 0)
+				{
+					nat = r->GetNationalities().Items[0].CountryCode;
+					natconf = r->GetNationalities().Items[0].NationalityConfidence;
+					natplate = r->GetNationalities().Items[0].OCRText;
+				}
+				else
+				{
+
+				}
+				if (m_pCallback != NULL) m_pCallback->FoundPlate(txt, l, t, rr, b, a, c, nat, natconf, natplate); 
 			}
 			else
 			{
@@ -1746,20 +1656,25 @@ void D3DPresentEngine::ALPR(IDirect3DSurface9* pD3DSurface)
 		}
 		catch (std::exception& e)
 		{
-			
+			if (m_pCallback != NULL) m_pCallback->FoundPlate(L"std::exception", 0, 0, 0, 0, 0, 1000, L"", 0, L"");
 		}
 		catch (...)
 		{
-			
+			if (m_pCallback != NULL) m_pCallback->FoundPlate(L"exception", 0, 0, 0, 0, 0, 1000, L"", 0, L"");
 		}
 
 	lock.Unlock();
 		
+	//offscreenSurface->Release();
+	offscreenSurfaceOrig->Release();
+	//resizedRenderTarget->Release();
+
 	img->Release();
-	pProcessor->Release();
 
 	delete[] pOriginal;
 }
+
+#endif
 
 //-----------------------------------------------------------------------------
 // GetSwapChainPresentParameters

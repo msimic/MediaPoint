@@ -1,10 +1,15 @@
 ﻿<Window x:Class="MediaPoint.App.Window1"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         Title="MediaPoint" Closing="window_Closed"
         Icon="/Images/app.ico" Name="window" 
         Style="{DynamicResource WindowStyle}" Background="Black"
+        xmlns:Attached="clr-namespace:MediaPoint.App.AttachedProperties"
+        xmlns:Behaviors="clr-namespace:MediaPoint.App.Behaviors"
+        xmlns:LayoutBehaviors="clr-namespace:Microsoft.Expression.Interactivity.Layout;assembly=Microsoft.Expression.Interactions"
         xmlns:controls="clr-namespace:MediaPoint.Controls;assembly=MediaPoint.Controls"
+        xmlns:effects="clr-namespace:MediaPoint.App.Effects"
         xmlns:tb="clr-namespace:MediaPoint.Common.TaskbarNotification;assembly=MediaPoint.Common"
         MouseLeave="MediaPlayer_MouseLeave" Initialized="Window_Initialized" Loaded="Window_Loaded"
         WindowStartupLocation="CenterScreen" Visibility="Collapsed"
@@ -85,10 +90,13 @@
                                                     SubtitleBold="{Binding ElementName=mediaPlayerContainer, Path=DataContext.SubtitleBold}"
                                                     Subtitle="{Binding SelectedSubtitle}"
                                                     Loop="{Binding Loop}">
+                                <!--<controls:MediaUriElement.Effect>
+                                    <effects:WaterEffect></effects:WaterEffect>
+                                </controls:MediaUriElement.Effect>-->
                             </controls:MediaUriElement>
                         </Grid>
                         <!--<Canvas Name="canvas">
-                            <Rectangle Focusable="False" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5" Stroke="Red" StrokeThickness="5" Fill="#77FFFF00">
+                            <Rectangle Name="rect" Fill="#33FFFF00" Focusable="False" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5" Stroke="Red" StrokeThickness="2">
                                 <Rectangle.RenderTransform>
                                     <RotateTransform Angle="{Binding PlateAngle}"></RotateTransform>
                                 </Rectangle.RenderTransform>
@@ -195,5 +203,67 @@
                     </controls:OSD>
                 </Grid>
             </controls:MainWindowContent>
+
+                <!--<Grid Name="plateGrid" HorizontalAlignment="Right" Width="265" VerticalAlignment="Top" MaxHeight="200" Margin="10,60,10,10" Attached:PanelBringToFrontOnClick.IsEnabled="True" >
+                    <Behaviors:StylizedBehaviors.Behaviors>
+                        <Behaviors:StylizedBehaviorCollection>
+                            <Behaviors:DraggableBehavior IsDraggable="True" />
+                            <Behaviors:PopupInWindow IsAutomatic="False" />
+                            <Behaviors:MouseDragElementBehavior/>
+                        </Behaviors:StylizedBehaviorCollection>
+                    </Behaviors:StylizedBehaviors.Behaviors>
+                    <Border Background="#bb444444" CornerRadius="7">
+                        <Border Background="#bb000000" Style="{DynamicResource MenuOuterBorder}" Margin="1">
+                            <Border Style="{DynamicResource MenuInnerBorder}">
+                                <Grid>
+                                    <Grid.Resources>
+                                        <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
+                                        <FrameworkElement x:Key="ProxyElement2" DataContext="{Binding ElementName=platesLv}"/>
+                                    </Grid.Resources>
+                                    <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
+                                    <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement2}"/>
+                                    <ListView Name="platesLv" Attached:ItemsControlDoubleClickMouseInputBinding.Enabled="true" Margin="3" ItemsSource="{Binding Plates}" Style="{DynamicResource ListView}" Attached:ListBoxBehavior.ScrollOnNewItem="true" SelectedItem="{Binding SelectedPlate}" BorderThickness="0">
+                                        <ListView.Resources>
+                                            <DataTemplate x:Key="HitCount">
+                                                <TextBlock ToolTip="Frame count for this plate" VerticalAlignment="Center" HorizontalAlignment="Center" Text="#" />
+                                            </DataTemplate>
+                                            <DataTemplate x:Key="Plate">
+                                                <TextBlock ToolTip="Plate OCR Text" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Plate" />
+                                            </DataTemplate>
+                                            <DataTemplate x:Key="Conf">
+                                                <TextBlock ToolTip="OCR Confidence" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Conf" />
+                                            </DataTemplate>
+                                            <DataTemplate x:Key="CC">
+                                                <TextBlock ToolTip="Country Code" VerticalAlignment="Center" HorizontalAlignment="Center" Text="CC" />
+                                            </DataTemplate>
+                                            <DataTemplate x:Key="CConf">
+                                                <TextBlock ToolTip="Country confidence" VerticalAlignment="Center" HorizontalAlignment="Center" Text="CConf" />
+                                            </DataTemplate>
+                                        </ListView.Resources>
+                                        <ListBox.InputBindings>
+                                            <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Attached:InputBindingCommandSetter.Command="{Binding DataContext.SetTimeOnPlate, Source={StaticResource ProxyElement}}"
+                                                  Attached:InputBindingCommandSetter.CommandParameter="{Binding DataContext.SelectedItem, Source={StaticResource ProxyElement2}}"/>
+                                        </ListBox.InputBindings>
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridViewColumn Width="75" Header="Plate" HeaderTemplate="{StaticResource Plate}" DisplayMemberBinding="{Binding Text}" />
+                                                <GridViewColumn Width="40" Header="Conf" HeaderTemplate="{StaticResource Conf}" DisplayMemberBinding="{Binding Confidence}" />
+                                                <GridViewColumn Width="30" Header="CC" HeaderTemplate="{StaticResource CC}" DisplayMemberBinding="{Binding Nationality}" />
+                                                <GridViewColumn Width="40" Header="CConf" HeaderTemplate="{StaticResource CConf}" DisplayMemberBinding="{Binding NationalityConfidence}" />
+                                                <GridViewColumn Width="25" Header="#" HeaderTemplate="{StaticResource HitCount}" DisplayMemberBinding="{Binding Matches}" />
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                    <ToggleButton Style="{DynamicResource dockButton}" Grid.Column="0" 
+																	Margin="0,-6,-6,0" Width="12" Height="12"
+																	HorizontalAlignment="Right"
+																	VerticalAlignment="Top" IsChecked="{Binding Path=(Behaviors:PopupInWindow.IsAutomatic), Mode=TwoWay, ElementName=plateGrid}" />
+                                </Grid>
+                            </Border>
+                        </Border>
+                    </Border>
+                </Grid>-->
+
     </Grid>
 </Window>

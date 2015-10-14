@@ -11,6 +11,7 @@ using MediaPoint.Controls.Extensions;
 using System.Windows.Controls;
 using MediaPoint.MVVM.Services;
 using MediaPoint.VM.ViewInterfaces;
+using MediaPoint.App.AttachedProperties;
 
 namespace MediaPoint.App.Behaviors
 {
@@ -152,10 +153,16 @@ namespace MediaPoint.App.Behaviors
                     Math.Abs(currentPoint.Y - startPoint.Y) >
                         SystemParameters.MinimumVerticalDragDistance))
                 {
-                    _wasDragging = true;
-                    // Prevent Click from firing
-                    //AssociatedObject.CaptureMouse();
-                    wnd.DragMove();
+                    var element = e.OriginalSource as FrameworkElement;
+                    var isInput = element.GetValue(ThreatAsInputControl.TreatProperty);
+                    if (isInput != DependencyProperty.UnsetValue &&
+                        (bool)isInput != false)
+                    {
+                        _wasDragging = true;
+                        // Prevent Click from firing
+                        //AssociatedObject.CaptureMouse();
+                        wnd.DragMove();
+                    }
 
                 }
 			}

@@ -234,7 +234,14 @@ namespace MediaPoint.VM
             Remaining = TimeSpan.FromSeconds(Math.Abs(MediaDuration - value) / 10000000).ToString();
             ServiceLocator.GetService<IMainView>().Invoke((Action)(() =>
             {
-                TaskbarManager.Instance.SetProgressValue(value == 0 ? 0 : (int)(value * 100 / MediaDuration), 100, ServiceLocator.GetService<IMainView>().GetWindow());
+                if (MediaDuration < value * 100)
+                {
+                    TaskbarManager.Instance.SetProgressValue(0, 100, ServiceLocator.GetService<IMainView>().GetWindow());
+                }
+                else
+                {
+                    TaskbarManager.Instance.SetProgressValue(value == 0 ? 0 : (int)(value * 100 / MediaDuration), 100, ServiceLocator.GetService<IMainView>().GetWindow());
+                }
             }));
         }
 
@@ -502,6 +509,7 @@ namespace MediaPoint.VM
             {
                 return new Command(o =>
                 {
+#if !ALPR
                     if (HasVideo == false) return;
 
                     if (o is string && (string)o == "online")
@@ -514,6 +522,7 @@ namespace MediaPoint.VM
                         // this happens when the player started without subtitles
                         SetBestSubtitles();
                     }
+#endif
                 }, can =>
                 {
                     return Source != null;
@@ -697,7 +706,10 @@ namespace MediaPoint.VM
 				IsStopped = false;
 				Status = "Playing";
                 Main.ShowOsdMessage("Playing");
-                Main.Equalizer.Update();
+                
+                ServiceLocator.GetService<IMainView>().DelayedInvoke(() => {
+                    //Main.Equalizer.Update();
+                }, 2000);
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Normal, ServiceLocator.GetService<IMainView>().GetWindow());
 			}
 
@@ -780,6 +792,10 @@ namespace MediaPoint.VM
 			if (uri == null)
 				return false;
 
+#if ALPR
+            Main.Plates.Clear();
+#endif
+
             Main.Playlist.AddTrackIfNotExisting(uri);
 
             if (Main.Playlist.Tracks.Count > 1)
@@ -795,6 +811,7 @@ namespace MediaPoint.VM
 			Source = null;
 			SubtitleItem sub = null;
 
+#if !ALPR
             if (uri.IsFile)
             {
                 if (null == (sub = FillSubs(uri)) && Main.AutoLoadSubtitles)
@@ -808,7 +825,7 @@ namespace MediaPoint.VM
                     QueryIMDBForUri(uri);
                 }
             }
-
+#endif
             Main.ShowVisualizations = false;
             Main.ShowEqualizer = false;
             HasVideo = true;
@@ -823,7 +840,9 @@ namespace MediaPoint.VM
             {
                 // queue subtitle set
                 // in case we didnt find any the command NeedSubtitlesCommand will be fired by the player when he opens the video
+#if !ALPR
                 ServiceLocator.GetService<IMainView>().DelayedInvoke(() => SelectedSubtitle = sub, 200);
+#endif
             }
 
             if (Source != null)

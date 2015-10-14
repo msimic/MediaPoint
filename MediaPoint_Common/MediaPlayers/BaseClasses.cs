@@ -154,7 +154,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
     /// <param name="pSurface">The pointer to the D3D surface</param>
     public delegate void NewAllocatorSurfaceDelegate(object sender, IntPtr pSurface);
 
-    public delegate void PlateFoundDelegate(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence);
+    public delegate void PlateFoundDelegate(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence, string nattext, int natconf, string natplate);
     /// <summary>
     /// The arguments that store information about a failed media attempt
     /// </summary>
@@ -391,6 +391,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
         protected ILAVVideoSettings _videoSettings;
         protected ILAVAudioSettings _audioSettings;
         protected IDCEqualizer _equalizer;
+        protected bool _eqEnabled;
         protected IDCDSPFilterInterface _dspFilter;
         protected IDCDownMix _downmix;
         protected IDCAmplify _amplify;
@@ -1156,11 +1157,11 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             m_customAllocator.PlateFound += CustomAllocatorPlateFound;
         }
 
-        private void CustomAllocatorPlateFound(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence)
+        private void CustomAllocatorPlateFound(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence, string nattext, int natconf, string natplate)
         {
             var del = PlateFound;
             if (del != null)
-                del(this, text, left, top, right, bottom, angle, confidence);
+                del(this, text, left, top, right, bottom, angle, confidence, nattext, natconf, natplate);
         }
 
         /// <summary>
@@ -1550,6 +1551,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
             /* This is generally a good place to start
              * our polling timer */
             StartGraphPollTimer();
+
+            _eqEnabled = true;
 
             var mediaOpenedHandler = MediaOpened;
             if (mediaOpenedHandler != null)
@@ -2055,7 +2058,8 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 
         public void SetBand(int channel, int band, sbyte value)
         {
-            if (_equalizer == null || _dspFilter == null) return;            
+          
+            if (_equalizer == null || _dspFilter == null) return;
 
             int hr = _equalizer.set_Enabled(true);
 

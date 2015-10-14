@@ -200,7 +200,7 @@ public:
 
     template<class Y, class D, class A> shared_ptr( Y * p, D d, A a ): px( p ), pn( p, d, a )
     {
-        boost::detail::sp_enable_shared_from_this( this, p, p );
+        boost::detail:: ( this, p, p );
     }
 
 //  generated copy constructor, destructor are fine

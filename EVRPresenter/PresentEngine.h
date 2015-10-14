@@ -92,13 +92,15 @@ public:
 	HRESULT SetDeviceResetCallback(IDeviceResetCallback *pCallback);
 	IDirect3DDeviceManager9* GetManager();
 	HRESULT SetAdapter(POINT p);
-	void GetBytesFromSurface(IDirect3DSurface9* pSurface);
+	
 	void BlitD3D (RECT *rDest, D3DCOLOR vertexColour, float rotate);
 
 	IDirect3DDevice9            *m_pDevice;
 	IEVRPresenterCallback		*m_pCallback;
 
+#ifdef ALPR
 	void AlprProcess(IMFSample *pSample);
+#endif
 
 protected:
 	HRESULT InitializeD3D();
@@ -115,8 +117,11 @@ protected:
 
 protected:
 	
+#ifdef ALPR
 	void ALPR(IDirect3DSurface9* pD3DSurface);
-    
+	ProcessorHandle _pProcessor;
+#endif
+
 	IDeviceResetCallback		*m_pDeviceResetCallback;
     UINT                        m_DeviceResetToken;     // Reset token for the D3D device manager.
 	int							m_bufferCount;

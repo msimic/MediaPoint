@@ -557,6 +557,7 @@ namespace MediaPoint.Common.DirectShow.MediaPlayers
 //        }
         protected virtual void OpenSource()
         {
+            _eqEnabled = false;
             //if (m_graph != null)
             //{
             //    //RemoveAllFilters(m_graph);

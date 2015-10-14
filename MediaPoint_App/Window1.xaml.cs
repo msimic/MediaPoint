@@ -1326,7 +1326,7 @@ If you are not running a 'virtual machine' (which is unsupported) ensure that yo
         public event PropertyChangedEventHandler PropertyChanged;
         private System.Windows.WindowStyle _originalStyle;
 
-        //Window v;
+        Window v;
         private void window_Activated(object sender, EventArgs e)
         {
             //if (v == null)

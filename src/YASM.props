@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup
     Condition="'$(YASMBeforeTargets)' == '' and '$(YASMAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
     <YASMBeforeTargets>Midl</YASMBeforeTargets>
@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <YASM>
-      <CommandLineTemplate>yasm -X vc -f $(Platform) [Debug] [Defines] [IncludePaths] -o "$(IntDir)%(Filename).obj" "%(FullPath)"</CommandLineTemplate>
+      <CommandLineTemplate>$(SolutionDir)yasm -X vc -f $(Platform) [Debug] [Defines] [IncludePaths] -o "$(IntDir)%(Filename).obj" "%(FullPath)"</CommandLineTemplate>
       <Outputs>$(IntDir)%(Filename).obj</Outputs>
       <ExecutionDescription>YASM: Assembling %(Filename)%(Extension)</ExecutionDescription>
       <Debug>False</Debug>

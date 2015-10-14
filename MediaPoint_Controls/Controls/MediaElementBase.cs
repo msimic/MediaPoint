@@ -880,16 +880,18 @@ namespace MediaPoint.Controls
 			AudioRenderers = new ObservableCollection<string>(MediaPlayerBase.AudioRenderers);
 		}
 
-        void MediaPlayerBase_PlateFound(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence)
+        void MediaPlayerBase_PlateFound(object sender, string text, int left, int top, int right, int bottom, double angle, int confidence, string nattext, int natconf, string natplate)
         {
+#if ALPR
             var pp = ServiceLocator.GetService<MediaPoint.Interfaces.IPlateProcessor>();
             if (pp != null)
             {
                 Dispatcher.Invoke((Action)(() =>
                 {
-                    pp.ProcessPlate(text, left, top, right, bottom, angle, confidence);
+                    pp.ProcessPlate(text, left, top, right, bottom, angle, confidence, nattext, natconf, natplate);
                 }));
             }
+#endif
         }
 
         void OnMediaPlayerBaseNewAudioStream()

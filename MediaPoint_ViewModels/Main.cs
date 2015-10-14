@@ -54,18 +54,27 @@ namespace MediaPoint.VM
 		#region Ctor
 		public Main()
 		{
-            Plates = new ObservableCollection<Plate>();
             SubtitleMinScore = 0.55;
             PreferenceToHashMatchedSubtitle = true;
 
+#if ALPR
+            Plates = new ObservableCollection<Plate>();
+            SetTimeOnPlate = new Command((o) => {
+                var plate = (Plate)o;
+                if (Player.IsPaused == false) Player.Pause();
+                Player.MediaPosition = plate.VideoTime;
+                Player.FrameStep();
+            }, (o) => Player.IsPlaying || Player.IsPaused);
+
             // ALPR
-            //Observable.Interval(TimeSpan.FromSeconds(1.5)).Subscribe(i =>
-            //{
-            //    if (ShowPlate == true)
-            //    {
-            //        ShowPlate = false;
-            //    }
-            //});
+            Observable.Interval(TimeSpan.FromSeconds(1.5)).Subscribe(i =>
+            {
+                if (ShowPlate == true)
+                {
+                    ShowPlate = false;
+                }
+            });
+#endif
 
             Equalizer = new Equalizer();
 		    SubtitleColor = Colors.White;
@@ -1256,6 +1265,8 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
             get { return "MainVM"; }
         }
 
+#if ALPR
+
         DateTime _lastPlateTime = DateTime.Now;
 
         public double PlateLeft
@@ -1294,11 +1305,13 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
             set { SetValue(() => ShowPlate, value); }
         }
 
-        Plate IsFuzzyMatch(string text, Rect rect)
+        Plate IsFuzzyMatch(string text, Rect rect, ref int index)
         {
             if (Plates.Count == 0) return null;
+            int maxIndex = index;
+            Plate matchedPlate = null;
 
-            for (int i = Plates.Count - 1; i >= Math.Max(0, Plates.Count - 4); i--)
+            for (int i = Plates.Count - 1; i >= Math.Max(0, Math.Max(maxIndex+1, Plates.Count - 4)); i--)
             {
                 if ((DateTime.Now - Plates[i].time) > TimeSpan.FromSeconds(15)) continue;
 
@@ -1306,25 +1319,38 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
 
                 if (textMatch)
                 {
-                    return Plates[i];
+                    index = i;
+                    matchedPlate = Plates[i];
+                    continue;
                 }
 
-                if ((DateTime.Now - Plates[i].time) < TimeSpan.FromSeconds(1.5)) continue;
+                //if ((DateTime.Now - Plates[i].time) < TimeSpan.FromSeconds(1.5)) continue;
                 
-                Rect r1 = Plates[i].AsRect();
-                bool rectmatch = r1.IntersectsWith(rect);
+                //Rect r1 = Plates[i].AsRect();
+                //bool rectmatch = r1.IntersectsWith(rect);
 
-                if (rectmatch)
-                {
-                    return Plates[i];
-                }
+                //if (rectmatch)
+                //{
+                //    index = i;
+                //    matchedPlate = Plates[i];
+                //    continue;
+                //}
             }
 
-            return null;
+            return matchedPlate;
         }
 
         public class Plate : ViewModel
         {
+            public long VideoTime;
+
+            public Plate() { Matches = 1; }
+
+            public int Matches
+            {
+                get { return GetValue(() => Matches); }
+                set { SetValue(() => Matches, value); }
+            }
             public int Left;
             public int Top;
             public int Width;
@@ -1340,6 +1366,16 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
             {
                 get { return GetValue(() => Confidence); }
                 set { SetValue(() => Confidence, value); }
+            }
+            public string Nationality
+            {
+                get { return GetValue(() => Nationality); }
+                set { SetValue(() => Nationality, value); }
+            }
+            public int NationalityConfidence
+            {
+                get { return GetValue(() => NationalityConfidence); }
+                set { SetValue(() => NationalityConfidence, value); }
             }
             public Rect AsRect()
             {
@@ -1359,62 +1395,82 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
             set { SetValue(() => Plates, value); }
         }
 
-        public void ProcessPlate(string text, int left, int top, int right, int bottom, double angle, int confidence)
+        public void ProcessPlate(string text, int left, int top, int right, int bottom, double angle, int confidence, string nattext, int natconf, string natplate)
         {
-            if (confidence < 800) return;
+            if (confidence < 600) return;
 
             var chars = text.ToCharArray().ToList();
 
-            if (chars[1] == 'I' && chars[2] == 'J')
-            {
-                chars[1] = 'U';
-                chars.RemoveAt(2);
-            }
+            //if (chars[1] == 'I' && chars[2] == 'J')
+            //{
+            //    chars[1] = 'U';
+            //    chars.RemoveAt(2);
+            //}
 
-            for (int i = 0; i < 1; i++)
-            {
-                if (chars[i] == '0')
-                    chars[i] = 'O';
-                if (chars[i] == '1')
-                    chars[i] = 'I';
-            }
-            for (int i = chars.Count - 1; i >= chars.Count - 2; i--)
-            {
-                if (chars[i] == '0')
-                    chars[i] = 'O';
-                if (chars[i] == '1')
-                    chars[i] = 'I';
-            }
+            //for (int i = 0; i < 1; i++)
+            //{
+            //    if (chars[i] == '0')
+            //        chars[i] = 'O';
+            //    if (chars[i] == '1')
+            //        chars[i] = 'I';
+            //}
+            //for (int i = chars.Count - 1; i >= chars.Count - 2; i--)
+            //{
+            //    if (chars[i] == '0')
+            //        chars[i] = 'O';
+            //    if (chars[i] == '1')
+            //        chars[i] = 'I';
+            //}
 
             text = new string(chars.ToArray());
             var rect = new Rect(left, top, right - left, bottom - top);
 
             Plate match;
+            Plate tmpmatch = null;
 
-            if ((match = IsFuzzyMatch(text, rect)) != null)
+            int foundIndex = -1;
+
+            tmpmatch = IsFuzzyMatch(text, rect, ref foundIndex);
+            match = tmpmatch;
+
+            do
             {
-                UpdatePlate(match, rect, angle, text, confidence);
+                tmpmatch = IsFuzzyMatch(text, rect, ref foundIndex);
+                if (tmpmatch != null && tmpmatch != match)
+                {
+                    Plates.Remove(tmpmatch);
+                }
+            } while (tmpmatch != null);
+
+            if (match != null)
+            {
+                UpdatePlate(match, rect, angle, text, confidence, nattext, natconf, natplate);
                 return;
             }
 
             if (match == null)
-                SetPlate(text, confidence, rect, angle);
+                SetPlate(text, confidence, rect, angle, nattext, natconf, natplate);
         }
 
-        private void SetPlate(string text, int confidence, Rect rect, double angle)
+        public ICommand SetTimeOnPlate { get; set; }
+
+        private void SetPlate(string text, int confidence, Rect rect, double angle, string nat, int natconf, string natplate)
         {
             Plate p = new Plate();
+            p.VideoTime = Player.MediaPosition;
             p.Text = text;
             p.time = DateTime.Now;
+            p.Nationality = nat;
+            p.NationalityConfidence = natconf;
 
             Plates.Add(p);
 
-            UpdatePlate(p, rect, angle, text, confidence);
+            UpdatePlate(p, rect, angle, text, confidence, nat, natconf, natplate);
 
             ShowOsdMessage("Plate: " + text + " with " + confidence / 10 + "% confidence");
         }
 
-        private void UpdatePlate(Plate plate, Rect rect, double angle, string text, int confidence)
+        private void UpdatePlate(Plate plate, Rect rect, double angle, string text, int confidence, string nat, int natconf, string natplate)
         {
             _lastPlateTime = DateTime.Now;
 
@@ -1423,12 +1479,27 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
             plate.Top = (int)rect.Top;
             plate.Width = (int)rect.Width;
             plate.Height = (int)rect.Height;
-            if (plate.Confidence > 0 && plate.Confidence < confidence && plate.Text != text)
+
+            if (plate.NationalityConfidence < natconf)
             {
-                ShowOsdMessage("Plate updated: " + text + " with " + confidence / 10 + "% confidence");
+                plate.Nationality = nat;
+                plate.NationalityConfidence = natconf;
+                plate.Text = natplate;
                 plate.Confidence = confidence;
-                plate.Text = text;
+                plate.VideoTime = Player.MediaPosition;
             }
+            else if (plate.Confidence < confidence)
+            {
+                plate.Nationality = nat;
+                plate.NationalityConfidence = natconf;
+                bool currentlyOK = plate.Text.StartsWith(natplate) || plate.Text.EndsWith(natplate);
+                string newText = text.Length > natplate.Length && (text.StartsWith(natplate) || text.EndsWith(natplate)) ? text : natplate;
+                plate.Text = newText;
+                plate.Confidence = confidence;
+                plate.VideoTime = Player.MediaPosition;
+            }
+
+            plate.Matches++;
 
             if (plate.Confidence == 0) plate.Confidence = confidence;
 
@@ -1442,6 +1513,7 @@ Enjoy all the Bugs :D", "About MediaPoint", eMessageBoxType.Ok, eMessageBoxIcon.
 
             ShowPlate = true;
         }
+#endif
 
         public void ExecuteAction(Config.PlayerActionEnum actionId)
         {

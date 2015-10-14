@@ -108,13 +108,13 @@ end;
 
 function IsRequiredDotNetDetected(): Boolean;  
 begin
-    result := IsDotNetDetected('v3.5', 1);
+    result := IsDotNetDetected('v4.5', 0);
 end;
 
 function InitializeSetup(): Boolean;
 begin
-    if not IsDotNetDetected('v3.5', 1) then begin
-        MsgBox('{#MyAppName} requires Microsoft .NET Framework 3.5 SP1.'#13#13
+    if not IsDotNetDetected('v4.5', 0) then begin
+        MsgBox('{#MyAppName} requires Microsoft .NET Framework 4.5.'#13#13
           'The installer will attempt to install it at the end.'#13#13
           'Please note that you must complete this in order to run {#MyAppName}.', mbInformation, MB_OK);        
     end
@@ -183,7 +183,7 @@ Source: "..\output\bin\x86\WPFToolkit.dll"; DestDir: "{app}"; Flags: ignoreversi
 Source: "..\output\bin\x86\Xceed.Wpf.Toolkit.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\codecs\*"; DestDir: "{app}\codecs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\output\bin\x86\Themes\*"; DestDir: "{app}\Themes"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\InstallerResources\dotnetfx35setup.exe"; DestDir: {tmp}; Flags: deleteafterinstall; Check: not IsRequiredDotNetDetected 
+Source: "..\InstallerResources\NDP452-KB2901954-Web.exe"; DestDir: {tmp}; Flags: deleteafterinstall; Check: not IsRequiredDotNetDetected 
 Source: "..\InstallerResources\Splash.png"; DestDir: {tmp}; Flags: ignoreversion dontcopy nocompression
 Source: "..\InstallerResources\isgsg.dll"; DestDir: {tmp}; Flags: ignoreversion dontcopy nocompression
 
@@ -198,5 +198,5 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-Filename: "{tmp}\dotnetfx35setup.exe"; Parameters: "/q:a /c:""install /l /q"""; Check: not IsRequiredDotNetDetected; StatusMsg: Microsoft Framework 3.5 SP1 is being installed. Please wait... 
+Filename: "{tmp}\NDP452-KB2901954-Web"; Parameters: "/q:a /c:""install /l /q"""; Check: not IsRequiredDotNetDetected; StatusMsg: Microsoft .NET Framework 4.5 is being installed. Please wait... 
 

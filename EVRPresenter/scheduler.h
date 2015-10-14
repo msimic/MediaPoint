@@ -82,5 +82,9 @@ private:
 struct SchedulerCallback
 {
     virtual HRESULT PresentSample(IMFSample *pSample, LONGLONG llTarget, LONGLONG timeDelta, LONGLONG remainingInQueue, LONGLONG frameDurationDiv4) = 0;
+#ifdef ALPR
+
 	virtual void AlprProcess(IMFSample * pSample) = 0;
+
+#endif
 };

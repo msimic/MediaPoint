@@ -82,7 +82,7 @@ BOOL CMDIFrameWnd::OnCmdMsg(UINT nID, int nCode, void* pExtra,
 LRESULT CMDIFrameWnd::OnCommandHelp(WPARAM wParam, LPARAM lParam)
 {
 	if (lParam == 0 && IsTracking())
-#if (_MSC_VER == 1700)
+#if (_MSC_VER >= 1700)
 		lParam = HID_BASE_COMMAND + GetTrackingID();
 #else
 		lParam = HID_BASE_COMMAND+m_nIDTracking;
@@ -170,7 +170,7 @@ BOOL CMDIFrameWnd::CreateClient(LPCREATESTRUCT lpCreateStruct,
 	}
 
 	// Create MDICLIENT control with special IDC
-#if (_MSC_VER == 1700)
+#if (_MSC_VER >= 1700)
 	if ((m_hWndMDIClient = CreateWindowEx(dwExStyle, _T("mdiclient"), NULL,
 		dwStyle, 0, 0, 0, 0, m_hWnd, (HMENU)AFX_IDW_PANE_FIRST,
 		AfxGetInstanceHandle(), (LPVOID)&ccs)) == NULL)
@@ -825,7 +825,7 @@ void CMDIChildWnd::SetHandles(HMENU hMenu, HACCEL hAccel)
 	m_hAccelTable = hAccel;
 }
 
-#if (_MSC_VER == 1700)
+#if (_MSC_VER >= 1700)
 UINT CMDIChildWnd::GetTrackingID()
 {
 	if (GetParentFrame() && GetParentFrame()->IsTracking())

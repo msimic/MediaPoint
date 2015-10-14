@@ -31,7 +31,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
-#if (_MSC_VER == 1700)
+#if (_MSC_VER >= 1700)
 void AfxDoRegisterMFCControlClass(LPCTSTR lpszClassName, LPCTSTR lpszBaseClassName)
 #else
 static void DoRegisterWindowClass(LPCTSTR lpszClassName, LPCTSTR lpszBaseClassName)
@@ -43,7 +43,7 @@ static void DoRegisterWindowClass(LPCTSTR lpszClassName, LPCTSTR lpszBaseClassNa
 	WNDCLASS wnd = {0};
 
 	HINSTANCE hInst = AfxGetInstanceHandle();
-#if (_MSC_VER == 1700)
+#if (_MSC_VER >= 1700)
 	if (!GetClassInfo(hInst, lpszBaseClassName, &wnd))
 #else
 	if (!AfxCtxGetClassInfo(hInst, lpszBaseClassName, &wnd))

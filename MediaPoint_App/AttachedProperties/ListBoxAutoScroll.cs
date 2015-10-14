@@ -58,6 +58,10 @@ namespace MediaPoint.App.AttachedProperties
             if (Associations.ContainsKey(listBox))
                 Associations[listBox].Dispose();
             listBox.Unloaded -= ListBox_Unloaded;
+            if ((bool)listBox.GetValue(ListBoxBehavior.ScrollOnNewItemProperty) == true)
+            {
+                listBox.Loaded += new RoutedEventHandler(ListBox_Loaded);
+            }
         }
 
         static void ListBox_Loaded(object sender, RoutedEventArgs e)

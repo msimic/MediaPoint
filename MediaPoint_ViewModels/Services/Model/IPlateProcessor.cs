@@ -8,6 +8,8 @@ namespace MediaPoint.Interfaces
 {
     public interface IPlateProcessor : IService
     {
-        void ProcessPlate(string text, int left, int top, int right, int bottom, double angle, int confidence);
+#if ALPR
+        void ProcessPlate(string text, int left, int top, int right, int bottom, double angle, int confidence, string nattext, int natconf, string natplate);
+#endif
     }
 }

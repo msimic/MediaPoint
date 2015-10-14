@@ -49,6 +49,8 @@ namespace MediaPoint.App
                 preproduction = " βeta" + v.Build / 2 + " (rev." + v.Revision + ")";
             }
 
+            preproduction += " (ALPR mod)";
+
             this.Properties["Version"] = string.Format("v{0}.{1}{2}", v.Major, v.Minor, preproduction);
             this.Properties["VersionShort"] = string.Format("v{0}.{1}", v.Major, v.Minor);
 

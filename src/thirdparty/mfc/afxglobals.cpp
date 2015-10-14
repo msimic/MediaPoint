@@ -41,7 +41,7 @@ extern CObList afxAllToolBars;
 
 BOOL CMemDC::m_bUseMemoryDC = TRUE;
 
-#if (_MSC_VER == 1700)
+#if (_MSC_VER >= 1700)
 
 #define AFX_FONT_NAME_OFFICE       _T("Tahoma")
 #define AFX_FONT_NAME_OFFICE_2007  _T("Segoe UI")

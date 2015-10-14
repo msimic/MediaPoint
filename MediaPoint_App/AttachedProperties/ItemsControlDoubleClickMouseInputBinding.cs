@@ -29,8 +29,26 @@ namespace MediaPoint.App.AttachedProperties
 
         public static void SetCommand(InputBinding element, ICommand value)
         {
-            element.SetValue(CommandProperty, value);
             element.Command = value;
+        }
+
+        public static readonly DependencyProperty CommandParameterProperty =
+            DependencyProperty.RegisterAttached("CommandParameter",
+            typeof(object), typeof(InputBindingCommandSetter), new PropertyMetadata(new PropertyChangedCallback(CommandParameterChanged)));
+
+        private static void CommandParameterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            SetCommandParameter(d as InputBinding, (object)e.NewValue);
+        }
+
+        public static object GetCommandParameter(InputBinding element)
+        {
+            return element.GetValue(CommandParameterProperty);
+        }
+
+        public static void SetCommandParameter(InputBinding element, object value)
+        {
+            element.CommandParameter = value;
         }
     }
 
@@ -94,7 +112,7 @@ namespace MediaPoint.App.AttachedProperties
                 if (b.Gesture != null
                     && b.Gesture is MouseGesture
                     && ((MouseGesture)b.Gesture).MouseAction == MouseAction.LeftDoubleClick
-                    && b.Command.CanExecute(null))
+                    && (b.Command != null && b.Command.CanExecute(b.CommandParameter)))
                 {
                     if (control is ListBox)
                     {
@@ -102,7 +120,7 @@ namespace MediaPoint.App.AttachedProperties
                         var li = VisualHelper.TryFindParent<ListBoxItem>(fe);
                         if (li != null) (control as ListBox).SetValue(ListBox.SelectedValueProperty, li.DataContext);
                     }
-                    b.Command.Execute(b.CommandParameter);
+                    if (b.Command != null) b.Command.Execute(b.CommandParameter);
                     e.Handled = true;
                 }
             }

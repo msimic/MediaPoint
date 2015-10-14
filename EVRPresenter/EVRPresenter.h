@@ -45,7 +45,7 @@ IEVRPresenterCallback : public IUnknown
 {
 public:
     virtual HRESULT STDMETHODCALLTYPE PresentSurfaceCB(IDirect3DSurface9 *pSurface) = 0;
-	virtual HRESULT STDMETHODCALLTYPE FoundPlate(const wchar_t* text, int left, int top, int right, int bottom, float angle, int confidence) = 0;
+	virtual HRESULT STDMETHODCALLTYPE FoundPlate(const wchar_t* text, int left, int top, int right, int bottom, float angle, int confidence, const wchar_t* nat, int natconf, const wchar_t* natplate) = 0;
 };
 
 MIDL_INTERFACE("9019EA9C-F1B4-44b5-ADD5-D25704313E48")

@@ -37,7 +37,7 @@ namespace MediaPoint.Common.MediaFoundation
         [PreserveSig]
         int PresentSurfaceCB(IntPtr pSurface);
         [PreserveSig]
-        int FoundPlate([MarshalAs(UnmanagedType.LPWStr)] string text, int left, int top, int right, int bottom, float angle, int confidence);
+        int FoundPlate([MarshalAs(UnmanagedType.LPWStr)] string text, int left, int top, int right, int bottom, float angle, int confidence, [MarshalAs(UnmanagedType.LPWStr)] string nattext, int natconf, [MarshalAs(UnmanagedType.LPWStr)] string natplate);
     }
 
     [ComVisible(true), ComImport, SuppressUnmanagedCodeSecurity,
@@ -177,10 +177,10 @@ namespace MediaPoint.Common.MediaFoundation
             return 0;
         }
 
-        public int FoundPlate(string text, int left, int top, int right, int bottom, float angle, int confidence)
+        public int FoundPlate(string text, int left, int top, int right, int bottom, float angle, int confidence, string nattext, int natconf, string natplate)
         {
             var del = PlateFound;
-            if (del != null) del(this, text, left, top, right, bottom, angle, confidence);
+            if (del != null) del(this, text, left, top, right, bottom, angle, confidence, nattext, natconf, natplate);
             return 0;
         }
 
