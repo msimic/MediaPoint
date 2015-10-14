@@ -182,9 +182,19 @@ class InterceptKeys
 
     private static IInputTeller _inputTeller;
 
+    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+    static extern bool CheckRemoteDebuggerPresent(IntPtr hProcess, ref bool isDebuggerPresent);
+
+
     public static void Start(IInputTeller inputTeller)
     {
-        _inputTeller = inputTeller;
-        _hookID = SetHook(_proc);
+        bool isDebuggerPresent = false;
+        CheckRemoteDebuggerPresent(Process.GetCurrentProcess().Handle, ref isDebuggerPresent);
+
+        if (!isDebuggerPresent)
+        {
+            _inputTeller = inputTeller;
+            _hookID = SetHook(_proc);
+        }
     }
 }

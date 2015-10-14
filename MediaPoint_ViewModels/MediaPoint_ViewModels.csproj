@@ -145,6 +145,7 @@
   <ItemGroup>
     <Compile Include="Config\PlayerActionEnum.cs" />
     <Compile Include="Config\SupportedFiles.cs" />
+    <Compile Include="CustomPodnapisiDownloader.cs" />
     <Compile Include="Equalizer.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Model\FontObject.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="Playlist.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Model\IActionExecutor.cs" />
+    <Compile Include="Services\Model\ISubtitleDownloaderRegistrator.cs" />
     <Compile Include="Track.cs" />
     <Compile Include="Services\View\IDialogService.cs" />
     <Compile Include="Services\View\IEqualizer.cs" />

@@ -159,6 +159,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\AllArchitectures\ShaderEffectLibrary.dll</HintPath>
     </Reference>
+    <Reference Include="SubtitleDownloader, Version=3.0.16.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\AllArchitectures\SubtitleDownloader.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -207,6 +211,7 @@
     <Compile Include="AttachedProperties\TrackbarSlider.cs" />
     <Compile Include="Behaviors\BorderlessWindowBehavior.cs" />
     <Compile Include="Behaviors\Buttons.cs" />
+    <Compile Include="Behaviors\ComboBoxBehaviors.cs" />
     <Compile Include="Behaviors\MouseDragElementBehavior.cs" />
     <Compile Include="Behaviors\MouseLeaveBehavior.cs" />
     <Compile Include="Behaviors\PopupInWindowBehavior.cs" />

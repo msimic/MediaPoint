@@ -368,6 +368,7 @@ namespace MediaPoint.Common.Subtitles
             
             foreach (var service in services)
             {
+                
                 var d = SubtitleDownloaderFactory.GetSubtitleDownloader(service);
                 List<Subtitle> foundSubtitles = new List<Subtitle>();
 
@@ -375,7 +376,25 @@ namespace MediaPoint.Common.Subtitles
                 {
                     if (messageCallback != null) messageCallback(string.Format("Searching {0} {1}", service, "".PadLeft(i+3, '.') ));
 
-                    var q = new SearchQuery(patterns[i].Replace('.', ' '));
+                    string pat = patterns[i].Replace('.', ' ');
+                    string title, titleYear, strYear;
+                    int season, episode;
+                    Subtitle bestGuess;
+
+                    GetMovieMetadata(pat, out title, out titleYear, out strYear, out season, out episode, out bestGuess, false);
+
+                    SearchQuery q;
+
+                    if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(strYear))
+                    {
+                        q = new SearchQuery(title);
+                        q.Year = Convert.ToInt32(strYear);
+                    }
+                    else
+                    {
+                        q = new SearchQuery(pat);
+                    }
+
                     q.LanguageCodes = languages;
                     var subs = d.SearchSubtitles(q);
 
@@ -403,20 +422,22 @@ namespace MediaPoint.Common.Subtitles
             PriritizebyMedium(scores, patterns);
             PriritizebyLanguage(scores, patterns);
 
-            return scores.Distinct(new SubEquality()).OrderBy(m => ((int)(m.Score * 100))).ThenBy(m => GetLanguagePriority(languages, m.Language)).Reverse().ToList();
+            var serviceList = services.ToList();
+            return scores.Distinct(new SubEquality()).OrderBy(m => ((int)(m.Score * 100))).ThenBy(m => GetLanguagePriority(languages, m.Language)).ThenBy(m => serviceList.Count - serviceList.IndexOf(m.Service)).Reverse().ToList();
         }
 
         class SubEquality : EqualityComparer<SubtitleMatch>
         {
             public override bool Equals(SubtitleMatch x, SubtitleMatch y)
             {
-                return x.Language == y.Language &&
+                return x.Service == y.Service &&
+                    x.Language == y.Language &&
                     x.MatchRelease == y.MatchRelease;
             }
 
             public override int GetHashCode(SubtitleMatch obj)
             {
-                return (obj.Language + "#" + obj.MatchRelease).GetHashCode();
+                return (obj.Service + obj.Language + "#" + obj.MatchRelease).GetHashCode();
             }
         }
 
@@ -488,20 +509,35 @@ namespace MediaPoint.Common.Subtitles
                 {
                     subFileName = subtitle.FileName.RemoveSpecialCharacters();
                     string[] words = subFileName.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    bool fromReleases = false;
                     if (words.Length > 1)
                     {
                         if (words.Skip(1).Any(w => w == words[0]))
                         {
+                            List<string> cuts = new List<string>();
+                            int lastCut = 0;
                             int cut = subFileName.IndexOf(words[0], subFileName.IndexOf(words[1]));
-                            if (cut != -1)
+                            while (cut != -1)
                             {
-                                subFileName = subFileName.Substring(0, cut);
+                                cuts.Add(subFileName.Substring(lastCut, cut - lastCut));
+                                lastCut = cut;
+                                if (lastCut + 1 >= subFileName.Length) break;
+                                cut = subFileName.IndexOf(words[0], lastCut+1);
+                            }
 
+                            if (cuts.Count > 1)
+                            {
+                                fromReleases = true;
+
+                                subFileName = string.Join(" ", cuts.Select(c => c.Trim().Replace(' ', '.')));
                             }
                         }
                     }
-                    subFileName = subFileName.Trim();
-                    subFileName = subFileName.Replace(' ', '.');
+                    if (!fromReleases)
+                    {
+                        subFileName = subFileName.Trim();
+                        subFileName = subFileName.Replace(' ', '.');
+                    }
                 }
                 var files = podnapisi ? subFileName.Split(new string[] {" "}, StringSplitOptions.RemoveEmptyEntries) : new string[] { Path.GetFileNameWithoutExtension(subFileName) };
                 double best = 0;
@@ -630,7 +666,7 @@ namespace MediaPoint.Common.Subtitles
 
             string originalFilename = strFileName;
 
-            if (strFileName.ToLowerInvariant().Contains(Path.GetDirectoryName(strFileName).ToLowerInvariant()))
+            if (string.IsNullOrEmpty(Path.GetDirectoryName(strFileName)) == false && strFileName.ToLowerInvariant().Contains(Path.GetDirectoryName(strFileName).ToLowerInvariant()))
             {
                 strFileName = Path.GetFileNameWithoutExtension(strFileName);
             }

@@ -54,6 +54,7 @@ namespace MediaPoint.VM
 		#region Ctor
 		public Main()
 		{
+            ServiceLocator.GetService<ISubtitleDownloaderRegistrator>().RegisterDownloader(new PodnapisiDownloader());
             SubtitleMinScore = 0.55;
             PreferenceToHashMatchedSubtitle = true;
 

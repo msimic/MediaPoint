@@ -16,16 +16,20 @@ using MediaPoint.Interfaces;
 using MediaPoint.VM.Services.Model;
 using MediaPoint.Common.Services;
 using MediaPoint.VM.Model;
+using SubtitleDownloader.Core;
 
 namespace MediaPoint.App
 {
 	/// <summary>
 	/// Interaction logic for App.xaml
 	/// </summary>
-	public partial class App : Application
+    public partial class App : Application, ISubtitleDownloaderRegistrator
 	{
         protected override void OnStartup(System.Windows.StartupEventArgs e)
         {
+            ServiceLocator.RegisterService<ISubtitleDownloaderRegistrator>(this);
+
+            InitializationSequence = new Dictionary<object, Action>();
 
             DispatcherUnhandledException += Application_DispatcherUnhandledException;
             
@@ -49,7 +53,7 @@ namespace MediaPoint.App
                 preproduction = " βeta" + v.Build / 2 + " (rev." + v.Revision + ")";
             }
 
-            preproduction += " (ALPR mod)";
+            preproduction += " (unstable)";
 
             this.Properties["Version"] = string.Format("v{0}.{1}{2}", v.Major, v.Minor, preproduction);
             this.Properties["VersionShort"] = string.Format("v{0}.{1}", v.Major, v.Minor);
@@ -105,7 +109,21 @@ namespace MediaPoint.App
 
             w.Show();
 
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                Initialized = true;
+
+                foreach (var key in InitializationSequence.Keys)
+                {
+                    InitializationSequence[key]();
+                }
+            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
+
+        public bool Initialized { get; set; }
+
+        public Dictionary<object, Action> InitializationSequence { get; set; }
+
 
         public void Activate(string[] args)
         {
@@ -225,7 +243,20 @@ namespace MediaPoint.App
             Debug.WriteLine("Assemblies loaded: " + count);
         }
 
-	}
+
+        public void RegisterDownloader(SubtitleDownloader.Core.ISubtitleDownloader downloader)
+        {
+            var member = typeof(SubtitleDownloaderFactory).GetField("DownloaderInstances", BindingFlags.Static | BindingFlags.NonPublic);
+            var val = member.GetValue(null);
+            var dict = val as Dictionary<string, ISubtitleDownloader>;
+            dict[downloader.GetName()] = downloader;
+        }
+
+        public string Name
+        {
+            get { throw new NotImplementedException(); }
+        }
+    }
 
     public class EntryPoint
     {

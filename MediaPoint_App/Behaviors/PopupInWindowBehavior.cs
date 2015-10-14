@@ -16,6 +16,7 @@ using System.Globalization;
 using System.ComponentModel;
 using MediaPoint.MVVM.Services;
 using MediaPoint.VM.ViewInterfaces;
+using System.Diagnostics;
 
 namespace MediaPoint.App.Behaviors
 {
@@ -148,102 +149,118 @@ namespace MediaPoint.App.Behaviors
         {
             if (AssociatedObject == null || _skipHandler || ((bool)e.NewValue && PopupWindow != null && PopupWindow.IsVisible)) return;
 
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                lock (this)
+            var app = Application.Current as App;
+
+            Action execute = () => {
+                Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    if (PopupWindow == null)
+                    lock (this)
                     {
-                        TextInfo ti = CultureInfo.CurrentUICulture.TextInfo;
-                        var owenr = AssociatedObject.TryFindParent<Window>();
-
-                        PopupWindow = new Window();
-                        PopupWindow.SizeToContent = SizeToContent.WidthAndHeight;
-                        PopupWindow.AllowsTransparency = true;
-                        PopupWindow.ShowInTaskbar = false;
-                        PopupWindow.Title = ti.ToTitleCase(AssociatedObject.Name);
-                        PopupWindow.Name = PopupWindow.Title;
-                        PopupWindow.Background = Brushes.Transparent;
-                        PopupWindow.WindowStyle = WindowStyle.None;
-                        PopupWindow.DataContext = AssociatedObject.DataContext;
-                        PopupWindow.Owner = owenr;
-                        PopupWindow.Activated += (s,args) =>
+                        if (PopupWindow == null)
                         {
-                            if (Mouse.Captured != null)
+                            TextInfo ti = CultureInfo.CurrentUICulture.TextInfo;
+                            var owenr = AssociatedObject.TryFindParent<Window>();
+
+                            PopupWindow = new Window();
+                            PopupWindow.SizeToContent = SizeToContent.WidthAndHeight;
+                            PopupWindow.AllowsTransparency = true;
+                            PopupWindow.ShowInTaskbar = false;
+                            PopupWindow.Title = ti.ToTitleCase(AssociatedObject.Name);
+                            PopupWindow.Name = PopupWindow.Title;
+                            PopupWindow.Background = Brushes.Transparent;
+                            PopupWindow.WindowStyle = WindowStyle.None;
+                            PopupWindow.DataContext = AssociatedObject.DataContext;
+                            PopupWindow.Owner = owenr;
+                            PopupWindow.Activated += (s,args) =>
                             {
-                                Mouse.Captured.ReleaseMouseCapture();
-                            }
-                        };
-                        PopupWindow.SizeChanged += (s, args) =>
-                        {
-                            if (Mouse.Captured != null)
+                                if (Mouse.Captured != null)
+                                {
+                                    Mouse.Captured.ReleaseMouseCapture();
+                                }
+                            };
+                            PopupWindow.SizeChanged += (s, args) =>
                             {
-                                Mouse.Captured.ReleaseMouseCapture();
-                            }
-                        };
-                        PopupWindow.IsVisibleChanged += (s, args) =>
-                        {
-                            if (Mouse.Captured != null)
+                                if (Mouse.Captured != null)
+                                {
+                                    Mouse.Captured.ReleaseMouseCapture();
+                                }
+                            };
+                            PopupWindow.IsVisibleChanged += (s, args) =>
                             {
-                                Mouse.Captured.ReleaseMouseCapture();
+                                if (Mouse.Captured != null)
+                                {
+                                    Mouse.Captured.ReleaseMouseCapture();
+                                }
+                            };
+                            //PopupWindow.Topmost = true;
+                            PopupWindow.MinHeight = 200;
+                            if (double.IsNaN(AssociatedObject.MinHeight) != true)
+                            {
+                                PopupWindow.MinHeight = AssociatedObject.MinHeight;
                             }
-                        };
-                        //PopupWindow.Topmost = true;
-                        PopupWindow.MinHeight = 200;
-                        if (double.IsNaN(AssociatedObject.MinHeight) != true)
-                        {
-                            PopupWindow.MinHeight = AssociatedObject.MinHeight;
-                        }
-                        PopupWindow.MinWidth = 200;
-                        if (double.IsNaN(AssociatedObject.MinWidth) != true)
-                        {
-                            PopupWindow.MinWidth = AssociatedObject.MinWidth;
-                        }
-                        PopupWindow.Icon = owenr.Icon;
-                        PopupWindow.ResizeMode = ResizeMode.CanResizeWithGrip;
+                            PopupWindow.MinWidth = 200;
+                            if (double.IsNaN(AssociatedObject.MinWidth) != true)
+                            {
+                                PopupWindow.MinWidth = AssociatedObject.MinWidth;
+                            }
+                            PopupWindow.Icon = owenr.Icon;
+                            PopupWindow.ResizeMode = ResizeMode.CanResizeWithGrip;
 
-                        if (double.IsNaN(AssociatedObject.Height) != true)
-                        {
-                            PopupWindow.Height = AssociatedObject.Height;
-                            PopupWindow.ResizeMode = ResizeMode.NoResize;
-                        }
-                        if (double.IsNaN(AssociatedObject.Width) != true)
-                        {
-                            PopupWindow.Width = AssociatedObject.Width;
-                            PopupWindow.ResizeMode = ResizeMode.NoResize;
+                            if (double.IsNaN(AssociatedObject.Height) != true)
+                            {
+                                PopupWindow.Height = AssociatedObject.Height;
+                                PopupWindow.ResizeMode = ResizeMode.NoResize;
+                            }
+                            if (double.IsNaN(AssociatedObject.Width) != true)
+                            {
+                                PopupWindow.Width = AssociatedObject.Width;
+                                PopupWindow.ResizeMode = ResizeMode.NoResize;
+                            }
+
+                            BehaviorCollection itemBehaviors = Interaction.GetBehaviors(PopupWindow);
+                            var bh = new WindowStateBehavior();
+                            itemBehaviors.Add(bh);
+
+                            if (bh.WindowStateSettings.Left != -1)
+                            {
+                                PopupWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                            }
+                            else
+                            {
+                                PopupWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                            }
+
+                            _isInitialized = true;
                         }
 
-                        BehaviorCollection itemBehaviors = Interaction.GetBehaviors(PopupWindow);
-                        var bh = new WindowStateBehavior();
-                        itemBehaviors.Add(bh);
-
-                        if (bh.WindowStateSettings.Left != -1)
+                        if ((bool)(sender as FrameworkElement).GetValue(IsAutomaticProperty) == false)
                         {
-                            PopupWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                            return;
+                        }
+
+                        if ((bool)e.NewValue)
+                        {
+                            Debug.WriteLine("ShowingInPopup");
+                            Show();
                         }
                         else
                         {
-                            PopupWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                            Debug.WriteLine("Closing Popup");
+                            Hide();
                         }
+                    }
+                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
-                        _isInitialized = true;
-                    }
+            };
 
-                    if ((bool)(sender as FrameworkElement).GetValue(IsAutomaticProperty) == false)
-                    {
-                        return;
-                    }
-
-                    if ((bool)e.NewValue)
-                    {
-                        Show();
-                    }
-                    else
-                    {
-                        Hide();
-                    }
-                }
-            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            if (app.Initialized)
+            {
+                execute();
+            }
+            else
+            {
+                app.InitializationSequence[this] = execute;
+            }
         }
 
         private void Hide()
@@ -373,6 +390,9 @@ namespace MediaPoint.App.Behaviors
             AssociatedObject.IsVisibleChanged -= AssociatedObject_IsVisibleChanged;
             TypeDescriptor.GetProperties(AssociatedObject)["Opacity"].RemoveValueChanged(AssociatedObject, OpacityValueChanged);
             base.OnDetaching();
+
+            var app = Application.Current as App;
+            app.InitializationSequence.Remove(this);
 
         }
 

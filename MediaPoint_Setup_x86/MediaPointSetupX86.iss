@@ -169,6 +169,8 @@ Source: "..\output\bin\x86\Microsoft.WindowsAPICodePack.dll"; DestDir: "{app}"; 
 Source: "..\output\bin\x86\Microsoft.WindowsAPICodePack.Shell.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\msvcr110.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\output\bin\x86\msvcr120.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\output\bin\x86\msvcp120.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\NAudio.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\ShaderEffectLibrary.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\output\bin\x86\SharpDX.DirectSound.dll"; DestDir: "{app}"; Flags: ignoreversion

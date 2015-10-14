@@ -1061,48 +1061,54 @@
                                                             <ColumnDefinition Width="*"/>
                                                         </Grid.ColumnDefinitions>
                                                         <StackPanel Orientation="Horizontal" Height="26" DockPanel.Dock="Left">
-                                                            <Button Margin="0,0,3,0"
-																	Style="{DynamicResource ShowImdbButton}"
+                                                            <ToggleButton Margin="0,0,3,0"
+																	IsChecked="{Binding IsOptionsVisible, Mode=OneWay}"
+																	Style="{DynamicResource ShowImdbButtonToggle}"
 																	Width="28"
 																	Height="14" ToolTip="Show settings"
 																	Command="{Binding OptionsCommand}">
                                                                 <Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="13" RenderOptions.BitmapScalingMode="HighQuality" Source="/Themes/default/Images/settings.png"/>
-                                                            </Button>
-                                                            <Button Margin="0,0,3,0"
-																	Style="{DynamicResource ShowImdbButton}"
+                                                            </ToggleButton>
+                                                            <ToggleButton Margin="0,0,3,0"
+																	IsChecked="{Binding ShowPlaylist, Mode=OneWay}"
+																	Style="{DynamicResource ShowImdbButtonToggle}"
 																	Width="28"
 																	Height="14" ToolTip="Show playlist"
 																	Command="{Binding ShowPlaylistCommand}">
                                                                 <Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="13" RenderOptions.BitmapScalingMode="HighQuality" Source="/Themes/default/Images/playlist.png"/>
-                                                            </Button>
-                                                            <Button Margin="0,0,3,0" Visibility="{Binding Player.IMDb, Converter={StaticResource NotNullToVisibility}}"
-																	Style="{DynamicResource ShowImdbButton}"
+                                                            </ToggleButton>
+                                                            <ToggleButton Margin="0,0,3,0" Visibility="{Binding Player.IMDb, Converter={StaticResource NotNullToVisibility}}"
+                                                                    IsChecked="{Binding Player.ShowIMdb, Mode=OneWay}"
+																	Style="{DynamicResource ShowImdbButtonToggle}"
 																	Width="28"
 																	Height="14" ToolTip="Show movie info"
 																	Command="{Binding Player.ShowImdbCommand}">
                                                                 <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
                                                                 <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >INFO</TextBlock>
-                                                            </Button>
-                                                            <Button Margin="0,0,3,0"
-																	Style="{DynamicResource ShowImdbButton}"
+                                                            </ToggleButton>
+                                                            <ToggleButton Margin="0,0,3,0"
+																	IsChecked="{Binding ShowVisualizations, Mode=OneWay}"
+																	Style="{DynamicResource ShowImdbButtonToggle}"
 																	Width="28"
 																	Height="14" ToolTip="Show visualizations"
 																	Command="{Binding ShowVisualizationsCommand}">
                                                                 <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
                                                                 <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >VIS</TextBlock>
-                                                            </Button>
-                                                            <Button Margin="0,0,3,0"
-																	Style="{DynamicResource ShowImdbButton}"
+                                                            </ToggleButton>
+                                                            <ToggleButton Margin="0,0,3,0"
+																	IsChecked="{Binding ShowEqualizer, Mode=OneWay}"
+																	Style="{DynamicResource ShowImdbButtonToggle}"
 																	Width="28"
 																	Height="14" ToolTip="Show equalizer"
 																	Command="{Binding ShowEqualizerCommand}">
                                                                 <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
                                                                 <TextBlock Margin="0,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{DynamicResource DefaultFontStyle}" FontSize="6" Foreground="White" >EQ</TextBlock>
-                                                            </Button>
+                                                            </ToggleButton>
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Height="26" DockPanel.Dock="Right">
-                                                            <Button Name="subsBtn" Margin="0,0,3,0" Visibility="{Binding Player.HasVideo, Converter={StaticResource Boolean2VisibilityConverter}}"
-																	Style="{DynamicResource ShowImdbButton}"
+                                                            <ToggleButton Name="subsBtn" Margin="0,0,3,0" Visibility="{Binding Player.HasVideo, Converter={StaticResource Boolean2VisibilityConverter}}"
+																	IsChecked="{Binding Player.ShowOnlineSubtitles, Mode=OneWay}"
+																	Style="{DynamicResource ShowImdbButtonToggle}"
 																	Width="28"
 																	Height="14" ToolTip="Select active subtitle">
                                                                 <!--<Image HorizontalAlignment="Center" VerticalAlignment="Center" Height="8" RenderOptions.BitmapScalingMode="HighQuality" Source="/Images/imdb.png"></Image>-->
@@ -1112,7 +1118,7 @@
                                                                         <Behaviors:SetterAction Popup="{Binding ElementName=substreamsPopup}" Property="Popup.IsOpen" Value="True"/>
                                                                     </Interactivity:EventTrigger>
                                                                 </Interactivity:Interaction.Triggers>
-                                                            </Button>
+                                                            </ToggleButton>
                                                             <ToggleButton Style="{DynamicResource dockButton}"  Grid.Column="0" 
 																	Margin="10,10,-10,0" Width="15" Height="15"
 																	HorizontalAlignment="Right"
@@ -2315,7 +2321,7 @@
                                                                                         <RowDefinition MinHeight="28" />
                                                                                     </Grid.RowDefinitions>
                                                                                     <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Margin="0,0,5,0" Foreground="DarkGray">Subtitle Font:</TextBlock>
-                                                                                    <ComboBox VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" x:Name="fontCombo" HorizontalAlignment="Stretch" Margin="0" SelectedValue="{Binding SubtitleFont}" Background="Black" ItemsSource="{Binding AllFonts}">
+                                                                                    <ComboBox VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" x:Name="fontCombo" HorizontalAlignment="Stretch" Margin="0" SelectedValue="{Binding SubtitleFont}" Background="Black" Behaviors:ComboBoxBehaviors.ItemsSource="{Binding AllFonts}">
                                                                                         <ComboBox.ItemsPanel>
                                                                                             <ItemsPanelTemplate>
                                                                                                 <VirtualizingStackPanel Width="175" />
@@ -2337,7 +2343,7 @@
                                                                                         </ComboBox.ItemTemplate>
                                                                                     </ComboBox>
                                                                                     <TextBlock VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Margin="0,0,5,0" Foreground="DarkGray">Subtitle Encoding:</TextBlock>
-                                                                                    <ComboBox Background="Black" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" x:Name="encodingCombo" Text="Western" HorizontalAlignment="Stretch" Margin="0" SelectedValue="{Binding FontScript}" ItemsSource="{Binding FontScripts}">
+                                                                                    <ComboBox Background="Black" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" x:Name="encodingCombo" Text="Western" HorizontalAlignment="Stretch" Margin="0" Behaviors:ComboBoxBehaviors.ItemsSource="{Binding FontScripts}" SelectedValue="{Binding FontScript, Mode=TwoWay}">
                                                                                         <ComboBox.ItemsPanel>
                                                                                             <ItemsPanelTemplate>
                                                                                                 <VirtualizingStackPanel Width="175" />
@@ -2445,7 +2451,7 @@
                                                                     </StackPanel.Resources>
                                                                     <GroupBox Header="Skin" Style="{DynamicResource Heading}" Tag="True">
                                                                         <StackPanel Orientation="Vertical">
-                                                                            <ComboBox x:Name="themeCombo" Background="Black" VerticalAlignment="Stretch" SelectedValue="{Binding CurrentTheme}" ItemsSource="{Binding Themes}">
+                                                                            <ComboBox x:Name="themeCombo" Background="Black" VerticalAlignment="Stretch" SelectedValue="{Binding CurrentTheme}" Behaviors:ComboBoxBehaviors.ItemsSource="{Binding Themes}">
                                                                                 <ComboBox.ItemTemplate>
                                                                                     <DataTemplate>
                                                                                         <TextBlock Text="{Binding Name}" FontSize="15" Height="20"/>
@@ -5332,8 +5338,143 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style x:Key="ShowImdbButtonToggle"
+			TargetType="{x:Type ToggleButton}">
+        <Setter Property="FocusVisualStyle"
+				Value="{StaticResource ButtonFocusVisual}" />
+        <Setter Property="Background"
+				Value="{StaticResource ButtonNormalBackground}" />
+        <Setter Property="BorderBrush"
+				Value="{StaticResource ShineBrush}" />
+        <Setter Property="BorderThickness"
+				Value="1" />
+        <Setter Property="Foreground"
+				Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+        <Setter Property="HorizontalContentAlignment"
+				Value="Center" />
+        <Setter Property="VerticalContentAlignment"
+				Value="Center" />
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Padding"
+				Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <ControlTemplate.Resources>
+                        <Storyboard x:Key="OnMouseEnter">
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+									Storyboard.TargetName="Highlight"
+									Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.2000000"
+										Value="1" />
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                        <Storyboard x:Key="OnMouseLeave">
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+									Storyboard.TargetName="Highlight"
+									Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.2000000"
+										Value="0" />
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                        <Storyboard x:Key="OnMouseDown">
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+									Storyboard.TargetName="ButtonDim"
+									Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.1000000"
+										Value="1" />
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                        <Storyboard x:Key="OnMouseUp">
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
+									Storyboard.TargetName="ButtonDim"
+									Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.1000000"
+										Value="0" />
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </ControlTemplate.Resources>
+                    <Grid>
+                        <Border Visibility="Hidden"
+                                Name="btn"
+                                Width="Auto"
+								Height="Auto"
+								Background="{DynamicResource FollowGradient}"
+								BorderBrush="Transparent"
+								BorderThickness="1,1,1,1"
+								CornerRadius="4,4,4,4"
+								Padding="4"
+								IsHitTestVisible="False">
+                        </Border>
+                        <Rectangle x:Name="Highlight"
+								Width="Auto"
+								Height="Auto"
+								Fill="{DynamicResource FollowGradient}"
+								Stroke="{x:Null}"
+								StrokeThickness="1,1,1,1"
+								RadiusX="4"
+								RadiusY="4"
+								Opacity="0"
+								IsHitTestVisible="True">
+                            <Interactivity:Interaction.Behaviors>
+                                <Behaviors:GradientFollowBehavior />
+                            </Interactivity:Interaction.Behaviors>
+                        </Rectangle>
+                        <Border x:Name="ButtonDim"
+								Width="Auto"
+								Height="Auto"
+								Background="#99000000"
+								BorderBrush="{x:Null}"
+								BorderThickness="1,1,1,1"
+								CornerRadius="4,4,4,4"
+								Opacity="0"
+								IsHitTestVisible="False" />
+                        <ContentPresenter IsHitTestVisible="False"/>                        
+                        <Border 
+                                Width="Auto"
+								Height="Auto"
+								Background="{DynamicResource MediaButtonBackground}"
+								BorderBrush="{DynamicResource MediaButtonBorder}"
+								BorderThickness="1,1,1,1"
+								CornerRadius="4,4,4,4"
+								Padding="4"
+								IsHitTestVisible="False">
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="btn" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed"
+								Value="True">
+                            <Trigger.ExitActions>
+                                <BeginStoryboard x:Name="OnMouseUp_BeginStoryboard"
+										Storyboard="{StaticResource OnMouseUp}" />
+                            </Trigger.ExitActions>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard x:Name="OnMouseDown_BeginStoryboard"
+										Storyboard="{StaticResource OnMouseDown}" />
+                            </Trigger.EnterActions>
+                        </Trigger>
+                        <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                            <BeginStoryboard x:Name="OnMouseLeave_BeginStoryboard"
+									Storyboard="{StaticResource OnMouseLeave}" />
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                            <BeginStoryboard x:Name="OnMouseEnter_BeginStoryboard"
+									Storyboard="{StaticResource OnMouseEnter}" />
+                        </EventTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ShowImdbButton}"/>
+    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource ShowImdbButtonToggle}"/>
         
     <Style x:Key="AudioSliderStyle"
 			TargetType="{x:Type Slider}">
